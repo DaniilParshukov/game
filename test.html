@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Копилка — прототип</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, sans-serif;
+        }
+        body {
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+        h1 {
+            text-align: center;
+            margin: 0 0 6px 0;
+        }
+        .sub {
+            text-align: center;
+            color: #666;
+            margin-bottom: 24px;
+        }
+        .info {
+            display: flex;
+            justify-content: space-between;
+            background: #eef2f7;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .panel {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: #f8f9fb;
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+        .card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+        }
+        .empty {
+            color: #999;
+            text-align: center;
+            padding: 12px 0;
+        }
+        table {
+            width: 100%;
+            font-size: 0.9rem;
+            border-collapse: collapse;
+        }
+        th,
+        td {
+            padding: 6px 8px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #e9edf2;
+        }
+        .log-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.85rem;
+        }
+        .log-list li {
+            padding: 4px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: #eef6f0;
+            padding: 16px 18px;
+            border-radius: 14px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .controls input {
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            width: 90px;
+        }
+        .controls input:first-of-type {
+            width: 80px;
+        }
+        .btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn:hover {
+            opacity: 0.8;
+            transform: scale(0.97);
+        }
+        .btn-blue {
+            background: #2a7de1;
+            color: white;
+        }
+        .btn-green {
+            background: #1d9e5a;
+            color: white;
+        }
+        .btn-red {
+            background: #d14c4c;
+            color: white;
+        }
+        .btn-gray {
+            background: #9aa4b2;
+            color: white;
+        }
+        .btn-gold {
+            background: #e6a017;
+            color: white;
+        }
+        .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .hint {
+            font-size: 0.8rem;
+            color: #777;
+        }
+        @media (max-width: 600px) {
+            .panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🏦 Копилка</h1>
+        <div class="sub">Инвестиционный симулятор</div>
+
+        <div class="info">
+            <span id="balanceDisplay">💰 0 ₽</span>
+            <span id="dayDisplay">📅 День 1 из 365</span>
+        </div>
+
+        <div class="panel">
+            <div class="card">
+                <h3>📊 Портфель</h3>
+                <div id="portfolioContainer">
+                    <div class="empty">Загрузка...</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>📝 История</h3>
+                <div id="logContainer">
+                    <div class="empty">Нет операций</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <span>📈</span>
+            <input type="text" id="tickerInput" placeholder="SBER" maxlength="10" />
+            <input type="number" id="amountInput" placeholder="10" min="1" value="10" />
+            <button class="btn btn-green" id="buyBtn">Купить</button>
+            <button class="btn btn-red" id="sellBtn">Продать</button>
+            <span class="hint">(SBER, GAZP, YNDX, OZFZ, GOLD)</span>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-blue" id="nextDayBtn">➡️ Следующий день</button>
+            <button class="btn btn-gray" id="resetBtn">🔄 Сбросить</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 1. ИГРОВОЕ ЯДРО (GameEngine) — вся логика
+        // ============================================================
+        class GameEngine {
+            /**
+             * @param {object} storage - объект с методами save/load
+             * @param {object} prices - объект с методом getPrice(ticker, day)
+             */
+            constructor(storage, prices) {
+                this.storage = storage;
+                this.prices = prices;
+            }
+
+            // Начисляем проценты (11% годовых, ежедневно)
+            applyInterest(portfolio) {
+                const rate = 0.11;
+                const dailyRate = rate / 365;
+                const interest = portfolio.cash * dailyRate;
+                portfolio.cash += interest;
+                return portfolio;
+            }
+
+            // Переоцениваем активы по ценам на указанный день
+            revaluateAssets(portfolio, day) {
+                const assetValues = {};
+                for (const [ticker, quantity] of Object.entries(portfolio.assets)) {
+                    const price = this.prices.getPrice(ticker, day);
+                    assetValues[ticker] = {
+                        quantity,
+                        price,
+                        value: quantity * price,
+                    };
+                }
+                portfolio.assetValues = assetValues;
+                return portfolio;
+            }
+
+            // Общая стоимость портфеля
+            getTotalValue(portfolio) {
+                let total = portfolio.cash || 0;
+                if (portfolio.assetValues) {
+                    for (const key of Object.keys(portfolio.assetValues)) {
+                        total += portfolio.assetValues[key].value;
+                    }
+                }
+                return total;
+            }
+
+            // Переход на следующий день
+            nextDay(gameData) {
+                const newDay = gameData.currentDay + 1;
+
+                let portfolio = { ...gameData.portfolio };
+                portfolio = this.applyInterest(portfolio);
+                portfolio = this.revaluateAssets(portfolio, newDay);
+
+                // Жизненные ситуации (заглушка)
+                const event = this._getLifeEvent(newDay);
+                if (event) {
+                    portfolio.cash += event.amount;
+                }
+
+                const newGameData = {
+                    ...gameData,
+                    portfolio,
+                    currentDay: newDay,
+                };
+
+                return newGameData;
+            }
+
+            // Покупка актива
+            buyAsset(gameData, ticker, amount) {
+                const day = gameData.currentDay;
+                const price = this.prices.getPrice(ticker, day);
+                const cost = price * amount;
+
+                if (gameData.portfolio.cash < cost) {
+                    throw new Error(`Не хватает денег: нужно ${cost.toFixed(2)}, есть ${gameData.portfolio.cash.toFixed(2)}`);
+                }
+
+                const portfolio = { ...gameData.portfolio };
+                portfolio.cash -= cost;
+
+                if (!portfolio.assets[ticker]) portfolio.assets[ticker] = 0;
+                portfolio.assets[ticker] += amount;
+
+                const newGameData = {
+                    ...gameData,
+                    portfolio,
+                    history: [
+                        ...(gameData.history || []),
+                        {
+                            type: 'BUY',
+                            ticker,
+                            amount,
+                            price,
+                            total: cost,
+                            day,
+                        },
+                    ],
+                };
+
+                // Переоцениваем
+                newGameData.portfolio = this.revaluateAssets(newGameData.portfolio, day);
+                return newGameData;
+            }
+
+            // Продажа актива
+            sellAsset(gameData, ticker, amount) {
+                const day = gameData.currentDay;
+                const price = this.prices.getPrice(ticker, day);
+                const revenue = price * amount;
+
+                const portfolio = { ...gameData.portfolio };
+
+                if (!portfolio.assets[ticker]) {
+                    throw new Error(`У вас нет актива ${ticker}`);
+                }
+                if (portfolio.assets[ticker] < amount) {
+                    throw new Error(`У вас только ${portfolio.assets[ticker]} акций ${ticker}`);
+                }
+
+                portfolio.assets[ticker] -= amount;
+                if (portfolio.assets[ticker] === 0) {
+                    delete portfolio.assets[ticker];
+                }
+
+                portfolio.cash += revenue;
+
+                const newGameData = {
+                    ...gameData,
+                    portfolio,
+                    history: [
+                        ...(gameData.history || []),
+                        {
+                            type: 'SELL',
+                            ticker,
+                            amount,
+                            price,
+                            total: revenue,
+                            day,
+                        },
+                    ],
+                };
+
+                newGameData.portfolio = this.revaluateAssets(newGameData.portfolio, day);
+                return newGameData;
+            }
+
+            // Жизненные события
+            _getLifeEvent(day) {
+                const events = {
+                    30: { amount: 5000, description: '🎁 Премия!' },
+                    100: { amount: -3000, description: '🔧 Ремонт телефона' },
+                    200: { amount: 10000, description: '🎉 Выигрыш в лотерею' },
+                    300: { amount: -5000, description: '💸 Налог на имущество' },
+                };
+                return events[day] || null;
+            }
+
+            // Финальная рекомендация
+            getRecommendation(gameData) {
+                const initial = 250000;
+                const final = this.getTotalValue(gameData.portfolio);
+                const profit = final - initial;
+                const percent = (profit / initial) * 100;
+
+                if (profit > 20000) {
+                    return { type: 'success', text: '🎉 Отлично! Ты успешный инвестор!', profit, percent };
+                } else if (profit > 0) {
+                    return { type: 'moderate', text: '📊 Хорошо, но можно лучше. Попробуй ОФЗ.', profit, percent };
+                } else {
+                    return { type: 'fail', text: '🏦 Лучше держи деньги во вкладе.', profit, percent };
+                }
+            }
+        }
+
+        // ============================================================
+        // 2. ХРАНИЛИЩЕ (localStorage)
+        // ============================================================
+        class LocalStorageAdapter {
+            async saveGame(gameId, data) {
+                localStorage.setItem(`game_${gameId}`, JSON.stringify(data));
+            }
+
+            async loadGame(gameId) {
+                const raw = localStorage.getItem(`game_${gameId}`);
+                return raw ? JSON.parse(raw) : null;
+            }
+
+            async deleteGame(gameId) {
+                localStorage.removeItem(`game_${gameId}`);
+            }
+        }
+
+        // ============================================================
+        // 3. ЦЕНЫ (генерация случайных цен)
+        // ============================================================
+        class LocalPrices {
+            constructor() {
+                this.tickers = ['SBER', 'GAZP', 'YNDX', 'OZFZ', 'GOLD'];
+                this.data = {};
+                for (const t of this.tickers) {
+                    this.data[t] = [];
+                    let price = 100 + Math.random() * 200;
+                    for (let d = 0; d < 365; d++) {
+                        const change = (Math.random() - 0.5) * 4;
+                        price = Math.max(5, price + change);
+                        this.data[t].push(Math.round(price * 100) / 100);
+                    }
+                }
+            }
+
+            getPrice(ticker, day) {
+                if (!this.data[ticker]) throw new Error(`Неизвестный тикер: ${ticker}`);
+                const idx = Math.min(day - 1, this.data[ticker].length - 1);
+                return this.data[ticker][idx] || 0;
+            }
+        }
+
+        // ============================================================
+        // 4. ТОЧКА ВХОДА
+        // ============================================================
+        (async function main() {
+            const GAME_ID = 'my_game';
+            const storage = new LocalStorageAdapter();
+            const prices = new LocalPrices();
+            const engine = new GameEngine(storage, prices);
+
+            let gameData = null;
+
+            // DOM
+            const balanceEl = document.getElementById('balanceDisplay');
+            const dayEl = document.getElementById('dayDisplay');
+            const portfolioEl = document.getElementById('portfolioContainer');
+            const logEl = document.getElementById('logContainer');
+
+            const tickerInput = document.getElementById('tickerInput');
+            const amountInput = document.getElementById('amountInput');
+            const buyBtn = document.getElementById('buyBtn');
+            const sellBtn = document.getElementById('sellBtn');
+            const nextBtn = document.getElementById('nextDayBtn');
+            const resetBtn = document.getElementById('resetBtn');
+
+            // ===== СОЗДАНИЕ НОВОЙ ИГРЫ =====
+            function createNewGame() {
+                return {
+                    portfolio: {
+                        cash: 10000, // ← вот тут 10 000 рублей!
+                        assets: {},
+                        assetValues: {},
+                    },
+                    currentDay: 1,
+                    history: [],
+                };
+            }
+
+            // ===== СОХРАНЕНИЕ =====
+            async function saveGame() {
+                await storage.saveGame(GAME_ID, gameData);
+            }
+
+            // ===== ЗАГРУЗКА =====
+            async function loadGame() {
+                const saved = await storage.loadGame(GAME_ID);
+                if (saved) {
+                    gameData = saved;
+                    // Переоцениваем, чтобы цены были актуальны
+                    gameData.portfolio = engine.revaluateAssets(gameData.portfolio, gameData.currentDay);
+                    return true;
+                }
+                return false;
+            }
+
+            // ===== ИНИЦИАЛИЗАЦИЯ =====
+            async function initGame() {
+                const hasSaved = await loadGame();
+                if (!hasSaved) {
+                    gameData = createNewGame();
+                    // Сразу переоцениваем портфель на 1-й день
+                    gameData.portfolio = engine.revaluateAssets(gameData.portfolio, 1);
+                    await saveGame();
+                }
+                renderUI();
+            }
+
+            // ===== ОТРИСОВКА =====
+            function renderUI() {
+                if (!gameData) return;
+
+                const total = engine.getTotalValue(gameData.portfolio);
+                balanceEl.textContent = `💰 ${Math.round(total)} ₽ (наличные: ${Math.round(gameData.portfolio.cash)} ₽)`;
+                dayEl.textContent = `📅 День ${gameData.currentDay} из 365`;
+
+                renderPortfolio();
+                renderLog();
+            }
+
+            function renderPortfolio() {
+                const av = gameData.portfolio.assetValues || {};
+                const keys = Object.keys(av);
+
+                if (keys.length === 0) {
+                    portfolioEl.innerHTML = `<div class="empty">Портфель пуст</div>`;
+                    return;
+                }
+
+                let html = `<table><tr><th>Актив</th><th>Кол-во</th><th>Цена</th><th>Стоимость</th></tr>`;
+                let totalAssets = 0;
+                for (const ticker of keys) {
+                    const d = av[ticker];
+                    html += `<tr>
+                        <td><b>${ticker}</b></td>
+                        <td>${d.quantity}</td>
+                        <td>${d.price.toFixed(2)} ₽</td>
+                        <td>${d.value.toFixed(2)} ₽</td>
+                    </tr>`;
+                    totalAssets += d.value;
+                }
+                html += `<tr style="border-top:2px solid #ccc;font-weight:bold;">
+                    <td colspan="3">Итого активы:</td>
+                    <td>${totalAssets.toFixed(2)} ₽</td>
+                </tr></table>`;
+                portfolioEl.innerHTML = html;
+            }
+
+            function renderLog() {
+                const history = gameData.history || [];
+                if (history.length === 0) {
+                    logEl.innerHTML = `<div class="empty">Нет операций</div>`;
+                    return;
+                }
+                const last = history.slice(-5).reverse();
+                let html = `<ul class="log-list">`;
+                for (const ev of last) {
+                    const sign = ev.type === 'BUY' ? '🟢' : '🔴';
+                    html += `<li>${sign} ${ev.type} ${ev.ticker} ${ev.amount} шт. по ${ev.price.toFixed(2)} ₽</li>`;
+                }
+                html += `</ul>`;
+                logEl.innerHTML = html;
+            }
+
+            // ===== ОБРАБОТЧИКИ =====
+
+            // Следующий день
+            async function handleNextDay() {
+                if (gameData.currentDay >= 365) {
+                    alert('🎉 Игра завершена! Нажми "Сбросить"');
+                    return;
+                }
+
+                gameData = engine.nextDay(gameData);
+                await saveGame();
+                renderUI();
+
+                if (gameData.currentDay === 365) {
+                    const rec = engine.getRecommendation(gameData);
+                    setTimeout(() => {
+                        alert(
+                            `🏁 ИГРА ЗАВЕРШЕНА!\n\n` +
+                            `💰 Итог: ${Math.round(engine.getTotalValue(gameData.portfolio))} ₽\n` +
+                            `📈 Прибыль: ${Math.round(rec.profit)} ₽ (${rec.percent.toFixed(1)}%)\n\n` +
+                            `${rec.text}`
+                        );
+                    }, 400);
+                }
+            }
+
+            // Покупка
+            async function handleBuy() {
+                const ticker = tickerInput.value.toUpperCase().trim();
+                const amount = parseInt(amountInput.value);
+                if (!ticker || isNaN(amount) || amount <= 0) {
+                    alert('Введите корректный тикер и количество');
+                    return;
+                }
+
+                try {
+                    gameData = engine.buyAsset(gameData, ticker, amount);
+                    await saveGame();
+                    renderUI();
+                    tickerInput.value = '';
+                    amountInput.value = '10';
+                } catch (err) {
+                    alert('❌ ' + err.message);
+                }
+            }
+
+            // Продажа
+            async function handleSell() {
+                const ticker = tickerInput.value.toUpperCase().trim();
+                const amount = parseInt(amountInput.value);
+                if (!ticker || isNaN(amount) || amount <= 0) {
+                    alert('Введите корректный тикер и количество');
+                    return;
+                }
+
+                try {
+                    gameData = engine.sellAsset(gameData, ticker, amount);
+                    await saveGame();
+                    renderUI();
+                    tickerInput.value = '';
+                    amountInput.value = '10';
+                } catch (err) {
+                    alert('❌ ' + err.message);
+                }
+            }
+
+            // Сброс
+            async function handleReset() {
+                if (!confirm('Сбросить игру?')) return;
+                await storage.deleteGame(GAME_ID);
+                gameData = createNewGame();
+                gameData.portfolio = engine.revaluateAssets(gameData.portfolio, 1);
+                await saveGame();
+                renderUI();
+            }
+
+            // ===== НАВЕШИВАЕМ СОБЫТИЯ =====
+            nextBtn.addEventListener('click', handleNextDay);
+            buyBtn.addEventListener('click', handleBuy);
+            sellBtn.addEventListener('click', handleSell);
+            resetBtn.addEventListener('click', handleReset);
+
+            // ===== СТАРТ =====
+            await initGame();
+
+            // Для отладки в консоли
+            window.__debug = { gameData, engine, prices, storage };
+            console.log('✅ Игра запущена! Баланс:', gameData?.portfolio?.cash);
+        })();
+    </script>
+
+</body>
+</html>
