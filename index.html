@@ -258,15 +258,7 @@
             color: var(--text);
             padding: 8px 10px;
             outline: none;
-        }
-
-        .chip-btn {
-            border: none;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.08);
-            color: var(--text);
-            padding: 8px 12px;
-            cursor: pointer;
+            appearance: none;
         }
 
         .action-btn {
@@ -324,7 +316,6 @@
     <div class="app-shell">
         <header class="topbar">
             <div class="cash-pill">
-                <span class="label">Наличные</span>
                 <strong class="cash-value" id="balance">0 руб.</strong>
                 <span class="secondary" id="totalState">Общее состояние: 0 руб.</span>
             </div>
@@ -335,12 +326,6 @@
 
         <main class="content">
             <section class="asset-section">
-                <div class="asset-header">
-                    <div>
-                        <h2>Инструменты</h2>
-                        <p>Карточки активов с текущей ценой, движением и быстрыми операциями</p>
-                    </div>
-                </div>
                 <div class="asset-grid" id="marketCards"></div>
             </section>
         </main>

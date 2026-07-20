@@ -84,10 +84,14 @@ function renderMarketCards() {
                     <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
                     <div class="price-change ${directionClass}">${changeText}</div>
                 </div>
-                <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">${buildCandleChart(history)}</div>
+                <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">${buildPriceChart(history)}</div>
                 <div class="card-controls">
-                    <input class="card-amount" type="number" min="1" value="1" data-ticker="${ticker}">
-                    <button class="chip-btn" data-action="max" data-ticker="${ticker}">MAX</button>
+                    <select class="card-amount" data-ticker="${ticker}">
+                        <option value="1">1</option>
+                        <option value="10">10</option>
+                        <option value="100">100</option>
+                        <option value="all">Все</option>
+                    </select>
                     <button class="btn btn-secondary action-btn" data-action="buy" data-ticker="${ticker}">Купить</button>
                     <button class="btn btn-muted action-btn" data-action="sell" data-ticker="${ticker}">Продать</button>
                 </div>
@@ -98,45 +102,34 @@ function renderMarketCards() {
     marketCardsEl.innerHTML = cards;
 }
 
-function buildCandleChart(history) {
-    const slice = history.slice(Math.max(0, history.length - 8));
+function buildPriceChart(history) {
+    const slice = history.slice(Math.max(0, history.length - 24));
     if (!slice.length) return '<div class="empty-state">Нет данных</div>';
 
     const width = 180;
-    const height = 48;
-    const padding = 6;
+    const height = 54;
+    const padding = 4;
     const max = Math.max(...slice);
     const min = Math.min(...slice);
     const range = max - min || 1;
-    const candleWidth = 10;
-    const step = (width - padding * 2) / slice.length;
 
-    const candles = slice.map((value, index) => {
-        const prevValue = index === 0 ? slice[0] : slice[index - 1];
-        const open = prevValue;
-        const close = value;
-        const high = Math.max(open, close);
-        const low = Math.min(open, close);
-        const x = padding + index * step + step / 2;
-        const top = padding + ((max - high) / range) * (height - padding * 2);
-        const bottom = padding + ((max - low) / range) * (height - padding * 2);
-        const bodyTop = padding + ((max - Math.max(open, close)) / range) * (height - padding * 2);
-        const bodyBottom = padding + ((max - Math.min(open, close)) / range) * (height - padding * 2);
-        const bodyHeight = Math.max(4, bodyBottom - bodyTop);
-        const color = close >= open ? '#2dd4bf' : '#ff4d6d';
+    const points = slice.map((value, index) => {
+        const x = padding + (index / Math.max(1, slice.length - 1)) * (width - padding * 2);
+        const y = padding + ((max - value) / range) * (height - padding * 2);
+        return { x, y };
+    });
 
-        return `
-            <g>
-                <line x1="${x}" y1="${top}" x2="${x}" y2="${bottom}" stroke="${color}" stroke-width="1.4"></line>
-                <rect x="${x - candleWidth / 2}" y="${bodyTop}" width="${candleWidth}" height="${bodyHeight}" rx="3" fill="${color}"></rect>
-            </g>
-        `;
-    }).join('');
+    const linePath = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ');
+    const lastPoint = points[points.length - 1];
+    const firstPoint = points[0];
+    const color = slice[slice.length - 1] >= slice[0] ? '#2dd4bf' : '#ff4d6d';
 
     return `
-        <svg viewBox="0 0 ${width} ${height}" width="100%" height="48" preserveAspectRatio="none">
+        <svg viewBox="0 0 ${width} ${height}" width="100%" height="54" preserveAspectRatio="none">
             <rect x="0" y="0" width="${width}" height="${height}" rx="8" fill="rgba(255,255,255,0.02)"></rect>
-            ${candles}
+            <path d="${linePath}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            <circle cx="${lastPoint.x.toFixed(2)}" cy="${lastPoint.y.toFixed(2)}" r="2.8" fill="${color}"></circle>
+            <circle cx="${firstPoint.x.toFixed(2)}" cy="${firstPoint.y.toFixed(2)}" r="1.8" fill="rgba(255,255,255,0.6)"></circle>
         </svg>
     `;
 }
@@ -176,8 +169,19 @@ function showFinalResult() {
     }, 500);
 }
 
-async function handleTrade(type, ticker, amount) {
-    if (!ticker || !amount || amount <= 0) {
+async function handleTrade(type, ticker, amount, mode) {
+    let resolvedAmount = amount;
+
+    if (mode === 'all') {
+        if (type === 'buy') {
+            const price = prices.getPrice(ticker, gameData.currentDay);
+            resolvedAmount = Math.max(1, Math.floor(gameData.portfolio.cash / price));
+        } else {
+            resolvedAmount = gameData.portfolio.assets[ticker] || 0;
+        }
+    }
+
+    if (!ticker || !resolvedAmount || resolvedAmount <= 0) {
         alert('Введите количество');
         return;
     }
@@ -185,26 +189,26 @@ async function handleTrade(type, ticker, amount) {
     try {
         if (type === 'buy') {
             const price = prices.getPrice(ticker, gameData.currentDay);
-            const cost = price * amount;
+            const cost = price * resolvedAmount;
 
             if (gameData.portfolio.cash < cost) {
                 alert(`Недостаточно средств. Нужно: ${cost.toFixed(2)} ₽, есть: ${gameData.portfolio.cash.toFixed(2)} ₽`);
                 return;
             }
 
-            gameData = gameEngine.buyAsset(gameData, ticker, amount);
+            gameData = gameEngine.buyAsset(gameData, ticker, resolvedAmount);
         } else {
             if (!gameData.portfolio.assets[ticker]) {
                 alert(`У вас нет актива ${ticker}`);
                 return;
             }
 
-            if (gameData.portfolio.assets[ticker] < amount) {
+            if (gameData.portfolio.assets[ticker] < resolvedAmount) {
                 alert(`У вас только ${gameData.portfolio.assets[ticker]} акций ${ticker}`);
                 return;
             }
 
-            gameData = gameEngine.sellAsset(gameData, ticker, amount);
+            gameData = gameEngine.sellAsset(gameData, ticker, resolvedAmount);
         }
 
         await storage.saveGame(GAME_ID, gameData);
@@ -230,20 +234,12 @@ function handleCardAction(event) {
     const action = button.getAttribute('data-action');
     const ticker = button.getAttribute('data-ticker');
     const card = button.closest('.instrument-card');
-    const input = card?.querySelector('.card-amount');
-    const amountInput = input?.value;
-    const amount = parseInt(amountInput, 10);
-
-    if (action === 'max') {
-        const price = prices.getPrice(ticker, gameData.currentDay);
-        const maxBuy = Math.max(1, Math.floor(gameData.portfolio.cash / price));
-        const maxSell = gameData.portfolio.assets[ticker] || 0;
-        input.value = Math.max(1, Math.min(maxBuy, maxSell || maxBuy));
-        return;
-    }
+    const select = card?.querySelector('.card-amount');
+    const mode = select?.value || '1';
+    const amount = mode === 'all' ? null : parseInt(mode, 10);
 
     if (action === 'buy' || action === 'sell') {
-        handleTrade(action, ticker, amount);
+        handleTrade(action, ticker, amount, mode);
     }
 }
 
