@@ -134,8 +134,8 @@ function renderMarketCards() {
                         <span class="instrument-pill">${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? product.rate : 'кредит ' + 2 * parseFloat(product.rate) + '%'}</span>
                     </div>
                     <div class="instrument-price-row">
-                        <div class="price-value up">${Math.round((gameData.portfolio.bankAccount?.balance || 0))} ₽</div>
-                        <div class="price-change up">Счёт</div>
+                        <div class="price-value ${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'up' : 'down'}">${Math.round((gameData.portfolio.bankAccount?.balance || 0))} ₽</div>
+                        <div class="price-change ${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'up' : 'down'}">${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'Счёт' : 'Кредит'}</div>
                     </div>
                     <div class="card-controls">
                         <input class="card-amount" type="number" min="100" step="100" value="1000" data-deposit="${product.key}" />
