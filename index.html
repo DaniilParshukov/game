@@ -25,7 +25,7 @@
             min-height: 100vh;
             font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
             color: var(--text);
-            background: radial-gradient(circle at top left, #14345d 0%, var(--bg) 42%, #050b14 100%);
+            background: radial-gradient(circle at top left, #14345d 0%, #14345d 50%, var(--bg) 65%, #050b14 100%);
             padding: 24px;
             overflow-x: hidden;
         }
@@ -265,7 +265,7 @@
         }
 
         .card-amount {
-            width: clamp(64px, 5.6vw, 74px);
+            width: clamp(70px, 6.5vw, 100px);
             border: 1px solid var(--border);
             border-radius: 10px;
             background: rgba(255,255,255,0.04);
@@ -328,22 +328,29 @@
         }
 
         .deposit-line {
-            padding: 2px 8px;
+            padding: 0px 4px;
             border-radius: 12px;
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.06);
-            height: 20px;
+            height: 26px;
             display: flex;
             align-items: center;
         }
 
         .deposit-line-top {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 8px;
-            font-size: 0.88rem;
-            margin-bottom: 6px;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .deposit-line-top .action-btn {
+            padding: 0px 8px;
+            height: 20px;
+            font-size: 11px;
+            line-height: 20px;
         }
 
         .deposit-lock {
