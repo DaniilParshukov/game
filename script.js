@@ -168,9 +168,11 @@ function renderUI() {
     renderMarketCards();
 
     if (gameData.pendingEvent) {
+        pauseAutoAdvanceTimer();
         showEventModal(gameData.pendingEvent);
     } else {
         hideEventModal();
+        resumeAutoAdvanceTimer();
     }
 }
 
@@ -219,7 +221,7 @@ function renderMarketCards() {
     const depositProducts = [
         { key: 'bank', label: 'Банковский счёт', rate: '6%', term: '30 дней' },
         { key: 'ofz', label: 'ОФЗ', rate: '8%', term: '90 дней' },
-        { key: 'bonds', label: 'Корп. облигации', rate: '10%', term: '180 дней' }
+        { key: 'bonds', label: 'Корп. обл.', rate: '10%', term: '180 дней' }
     ];
     const tickers = ['SBER', 'GAZP', 'YNDX', 'USD', 'GOLD'];
     
@@ -383,7 +385,6 @@ async function handleNextDay() {
     gameData = gameEngine.nextDay(gameData);
     await storage.saveGame(GAME_ID, gameData);
     renderUI();
-    startAutoAdvanceTimer();
 
     if (gameData.currentDay === 365) {
         showFinalResult();

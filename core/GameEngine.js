@@ -146,7 +146,7 @@ export class GameEngine {
                 throw new Error(`Недостаточно средств. Нужно: ${amount}, есть: ${gameData.portfolio.cash}`);
             }
             const depositState = gameData.portfolio.deposits || {};
-            const activeDeposits = ['ofz', 'bonds'].reduce((sum, key) => sum + ((depositState[key] || []).length || 0), 0);
+            const activeDeposits = (depositState[productKey] || []).length;
             if (activeDeposits >= 3) {
                 throw new Error('Можно открыть не больше 3 вкладов');
             }
