@@ -21,7 +21,6 @@ const nextDayBtn = document.getElementById('nextDay');
 const buyBtn = document.getElementById('buy');
 const sellBtn = document.getElementById('sell');
 const resetBtn = document.getElementById('reset');
-const continueBtn = document.getElementById('continue');
 
 async function initGame() {
     const saved = await storage.loadGame(GAME_ID);
@@ -319,9 +318,6 @@ nextDayBtn.addEventListener('click', handleNextDay);
 buyBtn.addEventListener('click', handleBuy);
 sellBtn.addEventListener('click', handleSell);
 resetBtn.addEventListener('click', handleReset);
-continueBtn.addEventListener('click', () => {
-    document.getElementById('tickerInput').focus();
-});
 marketCardsEl.addEventListener('click', handleSelectTicker);
 
 initGame();
