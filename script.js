@@ -15,6 +15,10 @@ const dayEl = document.getElementById('day');
 const marketCardsEl = document.getElementById('marketCards');
 const nextDayBtn = document.getElementById('nextDay');
 const resetBtn = document.getElementById('reset');
+const eventModal = document.getElementById('eventModal');
+const eventModalTitle = document.getElementById('eventModalTitle');
+const eventModalText = document.getElementById('eventModalText');
+const eventModalContinueBtn = document.getElementById('eventModalContinue');
 
 async function initGame() {
     const saved = await storage.loadGame(GAME_ID);
@@ -39,7 +43,9 @@ function createNewGame() {
             assetValues: {}
         },
         currentDay: 1,
-        history: []
+        history: [],
+        monthlyEvents: {},
+        pendingEvent: null
     };
 }
 
@@ -54,6 +60,12 @@ function renderUI() {
     dayEl.textContent = `День ${gameData.currentDay} / 365`;
 
     renderMarketCards();
+
+    if (gameData.pendingEvent) {
+        showEventModal(gameData.pendingEvent);
+    } else {
+        hideEventModal();
+    }
 }
 
 function renderMarketCards() {
@@ -158,6 +170,30 @@ async function handleNextDay() {
     }
 }
 
+function showEventModal(event) {
+    if (!eventModal) return;
+
+    eventModalTitle.textContent = event.title || 'Событие';
+    eventModalText.textContent = event.text || '';
+    eventModal.classList.remove('hidden');
+    eventModal.setAttribute('aria-hidden', 'false');
+}
+
+function hideEventModal() {
+    if (!eventModal) return;
+
+    eventModal.classList.add('hidden');
+    eventModal.setAttribute('aria-hidden', 'true');
+}
+
+async function handleCloseEventModal() {
+    if (gameData) {
+        gameData.pendingEvent = null;
+        await storage.saveGame(GAME_ID, gameData);
+    }
+    hideEventModal();
+}
+
 function showFinalResult() {
     const recommendation = gameEngine.getRecommendation(gameData);
     const total = gameEngine.getTotalValue(gameData.portfolio);
@@ -244,6 +280,15 @@ function handleCardAction(event) {
 nextDayBtn.addEventListener('click', handleNextDay);
 resetBtn.addEventListener('click', handleReset);
 marketCardsEl.addEventListener('click', handleCardAction);
+eventModalContinueBtn?.addEventListener('click', () => {
+    void handleCloseEventModal();
+});
+
+eventModal?.addEventListener('click', (event) => {
+    if (event.target === eventModal) {
+        void handleCloseEventModal();
+    }
+});
 
 initGame();
 

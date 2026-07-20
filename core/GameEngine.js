@@ -61,9 +61,10 @@ export class GameEngine {
         // 2. Переоцениваем активы
         portfolio = this.revaluateAssets(portfolio, newDay);
         
-        // 3. Проверяем жизненные ситуации (пока заглушка)
-        const event = this.checkLifeEvents(newDay);
-        if (event) {
+        // 3. Проверяем ежемесячные выплаты и события
+        const monthlyEvents = { ...(gameData.monthlyEvents || {}) };
+        const event = this.checkLifeEvents(newDay, { ...gameData, monthlyEvents });
+        if (event && event.amount) {
             portfolio.cash += event.amount;
         }
         
@@ -71,7 +72,9 @@ export class GameEngine {
         const newGameData = {
             ...gameData,
             portfolio,
-            currentDay: newDay
+            currentDay: newDay,
+            monthlyEvents,
+            pendingEvent: event
         };
         
         return newGameData;
@@ -157,19 +160,70 @@ export class GameEngine {
         return gameData;
     }
 
+    getMonthInfo(day) {
+        const monthIndex = Math.floor((day - 1) / 30);
+        const dayOfMonth = ((day - 1) % 30) + 1;
+        return { monthIndex, dayOfMonth };
+    }
+
+    getRandomEventDay() {
+        let eventDay;
+        do {
+            eventDay = Math.floor(Math.random() * 30) + 1;
+        } while (eventDay === 10 || eventDay === 25);
+        return eventDay;
+    }
+
     /**
      * Проверить жизненные ситуации
      */
-    checkLifeEvents(day) {
-        // Пока простые заглушки
-        const events = {
-            30: { amount: 5000, description: 'Премия на работе!' },
-            100: { amount: -3000, description: 'Сломался телефон, пришлось купить новый' },
-            200: { amount: 10000, description: 'Выиграл в лотерею!' },
-            300: { amount: -5000, description: 'Налог на имущество' }
-        };
-        
-        return events[day] || null;
+    checkLifeEvents(day, gameData) {
+        const { monthIndex, dayOfMonth } = this.getMonthInfo(day);
+        const monthlyEvents = gameData?.monthlyEvents || {};
+
+        if (!monthlyEvents[monthIndex]) {
+            monthlyEvents[monthIndex] = this.getRandomEventDay();
+        }
+
+        const eventDay = monthlyEvents[monthIndex];
+
+        if (dayOfMonth === 10 || dayOfMonth === 25) {
+            return {
+                type: 'bonus',
+                title: 'Ежемесячная выплата',
+                text: 'На ваш счёт зачислено 10000 ₽.',
+                amount: 10000,
+                buttonText: 'Продолжить'
+            };
+        }
+
+        if (dayOfMonth === eventDay) {
+            const templates = [
+                {
+                    title: 'Случайное событие',
+                    text: 'К вам пришёл неожиданный поворот в финансовой жизни. Проверьте состояние счёта.'
+                },
+                {
+                    title: 'Внезапная возможность',
+                    text: 'На рынке появился шанс, который стоит учитывать при следующем выборе.'
+                },
+                {
+                    title: 'Нестандартная ситуация',
+                    text: 'Ситуация требует быстрого решения и внимательного взгляда на портфель.'
+                }
+            ];
+
+            const template = templates[(monthIndex + dayOfMonth) % templates.length];
+            return {
+                type: 'event',
+                title: template.title,
+                text: template.text,
+                amount: 0,
+                buttonText: 'Продолжить'
+            };
+        }
+
+        return null;
     }
 
     /**
