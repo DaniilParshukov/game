@@ -69,29 +69,40 @@ function renderMarketCards() {
     const tickers = ['SBER', 'GAZP', 'YNDX', 'OZFZ', 'GOLD'];
     const cards = tickers.map((ticker) => {
         const price = prices.getPrice(ticker, gameData.currentDay);
+        const history = prices.getHistory(ticker);
+        const prevPrice = history[Math.max(0, Math.min(history.length - 1, gameData.currentDay - 2))] ?? price;
+        const change = price - prevPrice;
+        const changePct = prevPrice ? (change / prevPrice) * 100 : 0;
         const quantity = gameData.portfolio.assets[ticker] || 0;
         const assetValue = gameData.portfolio.assetValues?.[ticker]?.value || 0;
         const label = getTickerLabel(ticker);
+        const directionClass = change >= 0 ? 'up' : 'down';
+        const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} руб. (${change >= 0 ? '+' : ''}${changePct.toFixed(1)}%)`;
 
         return `
-            <article class="instrument-card">
+            <article class="instrument-card ${directionClass}">
                 <div class="instrument-head">
                     <div>
                         <div class="instrument-name">${label}</div>
                         <div class="instrument-ticker">${ticker}</div>
                     </div>
-                    <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Нет позиции'}</span>
+                    <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Позиции нет'}</span>
                 </div>
-                <div class="instrument-metrics">
+                <div class="instrument-price-row">
+                    <div class="price-value ${directionClass}">${price.toFixed(2)} руб.</div>
+                    <div class="price-change ${directionClass}">${changeText}</div>
+                </div>
+                <div class="instrument-stats">
                     <div>
-                        <div class="metric-label">Цена</div>
-                        <div class="metric-value">${price.toFixed(2)} руб.</div>
+                        <div class="metric-label">В портфеле</div>
+                        <div class="metric-value">${quantity > 0 ? `${quantity} шт.` : '—'}</div>
                     </div>
                     <div>
-                        <div class="metric-label">Позиция</div>
+                        <div class="metric-label">Оценка</div>
                         <div class="metric-value">${quantity > 0 ? `${assetValue.toFixed(2)} руб.` : '—'}</div>
                     </div>
                 </div>
+                <div class="candle-wrap">${buildCandleChart(history, gameData.currentDay)}</div>
                 <div class="instrument-footer">
                     <button class="chip-btn" data-action="set-ticker" data-ticker="${ticker}">Выбрать</button>
                 </div>
@@ -100,6 +111,49 @@ function renderMarketCards() {
     }).join('');
 
     marketCardsEl.innerHTML = cards;
+}
+
+function buildCandleChart(history, currentDay) {
+    const slice = history.slice(Math.max(0, history.length - 8));
+    if (!slice.length) return '<div class="empty-state">Нет данных</div>';
+
+    const width = 180;
+    const height = 70;
+    const padding = 8;
+    const max = Math.max(...slice);
+    const min = Math.min(...slice);
+    const range = max - min || 1;
+    const candleWidth = 14;
+    const step = (width - padding * 2) / slice.length;
+
+    const candles = slice.map((value, index) => {
+        const prevValue = index === 0 ? slice[0] : slice[index - 1];
+        const open = prevValue;
+        const close = value;
+        const high = Math.max(open, close);
+        const low = Math.min(open, close);
+        const x = padding + index * step + step / 2;
+        const top = padding + ((max - high) / range) * (height - padding * 2);
+        const bottom = padding + ((max - low) / range) * (height - padding * 2);
+        const bodyTop = padding + ((max - Math.max(open, close)) / range) * (height - padding * 2);
+        const bodyBottom = padding + ((max - Math.min(open, close)) / range) * (height - padding * 2);
+        const bodyHeight = Math.max(4, bodyBottom - bodyTop);
+        const color = close >= open ? '#2dd4bf' : '#ff4d6d';
+
+        return `
+            <g>
+                <line x1="${x}" y1="${top}" x2="${x}" y2="${bottom}" stroke="${color}" stroke-width="1.4"></line>
+                <rect x="${x - candleWidth / 2}" y="${bodyTop}" width="${candleWidth}" height="${bodyHeight}" rx="3" fill="${color}"></rect>
+            </g>
+        `;
+    }).join('');
+
+    return `
+        <svg viewBox="0 0 ${width} ${height}" width="100%" height="70" preserveAspectRatio="none">
+            <rect x="0" y="0" width="${width}" height="${height}" rx="10" fill="rgba(255,255,255,0.02)"></rect>
+            ${candles}
+        </svg>
+    `;
 }
 
 function getTickerLabel(ticker) {
