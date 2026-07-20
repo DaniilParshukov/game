@@ -59,8 +59,6 @@ function renderUI() {
     totalStateEl.textContent = `Общее состояние: ${Math.round(total)} руб.`;
     dayEl.textContent = `День ${gameData.currentDay} / 365`;
 
-    renderPortfolio();
-    renderLog();
     renderMarketCards();
 }
 
@@ -164,52 +162,6 @@ function getTickerLabel(ticker) {
         case 'GOLD': return 'Золото';
         default: return ticker;
     }
-}
-
-function renderPortfolio() {
-    const portfolio = gameData.portfolio;
-    const assetValues = portfolio.assetValues || {};
-
-    if (Object.keys(assetValues).length === 0) {
-        portfolioEl.innerHTML = '<div class="empty-state">Нет активов в портфеле</div>';
-        return;
-    }
-
-    const rows = Object.entries(assetValues).map(([ticker, data]) => `
-        <div class="folio-row">
-            <div>
-                <strong>${ticker}</strong>
-                <div class="secondary">${data.quantity} шт.</div>
-            </div>
-            <div class="metric-value">${data.value.toFixed(2)} руб.</div>
-        </div>
-    `).join('');
-
-    portfolioEl.innerHTML = `<div class="portfolio-wrap">${rows}</div>`;
-}
-
-function renderLog() {
-    const history = gameData.history || [];
-    if (history.length === 0) {
-        logEl.innerHTML = '<div class="empty-state">История пуста</div>';
-        return;
-    }
-
-    const lastEvents = history.slice(-5).reverse();
-    const rows = lastEvents.map((event) => {
-        const sign = event.type === 'BUY' ? 'Покупка' : 'Продажа';
-        return `
-            <div class="log-row">
-                <div>
-                    <strong>${sign} ${event.ticker}</strong>
-                    <div class="secondary">${event.amount} шт. по ${event.price.toFixed(2)} руб.</div>
-                </div>
-                <div class="metric-value">${event.total.toFixed(2)} руб.</div>
-            </div>
-        `;
-    }).join('');
-
-    logEl.innerHTML = `<div class="log-wrap">${rows}</div>`;
 }
 
 async function handleNextDay() {
