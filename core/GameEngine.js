@@ -338,31 +338,34 @@ export class GameEngine {
             const templates = [
                 {
                     title: 'Случайное событие',
-                    text: 'Случайно пришлось оплатить ремонтные расходы.'
+                    text: 'Пришлось оплатить ремонтные расходы.',
+                    actionType: 'cost',
+                    buttonText: 'Выбрать способ'
                 },
                 {
                     title: 'Внезапная возможность',
-                    text: 'Вы нашли способ получить дополнительный доход.'
+                    text: 'Вы нашли способ получить дополнительный доход.',
+                    actionType: 'gain',
+                    buttonText: `Получить ${costAmount} ₽`
                 },
                 {
                     title: 'Нестандартная ситуация',
-                    text: 'Нужно быстро решить, откуда взять деньги на срочные нужды.'
+                    text: 'Нужно быстро решить, откуда взять деньги на срочные нужды.',
+                    actionType: 'cost',
+                    buttonText: 'Выбрать способ'
                 }
             ];
 
             const template = templates[(monthIndex + dayOfMonth) % templates.length];
             const costAmount = 2500 + ((monthIndex + dayOfMonth) % 3) * 500;
-            const isGain = (monthIndex + dayOfMonth) % 2 === 0;
 
             return {
                 type: 'event',
                 title: template.title,
-                text: isGain
-                    ? `${template.text} Вам начислят ${costAmount} ₽.`
-                    : `${template.text} Потребуется ${costAmount} ₽.`,
+                text: template.text,
                 amount: costAmount,
-                actionType: isGain ? 'gain' : 'cost',
-                buttonText: isGain ? `Получить ${costAmount} ₽` : 'Выбрать способ'
+                actionType: template.actionType,
+                buttonText: template.buttonText
             };
         }
 

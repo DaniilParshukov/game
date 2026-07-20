@@ -98,6 +98,7 @@ function renderMarketCards() {
                         <div class="instrument-ticker">${ticker}</div>
                     </div>
                     <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Нет'}</span>
+                    <span class="instrument-pill">${quantity > 0 ? `todo` : '0%'}</span>
                 </div>
                 <div class="instrument-price-row">
                     <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
@@ -129,7 +130,7 @@ function renderMarketCards() {
                             <div class="instrument-name">${product.label}</div>
                             <div class="instrument-ticker">${product.key.toUpperCase()}</div>
                         </div>
-                        <span class="instrument-pill">${product.rate}</span>
+                        <span class="instrument-pill">Math.round((gameData.portfolio.bankAccount?.balance || 0)) > 0 ? ${product.rate} : 'кредит ' + ${product.rate * 2}</span>
                     </div>
                     <div class="instrument-price-row">
                         <div class="price-value up">${Math.round((gameData.portfolio.bankAccount?.balance || 0))} ₽</div>
@@ -166,11 +167,8 @@ function renderMarketCards() {
                         <div class="instrument-name">${product.label}</div>
                         <div class="instrument-ticker">${product.key.toUpperCase()}</div>
                     </div>
+                    <span class="instrument-pill">${product.term} + 'д'</span>
                     <span class="instrument-pill">${product.rate}</span>
-                </div>
-                <div class="instrument-price-row">
-                    <div class="price-value up">${positions.length ? `${positions.length}/3` : '0/3'}</div>
-                    <div class="price-change up">${product.term}</div>
                 </div>
                 <div class="deposit-list">${lines}</div>
                 <div class="card-controls">
