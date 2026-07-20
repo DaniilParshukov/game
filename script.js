@@ -173,7 +173,6 @@ function renderUI() {
         resumeAutoAdvanceTimer();
     } else {
         hideEventModal();
-        
     }
 }
 
@@ -371,7 +370,7 @@ function getTickerLabel(ticker) {
         case 'SBER': return 'Сбербанк';
         case 'GAZP': return 'Газпром';
         case 'YNDX': return 'Яндекс';
-        case 'USD': return 'Долар';
+        case 'USD': return 'Доллар';
         case 'GOLD': return 'Золото';
         default: return ticker;
     }
