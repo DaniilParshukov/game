@@ -1,5 +1,3 @@
-// script.js
-
 import { GameEngine } from './core/GameEngine.js';
 import { LocalStorageAdapter } from './storage/LocalStorageAdapter.js';
 import { LocalPrices } from './prices/LocalPrices.js';
@@ -51,7 +49,7 @@ function renderUI() {
     const portfolio = gameData.portfolio;
     const total = gameEngine.getTotalValue(portfolio);
 
-    balanceEl.textContent = `Наличные ${Math.round(portfolio.cash)} ₽`;
+    balanceEl.textContent = `${Math.round(portfolio.cash)} ₽`;
     totalStateEl.textContent = `Общее состояние: ${Math.round(total)} ₽`;
     dayEl.textContent = `День ${gameData.currentDay} / 365`;
 
@@ -72,7 +70,7 @@ function renderMarketCards() {
         const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} ₽ (${change >= 0 ? '+' : ''}${changePct.toFixed(1)}%)`;
 
         return `
-            <article class="instrument-card ${directionClass}">
+            <article class="instrument-card ${ticker}">
                 <div class="instrument-head">
                     <div>
                         <div class="instrument-name">${label}</div>
@@ -84,13 +82,13 @@ function renderMarketCards() {
                     <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
                     <div class="price-change ${directionClass}">${changeText}</div>
                 </div>
-                <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">${buildPriceChart(history)}</div>
+                <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">${buildPriceChart(history, gameData.currentDay, directionClass)}</div>
                 <div class="card-controls">
                     <select class="card-amount" data-ticker="${ticker}">
                         <option value="1">1</option>
                         <option value="10">10</option>
                         <option value="100">100</option>
-                        <option value="all">Все</option>
+                        <option value="all" selected>All</option>
                     </select>
                     <button class="btn btn-secondary action-btn" data-action="buy" data-ticker="${ticker}">Купить</button>
                     <button class="btn btn-muted action-btn" data-action="sell" data-ticker="${ticker}">Продать</button>
@@ -102,8 +100,8 @@ function renderMarketCards() {
     marketCardsEl.innerHTML = cards;
 }
 
-function buildPriceChart(history) {
-    const slice = history.slice(Math.max(0, history.length - 24));
+function buildPriceChart(history, day, directionClass) {
+    const slice = history.slice(Math.max(0, day - 24), Math.min(day, history.length - 1));
     if (!slice.length) return '<div class="empty-state">Нет данных</div>';
 
     const width = 180;
@@ -122,7 +120,7 @@ function buildPriceChart(history) {
     const linePath = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ');
     const lastPoint = points[points.length - 1];
     const firstPoint = points[0];
-    const color = slice[slice.length - 1] >= slice[0] ? '#2dd4bf' : '#ff4d6d';
+    const color = directionClass ? '#2dd4bf' : '#ff4d6d';
 
     return `
         <svg viewBox="0 0 ${width} ${height}" width="100%" height="54" preserveAspectRatio="none">
