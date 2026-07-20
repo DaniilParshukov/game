@@ -14,12 +14,8 @@ const GAME_ID = 'my_game';
 const balanceEl = document.getElementById('balance');
 const totalStateEl = document.getElementById('totalState');
 const dayEl = document.getElementById('day');
-const portfolioEl = document.getElementById('portfolio');
-const logEl = document.getElementById('log');
 const marketCardsEl = document.getElementById('marketCards');
 const nextDayBtn = document.getElementById('nextDay');
-const buyBtn = document.getElementById('buy');
-const sellBtn = document.getElementById('sell');
 const resetBtn = document.getElementById('reset');
 
 async function initGame() {
@@ -55,8 +51,8 @@ function renderUI() {
     const portfolio = gameData.portfolio;
     const total = gameEngine.getTotalValue(portfolio);
 
-    balanceEl.textContent = `Наличные ${Math.round(portfolio.cash)} руб.`;
-    totalStateEl.textContent = `Общее состояние: ${Math.round(total)} руб.`;
+    balanceEl.textContent = `Наличные ${Math.round(portfolio.cash)} ₽`;
+    totalStateEl.textContent = `Общее состояние: ${Math.round(total)} ₽`;
     dayEl.textContent = `День ${gameData.currentDay} / 365`;
 
     renderMarketCards();
@@ -71,10 +67,9 @@ function renderMarketCards() {
         const change = price - prevPrice;
         const changePct = prevPrice ? (change / prevPrice) * 100 : 0;
         const quantity = gameData.portfolio.assets[ticker] || 0;
-        const assetValue = gameData.portfolio.assetValues?.[ticker]?.value || 0;
         const label = getTickerLabel(ticker);
         const directionClass = change >= 0 ? 'up' : 'down';
-        const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} руб. (${change >= 0 ? '+' : ''}${changePct.toFixed(1)}%)`;
+        const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} ₽ (${change >= 0 ? '+' : ''}${changePct.toFixed(1)}%)`;
 
         return `
             <article class="instrument-card ${directionClass}">
@@ -83,25 +78,18 @@ function renderMarketCards() {
                         <div class="instrument-name">${label}</div>
                         <div class="instrument-ticker">${ticker}</div>
                     </div>
-                    <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Позиции нет'}</span>
+                    <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Нет'}</span>
                 </div>
                 <div class="instrument-price-row">
-                    <div class="price-value ${directionClass}">${price.toFixed(2)} руб.</div>
+                    <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
                     <div class="price-change ${directionClass}">${changeText}</div>
                 </div>
-                <div class="instrument-stats">
-                    <div>
-                        <div class="metric-label">В портфеле</div>
-                        <div class="metric-value">${quantity > 0 ? `${quantity} шт.` : '—'}</div>
-                    </div>
-                    <div>
-                        <div class="metric-label">Оценка</div>
-                        <div class="metric-value">${quantity > 0 ? `${assetValue.toFixed(2)} руб.` : '—'}</div>
-                    </div>
-                </div>
-                <div class="candle-wrap">${buildCandleChart(history, gameData.currentDay)}</div>
-                <div class="instrument-footer">
-                    <button class="chip-btn" data-action="set-ticker" data-ticker="${ticker}">Выбрать</button>
+                <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">${buildCandleChart(history)}</div>
+                <div class="card-controls">
+                    <input class="card-amount" type="number" min="1" value="1" data-ticker="${ticker}">
+                    <button class="chip-btn" data-action="max" data-ticker="${ticker}">MAX</button>
+                    <button class="btn btn-secondary action-btn" data-action="buy" data-ticker="${ticker}">Купить</button>
+                    <button class="btn btn-muted action-btn" data-action="sell" data-ticker="${ticker}">Продать</button>
                 </div>
             </article>
         `;
@@ -110,17 +98,17 @@ function renderMarketCards() {
     marketCardsEl.innerHTML = cards;
 }
 
-function buildCandleChart(history, currentDay) {
+function buildCandleChart(history) {
     const slice = history.slice(Math.max(0, history.length - 8));
     if (!slice.length) return '<div class="empty-state">Нет данных</div>';
 
     const width = 180;
-    const height = 70;
-    const padding = 8;
+    const height = 48;
+    const padding = 6;
     const max = Math.max(...slice);
     const min = Math.min(...slice);
     const range = max - min || 1;
-    const candleWidth = 14;
+    const candleWidth = 10;
     const step = (width - padding * 2) / slice.length;
 
     const candles = slice.map((value, index) => {
@@ -146,8 +134,8 @@ function buildCandleChart(history, currentDay) {
     }).join('');
 
     return `
-        <svg viewBox="0 0 ${width} ${height}" width="100%" height="70" preserveAspectRatio="none">
-            <rect x="0" y="0" width="${width}" height="${height}" rx="10" fill="rgba(255,255,255,0.02)"></rect>
+        <svg viewBox="0 0 ${width} ${height}" width="100%" height="48" preserveAspectRatio="none">
+            <rect x="0" y="0" width="${width}" height="${height}" rx="8" fill="rgba(255,255,255,0.02)"></rect>
             ${candles}
         </svg>
     `;
@@ -188,61 +176,39 @@ function showFinalResult() {
     }, 500);
 }
 
-async function handleBuy() {
-    const ticker = document.getElementById('tickerInput').value.toUpperCase();
-    const amount = parseInt(document.getElementById('amountInput').value, 10);
-
+async function handleTrade(type, ticker, amount) {
     if (!ticker || !amount || amount <= 0) {
-        alert('Введите тикер и количество');
+        alert('Введите количество');
         return;
     }
 
     try {
-        const price = prices.getPrice(ticker, gameData.currentDay);
-        const cost = price * amount;
+        if (type === 'buy') {
+            const price = prices.getPrice(ticker, gameData.currentDay);
+            const cost = price * amount;
 
-        if (gameData.portfolio.cash < cost) {
-            alert(`Недостаточно средств. Нужно: ${cost.toFixed(2)} руб., есть: ${gameData.portfolio.cash.toFixed(2)} руб.`);
-            return;
+            if (gameData.portfolio.cash < cost) {
+                alert(`Недостаточно средств. Нужно: ${cost.toFixed(2)} ₽, есть: ${gameData.portfolio.cash.toFixed(2)} ₽`);
+                return;
+            }
+
+            gameData = gameEngine.buyAsset(gameData, ticker, amount);
+        } else {
+            if (!gameData.portfolio.assets[ticker]) {
+                alert(`У вас нет актива ${ticker}`);
+                return;
+            }
+
+            if (gameData.portfolio.assets[ticker] < amount) {
+                alert(`У вас только ${gameData.portfolio.assets[ticker]} акций ${ticker}`);
+                return;
+            }
+
+            gameData = gameEngine.sellAsset(gameData, ticker, amount);
         }
 
-        gameData = gameEngine.buyAsset(gameData, ticker, amount);
         await storage.saveGame(GAME_ID, gameData);
         renderUI();
-
-        document.getElementById('tickerInput').value = '';
-        document.getElementById('amountInput').value = '';
-    } catch (error) {
-        alert(`Ошибка: ${error.message}`);
-    }
-}
-
-async function handleSell() {
-    const ticker = document.getElementById('tickerInput').value.toUpperCase();
-    const amount = parseInt(document.getElementById('amountInput').value, 10);
-
-    if (!ticker || !amount || amount <= 0) {
-        alert('Введите тикер и количество');
-        return;
-    }
-
-    try {
-        if (!gameData.portfolio.assets[ticker]) {
-            alert(`У вас нет актива ${ticker}`);
-            return;
-        }
-
-        if (gameData.portfolio.assets[ticker] < amount) {
-            alert(`У вас только ${gameData.portfolio.assets[ticker]} акций ${ticker}`);
-            return;
-        }
-
-        gameData = gameEngine.sellAsset(gameData, ticker, amount);
-        await storage.saveGame(GAME_ID, gameData);
-        renderUI();
-
-        document.getElementById('tickerInput').value = '';
-        document.getElementById('amountInput').value = '';
     } catch (error) {
         alert(`Ошибка: ${error.message}`);
     }
@@ -257,20 +223,33 @@ async function handleReset() {
     }
 }
 
-function handleSelectTicker(event) {
-    const button = event.target.closest('[data-action="set-ticker"]');
+function handleCardAction(event) {
+    const button = event.target.closest('[data-action]');
     if (!button) return;
 
+    const action = button.getAttribute('data-action');
     const ticker = button.getAttribute('data-ticker');
-    document.getElementById('tickerInput').value = ticker;
-    document.getElementById('amountInput').focus();
+    const card = button.closest('.instrument-card');
+    const input = card?.querySelector('.card-amount');
+    const amountInput = input?.value;
+    const amount = parseInt(amountInput, 10);
+
+    if (action === 'max') {
+        const price = prices.getPrice(ticker, gameData.currentDay);
+        const maxBuy = Math.max(1, Math.floor(gameData.portfolio.cash / price));
+        const maxSell = gameData.portfolio.assets[ticker] || 0;
+        input.value = Math.max(1, Math.min(maxBuy, maxSell || maxBuy));
+        return;
+    }
+
+    if (action === 'buy' || action === 'sell') {
+        handleTrade(action, ticker, amount);
+    }
 }
 
 nextDayBtn.addEventListener('click', handleNextDay);
-buyBtn.addEventListener('click', handleBuy);
-sellBtn.addEventListener('click', handleSell);
 resetBtn.addEventListener('click', handleReset);
-marketCardsEl.addEventListener('click', handleSelectTicker);
+marketCardsEl.addEventListener('click', handleCardAction);
 
 initGame();
 

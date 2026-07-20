@@ -104,9 +104,7 @@
             border: 1px solid var(--border);
         }
 
-        .asset-section,
-        .trade-panel,
-        .insight-card {
+        .asset-section {
             border: 1px solid var(--border);
             border-radius: 24px;
             background: var(--panel);
@@ -155,10 +153,10 @@
             padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             background: linear-gradient(135deg, rgba(59,130,246,0.16), rgba(45,212,191,0.08));
             transition: transform 0.2s ease, border-color 0.2s ease;
-            min-height: 220px;
+            min-height: 200px;
         }
 
         .instrument-card:hover {
@@ -203,7 +201,7 @@
         }
 
         .price-value {
-            font-size: 1.35rem;
+            font-size: 1.2rem;
             font-weight: 700;
         }
 
@@ -217,12 +215,6 @@
 
         .price-change.up { color: #2dd4bf; }
         .price-change.down { color: #ff4d6d; }
-
-        .instrument-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
 
         .metric-label {
             font-size: 0.72rem;
@@ -240,8 +232,32 @@
         .candle-wrap {
             margin-top: 2px;
             border-radius: 12px;
-            padding: 8px;
+            padding: 6px;
             background: rgba(255,255,255,0.04);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .candle-wrap:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .card-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .card-amount {
+            width: 74px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            padding: 8px 10px;
+            outline: none;
         }
 
         .chip-btn {
@@ -253,44 +269,10 @@
             cursor: pointer;
         }
 
-        .trade-panel {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            padding: 20px 24px;
-            margin-top: 18px;
-        }
-
-        .trade-fields {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .trade-fields label {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            color: var(--muted);
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: 999px;
             font-size: 0.9rem;
-        }
-
-        .trade-fields input {
-            min-width: 120px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background: rgba(255,255,255,0.04);
-            color: var(--text);
-            padding: 10px 12px;
-            outline: none;
-        }
-
-        .trade-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
         }
 
         .insights {
@@ -331,14 +313,10 @@
             padding: 10px 0;
         }
 
-        @media (max-width: 900px) {
-            .insights { grid-template-columns: 1fr; }
-        }
-
         @media (max-width: 640px) {
             body { padding: 16px; }
-            .topbar, .trade-panel { flex-direction: column; align-items: flex-start; }
-            .market-header { flex-direction: column; align-items: flex-start; }
+            .topbar { flex-direction: column; align-items: flex-start; }
+            .asset-header { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
@@ -360,27 +338,10 @@
                 <div class="asset-header">
                     <div>
                         <h2>Инструменты</h2>
-                        <p>Карточки активов с текущей ценой, движением и вашим количеством</p>
+                        <p>Карточки активов с текущей ценой, движением и быстрыми операциями</p>
                     </div>
                 </div>
                 <div class="asset-grid" id="marketCards"></div>
-            </section>
-
-            <section class="trade-panel">
-                <div class="trade-fields">
-                    <label>
-                        Тикер
-                        <input type="text" id="tickerInput" placeholder="SBER" maxlength="10">
-                    </label>
-                    <label>
-                        Количество
-                        <input type="number" id="amountInput" placeholder="10" min="1" value="10">
-                    </label>
-                </div>
-                <div class="trade-actions">
-                    <button class="btn btn-secondary" id="buy">Купить</button>
-                    <button class="btn btn-muted" id="sell">Продать</button>
-                </div>
             </section>
         </main>
     </div>
