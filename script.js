@@ -81,7 +81,6 @@ function clearAutoAdvanceTimer() {
 }
 
 function startAutoAdvanceTimer() {
-    console.log("startAutoAdvanceTimer")
     clearAutoAdvanceTimer();
 
     if (!gameData || gameData.currentDay >= 365) {
@@ -115,12 +114,12 @@ function startAutoAdvanceTimer() {
         if (autoAdvanceRemainingMs <= 0) {
             clearAutoAdvanceTimer();
             void handleNextDay();
+            startAutoAdvanceTimer();
         }
     }, 80);
 }
 
 function pauseAutoAdvanceTimer() {
-    console.log("pauseAutoAdvanceTimer")
     if (!gameData || gameData.currentDay >= 365 || autoAdvancePaused) return;
 
     autoAdvancePaused = true;
@@ -134,7 +133,6 @@ function pauseAutoAdvanceTimer() {
 }
 
 function resumeAutoAdvanceTimer() {
-    console.log("resumeAutoAdvanceTimer")
     if (!gameData || gameData.currentDay >= 365 || !autoAdvancePaused) return;
 
     autoAdvancePaused = false;
@@ -154,6 +152,7 @@ function resumeAutoAdvanceTimer() {
         if (autoAdvanceRemainingMs <= 0) {
             clearAutoAdvanceTimer();
             void handleNextDay();
+            startAutoAdvanceTimer();
         }
     }, 80);
 }
@@ -573,6 +572,7 @@ function handleCardAction(event) {
 nextDayBtn.addEventListener('click', () => {
     clearAutoAdvanceTimer();
     void handleNextDay();
+    startAutoAdvanceTimer();
 });
 pauseTimerBtn?.addEventListener('click', () => {
     if (autoAdvancePaused) {
