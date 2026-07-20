@@ -81,6 +81,7 @@ function clearAutoAdvanceTimer() {
 }
 
 function startAutoAdvanceTimer() {
+    console.log("startAutoAdvanceTimer")
     clearAutoAdvanceTimer();
 
     if (!gameData || gameData.currentDay >= 365) {
@@ -119,6 +120,7 @@ function startAutoAdvanceTimer() {
 }
 
 function pauseAutoAdvanceTimer() {
+    console.log("pauseAutoAdvanceTimer")
     if (!gameData || gameData.currentDay >= 365 || autoAdvancePaused) return;
 
     autoAdvancePaused = true;
@@ -132,6 +134,7 @@ function pauseAutoAdvanceTimer() {
 }
 
 function resumeAutoAdvanceTimer() {
+    console.log("resumeAutoAdvanceTimer")
     if (!gameData || gameData.currentDay >= 365 || !autoAdvancePaused) return;
 
     autoAdvancePaused = false;
