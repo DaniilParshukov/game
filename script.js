@@ -172,9 +172,9 @@ function renderUI() {
     if (gameData.pendingEvent) {
         pauseAutoAdvanceTimer();
         showEventModal(gameData.pendingEvent);
-        resumeAutoAdvanceTimer();
     } else {
         hideEventModal();
+        resumeAutoAdvanceTimer();
     }
 }
 
@@ -543,6 +543,7 @@ async function handleReset() {
         gameData = createNewGame();
         await storage.saveGame(GAME_ID, gameData);
         renderUI();
+        clearAutoAdvanceTimer();
     }
 }
 
@@ -572,7 +573,6 @@ function handleCardAction(event) {
 nextDayBtn.addEventListener('click', () => {
     clearAutoAdvanceTimer();
     void handleNextDay();
-    startAutoAdvanceTimer();
 });
 pauseTimerBtn?.addEventListener('click', () => {
     if (autoAdvancePaused) {
