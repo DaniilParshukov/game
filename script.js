@@ -41,7 +41,8 @@ function createNewGame() {
             cash: 10000,
             assets: {},
             assetValues: {},
-            deposits: {}
+            deposits: {},
+            bankAccount: { balance: 0, rate: 0.06 }
         },
         currentDay: 1,
         history: [],
@@ -131,7 +132,7 @@ function renderMarketCards() {
                         <span class="instrument-pill">${product.rate}</span>
                     </div>
                     <div class="instrument-price-row">
-                        <div class="price-value up">${Math.round(gameData.portfolio.cash)} ₽</div>
+                        <div class="price-value up">${Math.round((gameData.portfolio.bankAccount?.balance || 0))} ₽</div>
                         <div class="price-change up">Счёт</div>
                     </div>
                     <div class="card-controls">
@@ -286,7 +287,7 @@ async function handleDepositAction(action, ticker, index) {
         if (action === 'deposit') {
             gameData = gameEngine.openDeposit(gameData, ticker, amount);
         } else if (action === 'withdraw') {
-            gameData = gameEngine.withdrawDeposit(gameData, ticker, Number(index));
+            gameData = gameEngine.withdrawDeposit(gameData, ticker, Number(index), amount);
         }
 
         await storage.saveGame(GAME_ID, gameData);

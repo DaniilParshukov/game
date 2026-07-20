@@ -32,7 +32,23 @@ export class GameEngine {
                 deposit.lastProcessedDay = day;
             }
         }
+
+        const bankAccount = this.getBankAccount(portfolio);
+        const bankRate = bankAccount.balance < 0 ? 0.12 : 0.06;
+        const dailyRate = bankRate / 365;
+        bankAccount.balance += bankAccount.balance * dailyRate;
+        this.setBankAccount(portfolio, bankAccount);
+
         portfolio.deposits = deposits;
+        return portfolio;
+    }
+
+    getBankAccount(portfolio) {
+        return portfolio.bankAccount || { balance: 0, rate: 0.06 };
+    }
+
+    setBankAccount(portfolio, account) {
+        portfolio.bankAccount = account;
         return portfolio;
     }
 
@@ -58,6 +74,8 @@ export class GameEngine {
      */
     getTotalValue(portfolio) {
         let total = portfolio.cash || 0;
+        const bankAccount = this.getBankAccount(portfolio);
+        total += bankAccount.balance || 0;
         for (const [ticker, data] of Object.entries(portfolio.assetValues || {})) {
             total += data.value || 0;
         }
@@ -118,13 +136,20 @@ export class GameEngine {
         if (!amount || amount <= 0) {
             throw new Error('Введите сумму вклада');
         }
-        if (gameData.portfolio.cash < amount) {
-            throw new Error(`Недостаточно средств. Нужно: ${amount}, есть: ${gameData.portfolio.cash}`);
-        }
-
-        if (productKey !== 'bank') {
+        if (productKey === 'bank') {
+            if (gameData.portfolio.cash < amount) {
+                throw new Error(`Недостаточно средств. Нужно: ${amount}, есть: ${gameData.portfolio.cash}`);
+            }
+            gameData.portfolio.cash -= amount;
+            const bankAccount = this.getBankAccount(gameData.portfolio);
+            bankAccount.balance += amount;
+            this.setBankAccount(gameData.portfolio, bankAccount);
+        } else {
+            if (gameData.portfolio.cash < amount) {
+                throw new Error(`Недостаточно средств. Нужно: ${amount}, есть: ${gameData.portfolio.cash}`);
+            }
             const depositState = gameData.portfolio.deposits || {};
-            const activeDeposits = [productKey].reduce((sum, key) => sum + ((depositState[key] || []).length || 0), 0);
+            const activeDeposits = ['ofz', 'bonds'].reduce((sum, key) => sum + ((depositState[key] || []).length || 0), 0);
             if (activeDeposits >= 3) {
                 throw new Error('Можно открыть не больше 3 вкладов');
             }
@@ -138,7 +163,6 @@ export class GameEngine {
                 termDays: config.term || 180
             });
             gameData.portfolio.deposits = depositState;
-        } else {
             gameData.portfolio.cash -= amount;
         }
 
@@ -152,7 +176,28 @@ export class GameEngine {
         return gameData;
     }
 
-    withdrawDeposit(gameData, productKey, index) {
+    withdrawDeposit(gameData, productKey, index, amount = null) {
+        if (productKey === 'bank') {
+            const bankAccount = this.getBankAccount(gameData.portfolio);
+            const transferAmount = amount ?? bankAccount.balance;
+            if (transferAmount <= 0) {
+                throw new Error('Сумма снятия должна быть положительной');
+            }
+            if (bankAccount.balance < transferAmount) {
+                throw new Error(`Недостаточно средств на счёте. Есть: ${bankAccount.balance}`);
+            }
+            bankAccount.balance -= transferAmount;
+            this.setBankAccount(gameData.portfolio, bankAccount);
+            gameData.portfolio.cash += transferAmount;
+            gameData.history.push({
+                type: 'BANK_WITHDRAW',
+                productKey,
+                amount: transferAmount,
+                day: gameData.currentDay
+            });
+            return gameData;
+        }
+
         const depositState = gameData.portfolio.deposits || {};
         const positions = depositState[productKey];
         const deposit = Array.isArray(positions) ? positions[index] : null;
