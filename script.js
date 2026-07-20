@@ -76,7 +76,7 @@ function renderMarketCards() {
         { key: 'ofz', label: 'ОФЗ', rate: '8%', term: '90 дней' },
         { key: 'bonds', label: 'Корп. облигации', rate: '10%', term: '180 дней' }
     ];
-    const tickers = ['SBER', 'GAZP', 'YNDX', 'OZFZ', 'GOLD'];
+    const tickers = ['SBER', 'GAZP', 'YNDX', 'USD', 'GOLD'];
     
 
     const stockCards = tickers.map((ticker) => {
