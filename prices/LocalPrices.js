@@ -17,7 +17,7 @@ export class LocalPrices {
             // Генерируем 365 дней с небольшим случайным движением
             for (let day = 0; day < 365; day++) {
                 // Случайное блуждание
-                const change = Math.random() * 2;
+                const change = (Math.random() - 0.5) * 4;
                 price = Math.max(10, price + change);
                 prices[ticker].push(Math.round(price * 100) / 100);
             }

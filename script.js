@@ -40,7 +40,8 @@ function createNewGame() {
         portfolio: {
             cash: 10000,
             assets: {},
-            assetValues: {}
+            assetValues: {},
+            deposits: {}
         },
         currentDay: 1,
         history: [],
@@ -70,7 +71,13 @@ function renderUI() {
 
 function renderMarketCards() {
     const tickers = ['SBER', 'GAZP', 'YNDX', 'OZFZ', 'GOLD'];
-    const cards = tickers.map((ticker) => {
+    const depositProducts = [
+        { key: 'bank', label: 'Банковский счёт', rate: '6%', term: '30 дней' },
+        { key: 'ofz', label: 'ОФЗ', rate: '8%', term: '90 дней' },
+        { key: 'bonds', label: 'Корпоративные облигации', rate: '10%', term: '180 дней' }
+    ];
+
+    const stockCards = tickers.map((ticker) => {
         const price = prices.getPrice(ticker, gameData.currentDay);
         const history = prices.getHistory(ticker);
         const prevPrice = history[Math.max(0, Math.min(history.length - 1, gameData.currentDay - 2))] ?? price;
@@ -109,7 +116,34 @@ function renderMarketCards() {
         `;
     }).join('');
 
-    marketCardsEl.innerHTML = cards;
+    const depositCards = depositProducts.map((product) => {
+        const deposit = gameData.portfolio.deposits?.[product.key] || null;
+        const amount = deposit?.amount || 0;
+        const amountText = amount > 0 ? `${amount.toFixed(0)} ₽` : 'Нет';
+        const maturity = deposit?.maturityDay ? `Снятие: ${deposit.maturityDay} день` : `${product.term}`;
+        return `
+            <article class="instrument-card deposit-card">
+                <div class="instrument-head">
+                    <div>
+                        <div class="instrument-name">${product.label}</div>
+                        <div class="instrument-ticker">${product.key.toUpperCase()}</div>
+                    </div>
+                    <span class="instrument-pill">${product.rate}</span>
+                </div>
+                <div class="instrument-price-row">
+                    <div class="price-value up">${amountText}</div>
+                    <div class="price-change up">${maturity}</div>
+                </div>
+                <div class="card-controls">
+                    <input class="card-amount" type="number" min="100" step="100" value="1000" data-deposit="${product.key}" />
+                    <button class="btn btn-secondary action-btn" data-action="deposit" data-ticker="${product.key}">Вложить</button>
+                    <button class="btn btn-muted action-btn" data-action="withdraw" data-ticker="${product.key}">Снять</button>
+                </div>
+            </article>
+        `;
+    }).join('');
+
+    marketCardsEl.innerHTML = `${stockCards}${depositCards}`;
 }
 
 function buildPriceChart(history, day, directionClass) {
@@ -203,6 +237,25 @@ function showFinalResult() {
     }, 500);
 }
 
+async function handleDepositAction(action, ticker) {
+    const card = marketCardsEl.querySelector(`.instrument-card [data-deposit="${ticker}"]`)?.closest('.instrument-card');
+    const input = card?.querySelector('[data-deposit]');
+    const amount = input ? parseFloat(input.value) : 0;
+
+    try {
+        if (action === 'deposit') {
+            gameData = gameEngine.openDeposit(gameData, ticker, amount);
+        } else if (action === 'withdraw') {
+            gameData = gameEngine.withdrawDeposit(gameData, ticker);
+        }
+
+        await storage.saveGame(GAME_ID, gameData);
+        renderUI();
+    } catch (error) {
+        alert(`Ошибка: ${error.message}`);
+    }
+}
+
 async function handleTrade(type, ticker, amount, mode) {
     let resolvedAmount = amount;
 
@@ -267,13 +320,19 @@ function handleCardAction(event) {
 
     const action = button.getAttribute('data-action');
     const ticker = button.getAttribute('data-ticker');
+
+    if (action === 'deposit' || action === 'withdraw') {
+        void handleDepositAction(action, ticker);
+        return;
+    }
+
     const card = button.closest('.instrument-card');
     const select = card?.querySelector('.card-amount');
     const mode = select?.value || '1';
     const amount = mode === 'all' ? null : parseInt(mode, 10);
 
     if (action === 'buy' || action === 'sell') {
-        handleTrade(action, ticker, amount, mode);
+        void handleTrade(action, ticker, amount, mode);
     }
 }
 

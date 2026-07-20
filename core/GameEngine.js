@@ -22,6 +22,22 @@ export class GameEngine {
     }
 
     /**
+     * Начислить проценты по депозитам
+     */
+    applyDepositInterest(portfolio, day) {
+        const deposits = portfolio.deposits || {};
+        for (const [productKey, deposit] of Object.entries(deposits)) {
+            if (!deposit || !deposit.amount) continue;
+            const dailyRate = (deposit.rate || 0) / 365;
+            deposit.amount += deposit.amount * dailyRate;
+            deposit.lastProcessedDay = day;
+            deposits[productKey] = deposit;
+        }
+        portfolio.deposits = deposits;
+        return portfolio;
+    }
+
+    /**
      * Переоценить активы по текущим ценам
      */
     revaluateAssets(portfolio, day) {
@@ -42,9 +58,12 @@ export class GameEngine {
      * Рассчитать общую стоимость портфеля
      */
     getTotalValue(portfolio) {
-        let total = portfolio.cash;
+        let total = portfolio.cash || 0;
         for (const [ticker, data] of Object.entries(portfolio.assetValues || {})) {
-            total += data.value;
+            total += data.value || 0;
+        }
+        for (const deposit of Object.values(portfolio.deposits || {})) {
+            total += deposit.amount || 0;
         }
         return total;
     }
@@ -58,17 +77,20 @@ export class GameEngine {
         // 1. Начисляем проценты
         let portfolio = this.applyInterest(gameData.portfolio);
         
-        // 2. Переоцениваем активы
+        // 2. Начисляем проценты по депозитам
+        portfolio = this.applyDepositInterest(portfolio, newDay);
+
+        // 3. Переоцениваем активы
         portfolio = this.revaluateAssets(portfolio, newDay);
         
-        // 3. Проверяем ежемесячные выплаты и события
+        // 4. Проверяем ежемесячные выплаты и события
         const monthlyEvents = { ...(gameData.monthlyEvents || {}) };
         const event = this.checkLifeEvents(newDay, { ...gameData, monthlyEvents });
         if (event && event.amount) {
             portfolio.cash += event.amount;
         }
         
-        // 4. Сохраняем новое состояние
+        // 5. Сохраняем новое состояние
         const newGameData = {
             ...gameData,
             portfolio,
@@ -78,6 +100,73 @@ export class GameEngine {
         };
         
         return newGameData;
+    }
+
+    getDepositConfig(productKey) {
+        const configs = {
+            bank: { label: 'Банковский счёт', rate: 0.06, term: 30, description: 'Вклад под 6% годовых' },
+            ofz: { label: 'ОФЗ', rate: 0.08, term: 90, description: 'Облигации федерального займа' },
+            bonds: { label: 'Корпоративные облигации', rate: 0.10, term: 180, description: 'Доходность 10% годовых' }
+        };
+        return configs[productKey] || null;
+    }
+
+    openDeposit(gameData, productKey, amount) {
+        const config = this.getDepositConfig(productKey);
+        if (!config) {
+            throw new Error(`Неверный продукт: ${productKey}`);
+        }
+        if (!amount || amount <= 0) {
+            throw new Error('Введите сумму вклада');
+        }
+        if (gameData.portfolio.cash < amount) {
+            throw new Error(`Недостаточно средств. Нужно: ${amount}, есть: ${gameData.portfolio.cash}`);
+        }
+
+        gameData.portfolio.cash -= amount;
+        const deposit = gameData.portfolio.deposits?.[productKey] || {
+            amount: 0,
+            openedDay: gameData.currentDay,
+            maturityDay: gameData.currentDay + config.term,
+            rate: config.rate,
+            productKey
+        };
+        deposit.amount += amount;
+        deposit.openedDay = deposit.openedDay || gameData.currentDay;
+        deposit.maturityDay = deposit.maturityDay || gameData.currentDay + config.term;
+        deposit.rate = config.rate;
+        deposit.productKey = productKey;
+        gameData.portfolio.deposits = gameData.portfolio.deposits || {};
+        gameData.portfolio.deposits[productKey] = deposit;
+
+        gameData.history.push({
+            type: 'DEPOSIT_OPEN',
+            productKey,
+            amount,
+            rate: config.rate,
+            day: gameData.currentDay
+        });
+        return gameData;
+    }
+
+    withdrawDeposit(gameData, productKey) {
+        const deposit = gameData.portfolio.deposits?.[productKey];
+        if (!deposit) {
+            throw new Error('У вас нет такого вклада');
+        }
+        if (gameData.currentDay < deposit.maturityDay) {
+            throw new Error(`Снять деньги можно только после ${deposit.maturityDay} дня`);
+        }
+
+        gameData.portfolio.cash += deposit.amount;
+        delete gameData.portfolio.deposits[productKey];
+        gameData.history.push({
+            type: 'DEPOSIT_WITHDRAW',
+            productKey,
+            amount: deposit.amount,
+            day: gameData.currentDay
+        });
+        return gameData;
     }
 
     /**
