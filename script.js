@@ -170,9 +170,10 @@ function renderUI() {
     if (gameData.pendingEvent) {
         pauseAutoAdvanceTimer();
         showEventModal(gameData.pendingEvent);
+        resumeAutoAdvanceTimer();
     } else {
         hideEventModal();
-        resumeAutoAdvanceTimer();
+        
     }
 }
 
