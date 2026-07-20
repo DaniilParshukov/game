@@ -339,20 +339,17 @@ export class GameEngine {
                 {
                     title: 'Случайное событие',
                     text: 'Пришлось оплатить ремонтные расходы.',
-                    actionType: 'cost',
-                    buttonText: 'Выбрать способ'
+                    actionType: 'cost'
                 },
                 {
                     title: 'Внезапная возможность',
                     text: 'Вы нашли способ получить дополнительный доход.',
-                    actionType: 'gain',
-                    buttonText: `Получить ${costAmount} ₽`
+                    actionType: 'gain'
                 },
                 {
                     title: 'Нестандартная ситуация',
                     text: 'Нужно быстро решить, откуда взять деньги на срочные нужды.',
-                    actionType: 'cost',
-                    buttonText: 'Выбрать способ'
+                    actionType: 'cost'
                 }
             ];
 
@@ -365,7 +362,7 @@ export class GameEngine {
                 text: template.text,
                 amount: costAmount,
                 actionType: template.actionType,
-                buttonText: template.buttonText
+                buttonText: template.actionType === 'gain' ? `Получить ${costAmount} ₽` : 'Выбрать способ'
             };
         }
 
