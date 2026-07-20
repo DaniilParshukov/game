@@ -70,6 +70,47 @@ function renderUI() {
     }
 }
 
+function getWeightedAverageProfitInfo(gameData, ticker) {
+    const quantity = gameData?.portfolio?.assets?.[ticker] || 0;
+    if (!quantity) {
+        return { percent: 0, avgCost: 0, amount: 0 };
+    }
+
+    const currentPrice = prices.getPrice(ticker, gameData.currentDay);
+    const transactions = (gameData?.history || []).filter((entry) => entry?.ticker === ticker && (entry?.type === 'BUY' || entry?.type === 'SELL'));
+
+    let remainingQuantity = 0;
+    let costBasis = 0;
+
+    for (const entry of transactions) {
+        const amount = Number(entry?.amount || 0);
+        if (!amount) continue;
+
+        if (entry.type === 'BUY') {
+            remainingQuantity += amount;
+            costBasis += amount * Number(entry.price || 0);
+        } else if (entry.type === 'SELL') {
+            const sellQty = Math.min(amount, remainingQuantity);
+            if (remainingQuantity <= 0) continue;
+            const avgCost = remainingQuantity > 0 ? costBasis / remainingQuantity : 0;
+            costBasis -= avgCost * sellQty;
+            remainingQuantity -= sellQty;
+        }
+    }
+
+    if (remainingQuantity <= 0 || !costBasis) {
+        return { percent: 0, avgCost: 0, amount: 0 };
+    }
+
+    const avgCost = costBasis / remainingQuantity;
+    const percent = avgCost > 0 ? ((currentPrice - avgCost) / avgCost) * 100 : 0;
+    return {
+        percent,
+        avgCost,
+        amount: (currentPrice - avgCost) * quantity
+    };
+}
+
 function renderMarketCards() {
     const depositProducts = [
         { key: 'bank', label: 'Банковский счёт', rate: '6%', term: '30 дней' },
@@ -89,6 +130,8 @@ function renderMarketCards() {
         const label = getTickerLabel(ticker);
         const directionClass = change >= 0 ? 'up' : 'down';
         const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} ₽ (${change >= 0 ? '+' : ''}${changePct.toFixed(1)}%)`;
+        const profitInfo = getWeightedAverageProfitInfo(gameData, ticker);
+        const profitText = quantity > 0 ? `${profitInfo.percent >= 0 ? '+' : ''}${profitInfo.percent.toFixed(1)}%` : '0%';
 
         return `
             <article class="instrument-card ${ticker}">
@@ -99,7 +142,7 @@ function renderMarketCards() {
                     </div>
                     <span class="instrument-pill-spacer"></span>
                     <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Нет'}</span>
-                    <span class="instrument-pill">${quantity > 0 ? `todo` : '0%'}</span>
+                    <span class="instrument-pill">${profitText}</span>
                 </div>
                 <div class="instrument-price-row">
                     <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
@@ -169,7 +212,7 @@ function renderMarketCards() {
                         <div class="instrument-ticker">${product.key.toUpperCase()}</div>
                     </div>
                     <span class="instrument-pill-spacer"></span>
-                    <span class="instrument-pill">${product.term + 'д'}</span>
+                    <span class="instrument-pill">${product.term}</span>
                     <span class="instrument-pill">${product.rate}</span>
                 </div>
                 <div class="deposit-list">${lines}</div>
