@@ -152,10 +152,7 @@ function renderMarketCards() {
                     <div class="deposit-line">
                         <div class="deposit-line-top">
                             <span>${(deposit.amount || 0).toFixed(0)} ₽</span>
-                            <span class="deposit-lock">${canWithdraw ? 'Можно снять' : `${termDays}д`}</span>
-                        </div>
-                        <div class="deposit-line-actions">
-                            <button class="btn btn-secondary action-btn" data-action="withdraw" data-ticker="${product.key}" data-index="${index}">${canWithdraw ? 'Забрать' : 'Ожидание'}</button>
+                            <button class="btn btn-secondary action-btn" data-action="withdraw" data-ticker="${product.key}" data-index="${index}">${canWithdraw ? 'Забрать' : `${termDays}д`}</button>
                         </div>
                     </div>
                 `;
