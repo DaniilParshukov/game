@@ -14,7 +14,7 @@ export class GameEngine {
      * Начислить проценты на остаток
      */
     applyInterest(portfolio) {
-        const rate = 0.11; // 11% годовых
+        const rate = portfolio.cash < 0 ? 0.22 : 0.11; // 11% годовых, отрицательный баланс — двойной процент
         const dailyRate = rate / 365;
         const interest = portfolio.cash * dailyRate;
         portfolio.cash += interest;
@@ -26,12 +26,15 @@ export class GameEngine {
      */
     applyDepositInterest(portfolio, day) {
         const deposits = portfolio.deposits || {};
-        for (const [productKey, deposit] of Object.entries(deposits)) {
-            if (!deposit || !deposit.amount) continue;
-            const dailyRate = (deposit.rate || 0) / 365;
-            deposit.amount += deposit.amount * dailyRate;
-            deposit.lastProcessedDay = day;
-            deposits[productKey] = deposit;
+        for (const [productKey, positions] of Object.entries(deposits)) {
+            if (!Array.isArray(positions)) continue;
+            for (const deposit of positions) {
+                if (!deposit || !deposit.amount) continue;
+                const dailyRate = (deposit.rate || 0) / 365;
+                deposit.amount += deposit.amount * dailyRate;
+                deposit.lockDays = Math.max(0, (deposit.lockDays ?? 180) - 1);
+                deposit.lastProcessedDay = day;
+            }
         }
         portfolio.deposits = deposits;
         return portfolio;
@@ -62,8 +65,11 @@ export class GameEngine {
         for (const [ticker, data] of Object.entries(portfolio.assetValues || {})) {
             total += data.value || 0;
         }
-        for (const deposit of Object.values(portfolio.deposits || {})) {
-            total += deposit.amount || 0;
+        for (const positions of Object.values(portfolio.deposits || {})) {
+            if (!Array.isArray(positions)) continue;
+            for (const deposit of positions) {
+                total += deposit.amount || 0;
+            }
         }
         return total;
     }
@@ -104,9 +110,9 @@ export class GameEngine {
 
     getDepositConfig(productKey) {
         const configs = {
-            bank: { label: 'Банковский счёт', rate: 0.06, term: 30, description: 'Вклад под 6% годовых' },
-            ofz: { label: 'ОФЗ', rate: 0.08, term: 90, description: 'Облигации федерального займа' },
-            bonds: { label: 'Корпоративные облигации', rate: 0.10, term: 180, description: 'Доходность 10% годовых' }
+            bank: { label: 'Банковский счёт', rate: 0.06, term: 0, lockDays: 0, description: 'Счёт с мгновенным доступом к средствам' },
+            ofz: { label: 'ОФЗ', rate: 0.08, term: 90, lockDays: 180, description: 'Облигации федерального займа' },
+            bonds: { label: 'Корпоративные облигации', rate: 0.10, term: 180, lockDays: 180, description: 'Доходность 10% годовых' }
         };
         return configs[productKey] || null;
     }
@@ -123,21 +129,26 @@ export class GameEngine {
             throw new Error(`Недостаточно средств. Нужно: ${amount}, есть: ${gameData.portfolio.cash}`);
         }
 
-        gameData.portfolio.cash -= amount;
-        const deposit = gameData.portfolio.deposits?.[productKey] || {
-            amount: 0,
-            openedDay: gameData.currentDay,
-            maturityDay: gameData.currentDay + config.term,
-            rate: config.rate,
-            productKey
-        };
-        deposit.amount += amount;
-        deposit.openedDay = deposit.openedDay || gameData.currentDay;
-        deposit.maturityDay = deposit.maturityDay || gameData.currentDay + config.term;
-        deposit.rate = config.rate;
-        deposit.productKey = productKey;
-        gameData.portfolio.deposits = gameData.portfolio.deposits || {};
-        gameData.portfolio.deposits[productKey] = deposit;
+        if (productKey !== 'bank') {
+            const depositState = gameData.portfolio.deposits || {};
+            const activeDeposits = ['ofz', 'bonds'].reduce((sum, key) => sum + ((depositState[key] || []).length || 0), 0);
+            if (activeDeposits >= 3) {
+                throw new Error('Можно открыть не больше 3 вкладов в ОФЗ и облигации');
+            }
+            depositState[productKey] = Array.isArray(depositState[productKey]) ? depositState[productKey] : [];
+            depositState[productKey].push({
+                amount,
+                openedDay: gameData.currentDay,
+                maturityDay: gameData.currentDay + (config.term || 180),
+                rate: config.rate,
+                productKey,
+                lockDays: config.lockDays || 180,
+                termDays: config.term || 180
+            });
+            gameData.portfolio.deposits = depositState;
+        } else {
+            gameData.portfolio.cash -= amount;
+        }
 
         gameData.history.push({
             type: 'DEPOSIT_OPEN',
@@ -149,17 +160,19 @@ export class GameEngine {
         return gameData;
     }
 
-    withdrawDeposit(gameData, productKey) {
-        const deposit = gameData.portfolio.deposits?.[productKey];
+    withdrawDeposit(gameData, productKey, index) {
+        const depositState = gameData.portfolio.deposits || {};
+        const positions = depositState[productKey];
+        const deposit = Array.isArray(positions) ? positions[index] : null;
         if (!deposit) {
             throw new Error('У вас нет такого вклада');
         }
-        if (gameData.currentDay < deposit.maturityDay) {
-            throw new Error(`Снять деньги можно только после ${deposit.maturityDay} дня`);
+        if ((deposit.lockDays ?? 0) > 0) {
+            throw new Error(`Снятие доступно через ${deposit.lockDays} дней`);
         }
 
         gameData.portfolio.cash += deposit.amount;
-        delete gameData.portfolio.deposits[productKey];
+        positions.splice(index, 1);
         gameData.history.push({
             type: 'DEPOSIT_WITHDRAW',
             productKey,

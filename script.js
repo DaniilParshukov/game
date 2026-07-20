@@ -117,10 +117,25 @@ function renderMarketCards() {
     }).join('');
 
     const depositCards = depositProducts.map((product) => {
-        const deposit = gameData.portfolio.deposits?.[product.key] || null;
-        const amount = deposit?.amount || 0;
-        const amountText = amount > 0 ? `${amount.toFixed(0)} ₽` : 'Нет';
-        const maturity = deposit?.maturityDay ? `Снятие: ${deposit.maturityDay} день` : `${product.term}`;
+        const positions = Array.isArray(gameData.portfolio.deposits?.[product.key]) ? gameData.portfolio.deposits[product.key] : [];
+        const lines = positions.length
+            ? positions.map((deposit, index) => {
+                const lockDays = Math.max(0, deposit.lockDays ?? 0);
+                const canWithdraw = lockDays === 0;
+                return `
+                    <div class="deposit-line">
+                        <div class="deposit-line-top">
+                            <span>${(deposit.amount || 0).toFixed(0)} ₽</span>
+                            <span class="deposit-lock">${canWithdraw ? 'Можно снять' : `Снятие ${lockDays}д`}</span>
+                        </div>
+                        <div class="deposit-line-actions">
+                            <button class="btn btn-secondary action-btn" data-action="withdraw" data-ticker="${product.key}" data-index="${index}">${canWithdraw ? 'Забрать' : 'Ожидание'}</button>
+                        </div>
+                    </div>
+                `;
+            }).join('')
+            : '<div class="deposit-empty">Нет активных вкладов</div>';
+
         return `
             <article class="instrument-card deposit-card">
                 <div class="instrument-head">
@@ -131,13 +146,13 @@ function renderMarketCards() {
                     <span class="instrument-pill">${product.rate}</span>
                 </div>
                 <div class="instrument-price-row">
-                    <div class="price-value up">${amountText}</div>
-                    <div class="price-change up">${maturity}</div>
+                    <div class="price-value up">${positions.length ? `${positions.length}/3` : '0/3'}</div>
+                    <div class="price-change up">${product.term}</div>
                 </div>
+                <div class="deposit-list">${lines}</div>
                 <div class="card-controls">
                     <input class="card-amount" type="number" min="100" step="100" value="1000" data-deposit="${product.key}" />
                     <button class="btn btn-secondary action-btn" data-action="deposit" data-ticker="${product.key}">Вложить</button>
-                    <button class="btn btn-muted action-btn" data-action="withdraw" data-ticker="${product.key}">Снять</button>
                 </div>
             </article>
         `;
@@ -237,7 +252,7 @@ function showFinalResult() {
     }, 500);
 }
 
-async function handleDepositAction(action, ticker) {
+async function handleDepositAction(action, ticker, index) {
     const card = marketCardsEl.querySelector(`.instrument-card [data-deposit="${ticker}"]`)?.closest('.instrument-card');
     const input = card?.querySelector('[data-deposit]');
     const amount = input ? parseFloat(input.value) : 0;
@@ -246,7 +261,7 @@ async function handleDepositAction(action, ticker) {
         if (action === 'deposit') {
             gameData = gameEngine.openDeposit(gameData, ticker, amount);
         } else if (action === 'withdraw') {
-            gameData = gameEngine.withdrawDeposit(gameData, ticker);
+            gameData = gameEngine.withdrawDeposit(gameData, ticker, Number(index));
         }
 
         await storage.saveGame(GAME_ID, gameData);
@@ -320,9 +335,10 @@ function handleCardAction(event) {
 
     const action = button.getAttribute('data-action');
     const ticker = button.getAttribute('data-ticker');
+    const index = button.getAttribute('data-index');
 
     if (action === 'deposit' || action === 'withdraw') {
-        void handleDepositAction(action, ticker);
+        void handleDepositAction(action, ticker, index);
         return;
     }
 
