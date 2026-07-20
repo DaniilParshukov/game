@@ -14,10 +14,6 @@ export class GameEngine {
      * Начислить проценты на остаток
      */
     applyInterest(portfolio) {
-        const rate = portfolio.cash < 0 ? 0.22 : 0.11; // 11% годовых, отрицательный баланс — двойной процент
-        const dailyRate = rate / 365;
-        const interest = portfolio.cash * dailyRate;
-        portfolio.cash += interest;
         return portfolio;
     }
 
@@ -32,7 +28,7 @@ export class GameEngine {
                 if (!deposit || !deposit.amount) continue;
                 const dailyRate = (deposit.rate || 0) / 365;
                 deposit.amount += deposit.amount * dailyRate;
-                deposit.lockDays = Math.max(0, (deposit.lockDays ?? 180) - 1);
+                deposit.termDays = Math.max(0, (deposit.termDays ?? 180) - 1);
                 deposit.lastProcessedDay = day;
             }
         }
@@ -80,11 +76,8 @@ export class GameEngine {
     nextDay(gameData) {
         const newDay = gameData.currentDay + 1;
         
-        // 1. Начисляем проценты
-        let portfolio = this.applyInterest(gameData.portfolio);
-        
-        // 2. Начисляем проценты по депозитам
-        portfolio = this.applyDepositInterest(portfolio, newDay);
+        // 1. Начисляем проценты по депозитам
+        let portfolio = this.applyDepositInterest(gameData.portfolio, newDay);
 
         // 3. Переоцениваем активы
         portfolio = this.revaluateAssets(portfolio, newDay);
@@ -110,9 +103,9 @@ export class GameEngine {
 
     getDepositConfig(productKey) {
         const configs = {
-            bank: { label: 'Банковский счёт', rate: 0.06, term: 0, lockDays: 0, description: 'Счёт с мгновенным доступом к средствам' },
-            ofz: { label: 'ОФЗ', rate: 0.08, term: 90, lockDays: 180, description: 'Облигации федерального займа' },
-            bonds: { label: 'Корпоративные облигации', rate: 0.10, term: 180, lockDays: 180, description: 'Доходность 10% годовых' }
+            bank: { label: 'Банковский счёт', rate: 0.06, term: 0, description: 'Счёт с мгновенным доступом к средствам' },
+            ofz: { label: 'ОФЗ', rate: 0.08, term: 90, description: 'Облигации федерального займа' },
+            bonds: { label: 'Корпоративные облигации', rate: 0.10, term: 180, description: 'Доходность 10% годовых' }
         };
         return configs[productKey] || null;
     }
@@ -131,9 +124,9 @@ export class GameEngine {
 
         if (productKey !== 'bank') {
             const depositState = gameData.portfolio.deposits || {};
-            const activeDeposits = ['ofz', 'bonds'].reduce((sum, key) => sum + ((depositState[key] || []).length || 0), 0);
+            const activeDeposits = [productKey].reduce((sum, key) => sum + ((depositState[key] || []).length || 0), 0);
             if (activeDeposits >= 3) {
-                throw new Error('Можно открыть не больше 3 вкладов в ОФЗ и облигации');
+                throw new Error('Можно открыть не больше 3 вкладов');
             }
             depositState[productKey] = Array.isArray(depositState[productKey]) ? depositState[productKey] : [];
             depositState[productKey].push({
@@ -142,7 +135,6 @@ export class GameEngine {
                 maturityDay: gameData.currentDay + (config.term || 180),
                 rate: config.rate,
                 productKey,
-                lockDays: config.lockDays || 180,
                 termDays: config.term || 180
             });
             gameData.portfolio.deposits = depositState;
@@ -167,8 +159,8 @@ export class GameEngine {
         if (!deposit) {
             throw new Error('У вас нет такого вклада');
         }
-        if ((deposit.lockDays ?? 0) > 0) {
-            throw new Error(`Снятие доступно через ${deposit.lockDays} дней`);
+        if ((deposit.termDays ?? 0) > 0) {
+            throw new Error(`Снятие доступно через ${deposit.termDays} дней`);
         }
 
         gameData.portfolio.cash += deposit.amount;

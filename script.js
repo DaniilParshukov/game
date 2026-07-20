@@ -70,12 +70,13 @@ function renderUI() {
 }
 
 function renderMarketCards() {
-    const tickers = ['SBER', 'GAZP', 'YNDX', 'OZFZ', 'GOLD'];
     const depositProducts = [
         { key: 'bank', label: 'Банковский счёт', rate: '6%', term: '30 дней' },
         { key: 'ofz', label: 'ОФЗ', rate: '8%', term: '90 дней' },
-        { key: 'bonds', label: 'Корпоративные облигации', rate: '10%', term: '180 дней' }
+        { key: 'bonds', label: 'Корп. облигации', rate: '10%', term: '180 дней' }
     ];
+    const tickers = ['SBER', 'GAZP', 'YNDX', 'OZFZ', 'GOLD'];
+    
 
     const stockCards = tickers.map((ticker) => {
         const price = prices.getPrice(ticker, gameData.currentDay);
@@ -118,15 +119,39 @@ function renderMarketCards() {
 
     const depositCards = depositProducts.map((product) => {
         const positions = Array.isArray(gameData.portfolio.deposits?.[product.key]) ? gameData.portfolio.deposits[product.key] : [];
+
+        if (product.key === 'bank') {
+            return `
+                <article class="instrument-card deposit-card">
+                    <div class="instrument-head">
+                        <div>
+                            <div class="instrument-name">${product.label}</div>
+                            <div class="instrument-ticker">${product.key.toUpperCase()}</div>
+                        </div>
+                        <span class="instrument-pill">${product.rate}</span>
+                    </div>
+                    <div class="instrument-price-row">
+                        <div class="price-value up">${Math.round(gameData.portfolio.cash)} ₽</div>
+                        <div class="price-change up">Счёт</div>
+                    </div>
+                    <div class="card-controls">
+                        <input class="card-amount" type="number" min="100" step="100" value="1000" data-deposit="${product.key}" />
+                        <button class="btn btn-secondary action-btn" data-action="deposit" data-ticker="${product.key}">Вложить</button>
+                        <button class="btn btn-muted action-btn" data-action="withdraw" data-ticker="${product.key}">Снять</button>
+                    </div>
+                </article>
+            `;
+        }
+
         const lines = positions.length
             ? positions.map((deposit, index) => {
-                const lockDays = Math.max(0, deposit.lockDays ?? 0);
-                const canWithdraw = lockDays === 0;
+                const termDays = deposit.termDays ?? 0;
+                const canWithdraw = termDays === 0;
                 return `
                     <div class="deposit-line">
                         <div class="deposit-line-top">
                             <span>${(deposit.amount || 0).toFixed(0)} ₽</span>
-                            <span class="deposit-lock">${canWithdraw ? 'Можно снять' : `Снятие ${lockDays}д`}</span>
+                            <span class="deposit-lock">${canWithdraw ? 'Можно снять' : `${termDays}д`}</span>
                         </div>
                         <div class="deposit-line-actions">
                             <button class="btn btn-secondary action-btn" data-action="withdraw" data-ticker="${product.key}" data-index="${index}">${canWithdraw ? 'Забрать' : 'Ожидание'}</button>
@@ -158,7 +183,7 @@ function renderMarketCards() {
         `;
     }).join('');
 
-    marketCardsEl.innerHTML = `${stockCards}${depositCards}`;
+    marketCardsEl.innerHTML = `${depositCards}${stockCards}`;
 }
 
 function buildPriceChart(history, day, directionClass) {
