@@ -221,7 +221,7 @@ function getTickerLabel(ticker) {
         case 'SBER': return 'Сбербанк';
         case 'GAZP': return 'Газпром';
         case 'YNDX': return 'Яндекс';
-        case 'OZFZ': return 'ОФЗ';
+        case 'USD': return 'Долар';
         case 'GOLD': return 'Золото';
         default: return ticker;
     }
