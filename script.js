@@ -8,12 +8,18 @@ const gameEngine = new GameEngine(storage, prices);
 
 let gameData = null;
 const GAME_ID = 'my_game';
+let autoAdvanceTimer = null;
+let autoAdvanceRemainingMs = 3000;
+let autoAdvanceDeadline = null;
+let autoAdvancePaused = false;
 
 const balanceEl = document.getElementById('balance');
 const totalStateEl = document.getElementById('totalState');
 const dayEl = document.getElementById('day');
+const dayTextEl = document.getElementById('dayText');
 const marketCardsEl = document.getElementById('marketCards');
 const nextDayBtn = document.getElementById('nextDay');
+const pauseTimerBtn = document.getElementById('pauseTimer');
 const resetBtn = document.getElementById('reset');
 const eventModal = document.getElementById('eventModal');
 const eventModalTitle = document.getElementById('eventModalTitle');
@@ -33,6 +39,7 @@ async function initGame() {
     }
 
     renderUI();
+    startAutoAdvanceTimer();
 }
 
 function createNewGame() {
@@ -51,6 +58,103 @@ function createNewGame() {
     };
 }
 
+function updateDayTimerUi() {
+    if (dayTextEl) {
+        dayTextEl.textContent = `День ${gameData.currentDay} / 365`;
+    }
+
+    if (!dayEl) return;
+    if (gameData.currentDay >= 365) {
+        dayEl.style.setProperty('--fill', '100%');
+        return;
+    }
+
+    const progress = 100 - (autoAdvanceRemainingMs / 3000) * 100;
+    dayEl.style.setProperty('--fill', `${Math.max(0, Math.min(100, progress))}%`);
+}
+
+function clearAutoAdvanceTimer() {
+    if (autoAdvanceTimer) {
+        clearInterval(autoAdvanceTimer);
+        autoAdvanceTimer = null;
+    }
+}
+
+function startAutoAdvanceTimer() {
+    clearAutoAdvanceTimer();
+
+    if (!gameData || gameData.currentDay >= 365) {
+        autoAdvanceRemainingMs = 3000;
+        autoAdvanceDeadline = null;
+        autoAdvancePaused = false;
+        updateDayTimerUi();
+        if (pauseTimerBtn) {
+            pauseTimerBtn.disabled = true;
+            pauseTimerBtn.textContent = 'Пауза';
+        }
+        return;
+    }
+
+    autoAdvanceRemainingMs = 3000;
+    autoAdvanceDeadline = Date.now() + autoAdvanceRemainingMs;
+    autoAdvancePaused = false;
+    updateDayTimerUi();
+
+    if (pauseTimerBtn) {
+        pauseTimerBtn.disabled = false;
+        pauseTimerBtn.textContent = 'Пауза';
+    }
+
+    autoAdvanceTimer = setInterval(() => {
+        if (!gameData || autoAdvancePaused) return;
+
+        autoAdvanceRemainingMs = Math.max(0, autoAdvanceDeadline - Date.now());
+        updateDayTimerUi();
+
+        if (autoAdvanceRemainingMs <= 0) {
+            clearAutoAdvanceTimer();
+            void handleNextDay();
+        }
+    }, 80);
+}
+
+function pauseAutoAdvanceTimer() {
+    if (!gameData || gameData.currentDay >= 365 || autoAdvancePaused) return;
+
+    autoAdvancePaused = true;
+    autoAdvanceRemainingMs = Math.max(0, autoAdvanceDeadline - Date.now());
+    clearAutoAdvanceTimer();
+    updateDayTimerUi();
+
+    if (pauseTimerBtn) {
+        pauseTimerBtn.textContent = 'Продолжить';
+    }
+}
+
+function resumeAutoAdvanceTimer() {
+    if (!gameData || gameData.currentDay >= 365 || !autoAdvancePaused) return;
+
+    autoAdvancePaused = false;
+    autoAdvanceDeadline = Date.now() + autoAdvanceRemainingMs;
+    updateDayTimerUi();
+
+    if (pauseTimerBtn) {
+        pauseTimerBtn.textContent = 'Пауза';
+    }
+
+    autoAdvanceTimer = setInterval(() => {
+        if (!gameData || autoAdvancePaused) return;
+
+        autoAdvanceRemainingMs = Math.max(0, autoAdvanceDeadline - Date.now());
+        updateDayTimerUi();
+
+        if (autoAdvanceRemainingMs <= 0) {
+            clearAutoAdvanceTimer();
+            void handleNextDay();
+        }
+    }, 80);
+}
+
 function renderUI() {
     if (!gameData) return;
 
@@ -59,7 +163,7 @@ function renderUI() {
 
     balanceEl.textContent = `${Math.round(portfolio.cash)} ₽`;
     totalStateEl.textContent = `Общее состояние: ${Math.round(total)} ₽`;
-    dayEl.textContent = `День ${gameData.currentDay} / 365`;
+    updateDayTimerUi();
 
     renderMarketCards();
 
@@ -279,6 +383,7 @@ async function handleNextDay() {
     gameData = gameEngine.nextDay(gameData);
     await storage.saveGame(GAME_ID, gameData);
     renderUI();
+    startAutoAdvanceTimer();
 
     if (gameData.currentDay === 365) {
         showFinalResult();
@@ -461,7 +566,17 @@ function handleCardAction(event) {
     }
 }
 
-nextDayBtn.addEventListener('click', handleNextDay);
+nextDayBtn.addEventListener('click', () => {
+    clearAutoAdvanceTimer();
+    void handleNextDay();
+});
+pauseTimerBtn?.addEventListener('click', () => {
+    if (autoAdvancePaused) {
+        resumeAutoAdvanceTimer();
+    } else {
+        pauseAutoAdvanceTimer();
+    }
+});
 resetBtn.addEventListener('click', handleReset);
 marketCardsEl.addEventListener('click', handleCardAction);
 eventModalActions?.addEventListener('click', (event) => {

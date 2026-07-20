@@ -137,11 +137,36 @@
         }
 
         .day-pill {
+            position: relative;
+            overflow: hidden;
             color: var(--muted);
             font-size: 0.95rem;
             padding: 8px 12px;
             border-radius: 999px;
             background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.06);
+            min-width: 132px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            isolation: isolate;
+        }
+
+        .day-pill::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: var(--fill, 0%);
+            background: linear-gradient(90deg, rgba(45,212,191,0.22), rgba(59,130,246,0.28));
+            border-radius: 999px;
+            z-index: 0;
+            transition: width 0.1s linear;
+        }
+
+        .day-pill-label {
+            position: relative;
+            z-index: 1;
+            white-space: nowrap;
         }
 
         .asset-grid {
@@ -457,7 +482,10 @@
                 <strong class="cash-value" id="balance">0 руб.</strong>
                 <span class="secondary" id="totalState">Общее состояние: 0 руб.</span>
             </div>
-            <div class="day-pill" id="day">День 1 / 365</div>
+            <div class="day-pill" id="day">
+                <span class="day-pill-label" id="dayText">День 1 / 365</span>
+            </div>
+            <button class="btn btn-muted" id="pauseTimer">Пауза</button>
             <button class="btn btn-primary" id="nextDay">Следующий день</button>
             <button class="btn btn-muted" id="reset">Сброс</button>
         </header>
