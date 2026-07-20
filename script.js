@@ -120,7 +120,7 @@ function buildPriceChart(history, day, directionClass) {
     const linePath = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ');
     const lastPoint = points[points.length - 1];
     const firstPoint = points[0];
-    const color = directionClass ? '#2dd4bf' : '#ff4d6d';
+    const color = directionClass == 'up' ? '#2dd4bf' : '#ff4d6d';
 
     return `
         <svg viewBox="0 0 ${width} ${height}" width="100%" height="54" preserveAspectRatio="none">
