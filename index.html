@@ -391,6 +391,23 @@
             line-height: 1.6;
         }
 
+        .event-modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .event-modal-actions .btn {
+            min-width: 150px;
+        }
+
+        .event-modal-actions .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .event-modal-icon {
             width: 48px;
             height: 48px;
@@ -442,7 +459,7 @@
             <div class="event-modal-icon">✦</div>
             <h3 id="eventModalTitle">Событие</h3>
             <p id="eventModalText">Текст события</p>
-            <button class="btn btn-primary" id="eventModalContinue">Продолжить</button>
+            <div class="event-modal-actions" id="eventModalActions"></div>
         </div>
     </div>
 

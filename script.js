@@ -18,7 +18,7 @@ const resetBtn = document.getElementById('reset');
 const eventModal = document.getElementById('eventModal');
 const eventModalTitle = document.getElementById('eventModalTitle');
 const eventModalText = document.getElementById('eventModalText');
-const eventModalContinueBtn = document.getElementById('eventModalContinue');
+const eventModalActions = document.getElementById('eventModalActions');
 
 async function initGame() {
     const saved = await storage.loadGame(GAME_ID);
@@ -245,8 +245,43 @@ async function handleNextDay() {
 function showEventModal(event) {
     if (!eventModal) return;
 
-    eventModalTitle.textContent = event.title || 'Событие';
-    eventModalText.textContent = event.text || '';
+    eventModalTitle.textContent = event?.title || 'Событие';
+    eventModalText.textContent = event?.text || '';
+    eventModalActions.innerHTML = '';
+
+    if (!event) {
+        eventModal.classList.add('hidden');
+        eventModal.setAttribute('aria-hidden', 'true');
+        return;
+    }
+
+    const actionType = event.actionType || (event.amount > 0 ? 'gain' : 'info');
+    const cashAvailable = (gameData?.portfolio?.cash || 0) >= Math.abs(event.amount || 0);
+
+    if (actionType === 'cost') {
+        const spendBtn = document.createElement('button');
+        spendBtn.className = 'btn btn-secondary';
+        spendBtn.type = 'button';
+        spendBtn.textContent = cashAvailable ? `Потратить наличные (${Math.round(Math.abs(event.amount || 0))} ₽)` : `Потратить наличные (нет)`;
+        spendBtn.disabled = !cashAvailable;
+        spendBtn.dataset.eventChoice = 'cash';
+        eventModalActions.appendChild(spendBtn);
+
+        const bankBtn = document.createElement('button');
+        bankBtn.className = 'btn btn-primary';
+        bankBtn.type = 'button';
+        bankBtn.textContent = `Взять из банка (${Math.round(Math.abs(event.amount || 0))} ₽)`;
+        bankBtn.dataset.eventChoice = 'bank';
+        eventModalActions.appendChild(bankBtn);
+    } else {
+        const actionBtn = document.createElement('button');
+        actionBtn.className = 'btn btn-primary';
+        actionBtn.type = 'button';
+        actionBtn.textContent = event.buttonText || 'Продолжить';
+        actionBtn.dataset.eventChoice = actionType === 'gain' ? 'receive' : 'close';
+        eventModalActions.appendChild(actionBtn);
+    }
+
     eventModal.classList.remove('hidden');
     eventModal.setAttribute('aria-hidden', 'false');
 }
@@ -256,14 +291,22 @@ function hideEventModal() {
 
     eventModal.classList.add('hidden');
     eventModal.setAttribute('aria-hidden', 'true');
+    eventModalActions.innerHTML = '';
 }
 
-async function handleCloseEventModal() {
-    if (gameData) {
-        gameData.pendingEvent = null;
-        await storage.saveGame(GAME_ID, gameData);
+async function handleEventChoice(choice) {
+    if (!gameData?.pendingEvent) {
+        hideEventModal();
+        return;
     }
-    hideEventModal();
+
+    try {
+        gameData = gameEngine.applyEventDecision(gameData, gameData.pendingEvent, choice);
+        await storage.saveGame(GAME_ID, gameData);
+        renderUI();
+    } catch (error) {
+        alert(`Ошибка: ${error.message}`);
+    }
 }
 
 function showFinalResult() {
@@ -378,14 +421,10 @@ function handleCardAction(event) {
 nextDayBtn.addEventListener('click', handleNextDay);
 resetBtn.addEventListener('click', handleReset);
 marketCardsEl.addEventListener('click', handleCardAction);
-eventModalContinueBtn?.addEventListener('click', () => {
-    void handleCloseEventModal();
-});
-
-eventModal?.addEventListener('click', (event) => {
-    if (event.target === eventModal) {
-        void handleCloseEventModal();
-    }
+eventModalActions?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-event-choice]');
+    if (!button) return;
+    void handleEventChoice(button.getAttribute('data-event-choice'));
 });
 
 initGame();

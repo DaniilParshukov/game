@@ -103,9 +103,6 @@ export class GameEngine {
         // 4. Проверяем ежемесячные выплаты и события
         const monthlyEvents = { ...(gameData.monthlyEvents || {}) };
         const event = this.checkLifeEvents(newDay, { ...gameData, monthlyEvents });
-        if (event && event.amount) {
-            portfolio.cash += event.amount;
-        }
         
         // 5. Сохраняем новое состояние
         const newGameData = {
@@ -330,9 +327,10 @@ export class GameEngine {
             return {
                 type: 'bonus',
                 title: 'Ежемесячная выплата',
-                text: 'На ваш счёт зачислено 10000 ₽.',
+                text: 'Вы получили ежемесячную выплату.',
                 amount: 10000,
-                buttonText: 'Продолжить'
+                actionType: 'gain',
+                buttonText: 'Получить 10000 ₽'
             };
         }
 
@@ -340,29 +338,75 @@ export class GameEngine {
             const templates = [
                 {
                     title: 'Случайное событие',
-                    text: 'К вам пришёл неожиданный поворот в финансовой жизни. Проверьте состояние счёта.'
+                    text: 'Случайно пришлось оплатить ремонтные расходы.'
                 },
                 {
                     title: 'Внезапная возможность',
-                    text: 'На рынке появился шанс, который стоит учитывать при следующем выборе.'
+                    text: 'Вы нашли способ получить дополнительный доход.'
                 },
                 {
                     title: 'Нестандартная ситуация',
-                    text: 'Ситуация требует быстрого решения и внимательного взгляда на портфель.'
+                    text: 'Нужно быстро решить, откуда взять деньги на срочные нужды.'
                 }
             ];
 
             const template = templates[(monthIndex + dayOfMonth) % templates.length];
+            const costAmount = 2500 + ((monthIndex + dayOfMonth) % 3) * 500;
+            const isGain = (monthIndex + dayOfMonth) % 2 === 0;
+
             return {
                 type: 'event',
                 title: template.title,
-                text: template.text,
-                amount: 0,
-                buttonText: 'Продолжить'
+                text: isGain
+                    ? `${template.text} Вам начислят ${costAmount} ₽.`
+                    : `${template.text} Потребуется ${costAmount} ₽.`,
+                amount: costAmount,
+                actionType: isGain ? 'gain' : 'cost',
+                buttonText: isGain ? `Получить ${costAmount} ₽` : 'Выбрать способ'
             };
         }
 
         return null;
+    }
+
+    applyEventDecision(gameData, event, choice) {
+        if (!event) {
+            gameData.pendingEvent = null;
+            return gameData;
+        }
+
+        const actionType = event.actionType || (event.amount > 0 ? 'gain' : 'info');
+        const amount = Math.abs(event.amount || 0);
+
+        if (actionType === 'gain') {
+            if (choice !== 'receive') {
+                throw new Error('Нужно подтвердить получение денег');
+            }
+            gameData.portfolio.cash += amount;
+        } else if (actionType === 'cost') {
+            if (choice === 'cash') {
+                if (gameData.portfolio.cash < amount) {
+                    throw new Error(`Недостаточно наличных. Нужно: ${amount} ₽`);
+                }
+                gameData.portfolio.cash -= amount;
+            } else if (choice === 'bank') {
+                const bankAccount = this.getBankAccount(gameData.portfolio);
+                bankAccount.balance -= amount;
+                this.setBankAccount(gameData.portfolio, bankAccount);
+            } else {
+                throw new Error('Необходимо выбрать вариант');
+            }
+        }
+
+        gameData.history.push({
+            type: 'EVENT_DECISION',
+            eventType: event.type,
+            choice,
+            amount,
+            day: gameData.currentDay
+        });
+        gameData.pendingEvent = null;
+        return gameData;
     }
 
     /**
