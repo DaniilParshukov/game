@@ -544,6 +544,7 @@ async function handleReset() {
         await storage.saveGame(GAME_ID, gameData);
         renderUI();
         clearAutoAdvanceTimer();
+        pauseAutoAdvanceTimer();
     }
 }
 
@@ -573,6 +574,7 @@ function handleCardAction(event) {
 nextDayBtn.addEventListener('click', () => {
     clearAutoAdvanceTimer();
     void handleNextDay();
+    pauseAutoAdvanceTimer();
 });
 pauseTimerBtn?.addEventListener('click', () => {
     if (autoAdvancePaused) {
