@@ -118,9 +118,9 @@ export class GameEngine {
 
     getDepositConfig(productKey) {
         const configs = {
-            bank: { label: 'Банковский счёт', rate: 0.06, term: 0, description: 'Счёт с мгновенным доступом к средствам' },
-            ofz: { label: 'ОФЗ', rate: 0.08, term: 90, description: 'Облигации федерального займа' },
-            bonds: { label: 'Корпоративные облигации', rate: 0.10, term: 180, description: 'Доходность 10% годовых' }
+            BANK: { label: 'Банковский счёт', rate: 0.06, term: 0, description: 'Счёт с мгновенным доступом к средствам' },
+            OFZ: { label: 'ОФЗ', rate: 0.08, term: 90, description: 'Облигации федерального займа' },
+            BONDS: { label: 'Корпоративные облигации', rate: 0.10, term: 180, description: 'Доходность 10% годовых' }
         };
         return configs[productKey] || null;
     }
@@ -133,7 +133,7 @@ export class GameEngine {
         if (!amount || amount <= 0) {
             throw new Error('Введите сумму вклада');
         }
-        if (productKey === 'bank') {
+        if (productKey === 'BANK') {
             if (gameData.portfolio.cash < amount) {
                 throw new Error(`Недостаточно средств. Нужно: ${amount}, есть: ${gameData.portfolio.cash}`);
             }
@@ -174,7 +174,7 @@ export class GameEngine {
     }
 
     withdrawDeposit(gameData, productKey, index, amount = null) {
-        if (productKey === 'bank') {
+        if (productKey === 'BANK') {
             const bankAccount = this.getBankAccount(gameData.portfolio);
             const transferAmount = amount ?? bankAccount.balance;
             if (transferAmount <= 0) {
@@ -389,7 +389,7 @@ export class GameEngine {
                     throw new Error(`Недостаточно наличных. Нужно: ${amount} ₽`);
                 }
                 gameData.portfolio.cash -= amount;
-            } else if (choice === 'bank') {
+            } else if (choice === 'BANK') {
                 const bankAccount = this.getBankAccount(gameData.portfolio);
                 bankAccount.balance -= amount;
                 this.setBankAccount(gameData.portfolio, bankAccount);

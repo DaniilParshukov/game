@@ -214,9 +214,9 @@ function getWeightedAverageProfitInfo(gameData, ticker) {
 
 function renderMarketCards() {
     const depositProducts = [
-        { key: 'bank', label: 'Банковский счёт', rate: '6%', term: '30 дней' },
-        { key: 'ofz', label: 'ОФЗ', rate: '8%', term: '90 дней' },
-        { key: 'bonds', label: 'Корп. обл.', rate: '10%', term: '180 дней' }
+        { key: 'BANK', label: 'Банковский счёт', rate: '6%', term: '30 дней' },
+        { key: 'OFZ', label: 'ОФЗ', rate: '8%', term: '90 дней' },
+        { key: 'BONDS', label: 'Корп. обл.', rate: '10%', term: '180 дней' }
     ];
     const tickers = ['SBER', 'GAZP', 'YNDX', 'USD', 'GOLD'];
     
@@ -268,16 +268,16 @@ function renderMarketCards() {
     const depositCards = depositProducts.map((product) => {
         const positions = Array.isArray(gameData.portfolio.deposits?.[product.key]) ? gameData.portfolio.deposits[product.key] : [];
 
-        if (product.key === 'bank') {
+        if (product.key === 'BANK') {
             return `
                 <article class="instrument-card deposit-card">
                     <div class="instrument-head">
                         <div>
                             <div class="instrument-name">${product.label}</div>
-                            <div class="instrument-ticker">${product.key.toUpperCase()}</div>
+                            <div class="instrument-ticker">${product.key}</div>
                         </div>
                         <span class="instrument-pill">${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? product.rate : 'кредит ' + 2 * parseFloat(product.rate) + '%'}</span>
-                        <button class="btn btn-muted action-btn" data-action="info" data-ticker="${ticker}">?</button>
+                        <button class="btn btn-muted action-btn" data-action="info" data-ticker="BANK">?</button>
                     </div>
                     <div class="instrument-price-row">
                         <div class="price-value ${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'up' : 'down'}">${Math.round((gameData.portfolio.bankAccount?.balance || 0))} ₽</div>
@@ -312,12 +312,12 @@ function renderMarketCards() {
                 <div class="instrument-head">
                     <div>
                         <div class="instrument-name">${product.label}</div>
-                        <div class="instrument-ticker">${product.key.toUpperCase()}</div>
+                        <div class="instrument-ticker">${product.key}</div>
                     </div>
                     <span class="instrument-pill-spacer"></span>
                     <span class="instrument-pill">${product.term}</span>
                     <span class="instrument-pill">${product.rate}</span>
-                    <button class="btn btn-muted action-btn" data-action="info" data-ticker="${ticker}">?</button>
+                    <button class="btn btn-muted action-btn" data-action="info" data-ticker="${product.key}">?</button>
                 </div>
                 <div class="deposit-list">${lines}</div>
                 <div class="card-controls">
@@ -418,7 +418,7 @@ function showEventModal(event) {
         bankBtn.className = 'btn btn-primary';
         bankBtn.type = 'button';
         bankBtn.textContent = `Взять из банка (${Math.round(Math.abs(event.amount || 0))} ₽)`;
-        bankBtn.dataset.eventChoice = 'bank';
+        bankBtn.dataset.eventChoice = 'BANK';
         eventModalActions.appendChild(bankBtn);
     } else {
         const actionBtn = document.createElement('button');
