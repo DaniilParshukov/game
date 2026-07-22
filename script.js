@@ -244,7 +244,7 @@ function renderMarketCards() {
                     <span class="instrument-pill-spacer"></span>
                     <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Нет'}</span>
                     <span class="instrument-pill">${profitText}</span>
-                    <button class="btn btn-muted action-btn" data-action="?" data-ticker="${ticker}">${'?'}</span>
+                    <button class="btn btn-muted action-btn" data-action="info" data-ticker="${ticker}">?</button>
                 </div>
                 <div class="instrument-price-row">
                     <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
@@ -277,7 +277,7 @@ function renderMarketCards() {
                             <div class="instrument-ticker">${product.key.toUpperCase()}</div>
                         </div>
                         <span class="instrument-pill">${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? product.rate : 'кредит ' + 2 * parseFloat(product.rate) + '%'}</span>
-                        <button class="btn btn-muted action-btn" data-action="?" data-ticker="${ticker}">${'?'}</span>
+                        <button class="btn btn-muted action-btn" data-action="info" data-ticker="${ticker}">?</button>
                     </div>
                     <div class="instrument-price-row">
                         <div class="price-value ${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'up' : 'down'}">${Math.round((gameData.portfolio.bankAccount?.balance || 0))} ₽</div>
@@ -317,7 +317,7 @@ function renderMarketCards() {
                     <span class="instrument-pill-spacer"></span>
                     <span class="instrument-pill">${product.term}</span>
                     <span class="instrument-pill">${product.rate}</span>
-                    <button class="btn btn-muted action-btn" data-action="?" data-ticker="${ticker}">${'?'}</span>
+                    <button class="btn btn-muted action-btn" data-action="info" data-ticker="${ticker}">?</button>
                 </div>
                 <div class="deposit-list">${lines}</div>
                 <div class="card-controls">
@@ -540,6 +540,7 @@ async function handleReset() {
         gameData = createNewGame();
         await storage.saveGame(GAME_ID, gameData);
         pauseAutoAdvanceTimer();
+        autoAdvanceRemainingMs = 3000;
         renderUI();
     }
 }
