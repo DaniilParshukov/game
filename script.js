@@ -93,7 +93,7 @@ function startAutoAdvanceTimer() {
 
     if (pauseTimerBtn) {
         pauseTimerBtn.disabled = false;
-        pauseTimerBtn.textContent = 'Пауза';
+        pauseTimerBtn.textContent = '⏸';
     }
 
     if (!gameData || gameData.currentDay >= 365) {
@@ -122,7 +122,7 @@ function pauseAutoAdvanceTimer() {
     updateDayTimerUi();
 
     if (pauseTimerBtn) {
-        pauseTimerBtn.textContent = 'Продолжить';
+        pauseTimerBtn.textContent = '▶';
     }
 }
 
@@ -134,7 +134,7 @@ function resumeAutoAdvanceTimer() {
     updateDayTimerUi();
 
     if (pauseTimerBtn) {
-        pauseTimerBtn.textContent = 'Пауза';
+        pauseTimerBtn.textContent = '⏸';
     }
 
     autoAdvanceTimer = setInterval(() => {
@@ -424,7 +424,7 @@ function showEventModal(event) {
         const actionBtn = document.createElement('button');
         actionBtn.className = 'btn btn-primary';
         actionBtn.type = 'button';
-        actionBtn.textContent = event.buttonText || 'Продолжить';
+        actionBtn.textContent = event.buttonText || '▶';
         actionBtn.dataset.eventChoice = actionType === 'gain' ? 'receive' : 'close';
         eventModalActions.appendChild(actionBtn);
     }
