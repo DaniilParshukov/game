@@ -11,7 +11,8 @@ const GAME_ID = 'my_game';
 let autoAdvanceTimer = null;
 let autoAdvanceRemainingMs = 3000;
 let autoAdvanceDeadline = null;
-let autoAdvancePaused = false;
+let autoAdvancePaused = true;
+let PausedBeforeEvent = true;
 
 const balanceEl = document.getElementById('balance');
 const totalStateEl = document.getElementById('totalState');
@@ -27,7 +28,9 @@ const eventModalText = document.getElementById('eventModalText');
 const eventModalActions = document.getElementById('eventModalActions');
 
 async function initGame() {
-    const saved = await storage.loadGame(GAME_ID);
+    //const saved = await storage.loadGame(GAME_ID);
+    // todo:
+    const saved = null
 
     if (saved) {
         gameData = saved;
@@ -39,7 +42,7 @@ async function initGame() {
     }
 
     renderUI();
-    startAutoAdvanceTimer();
+    //startAutoAdvanceTimer();
 }
 
 function createNewGame() {
@@ -83,18 +86,6 @@ function clearAutoAdvanceTimer() {
 function startAutoAdvanceTimer() {
     clearAutoAdvanceTimer();
 
-    if (!gameData || gameData.currentDay >= 365) {
-        autoAdvanceRemainingMs = 3000;
-        autoAdvanceDeadline = null;
-        autoAdvancePaused = false;
-        updateDayTimerUi();
-        if (pauseTimerBtn) {
-            pauseTimerBtn.disabled = true;
-            pauseTimerBtn.textContent = 'Пауза';
-        }
-        return;
-    }
-
     autoAdvanceRemainingMs = 3000;
     autoAdvanceDeadline = Date.now() + autoAdvanceRemainingMs;
     autoAdvancePaused = false;
@@ -105,6 +96,10 @@ function startAutoAdvanceTimer() {
         pauseTimerBtn.textContent = 'Пауза';
     }
 
+    if (!gameData || gameData.currentDay >= 365) {
+        return;
+    }
+
     autoAdvanceTimer = setInterval(() => {
         if (!gameData || autoAdvancePaused) return;
 
@@ -112,7 +107,6 @@ function startAutoAdvanceTimer() {
         updateDayTimerUi();
 
         if (autoAdvanceRemainingMs <= 0) {
-            clearAutoAdvanceTimer();
             void handleNextDay();
             startAutoAdvanceTimer();
         }
@@ -122,9 +116,9 @@ function startAutoAdvanceTimer() {
 function pauseAutoAdvanceTimer() {
     if (!gameData || gameData.currentDay >= 365 || autoAdvancePaused) return;
 
+    clearAutoAdvanceTimer();
     autoAdvancePaused = true;
     autoAdvanceRemainingMs = Math.max(0, autoAdvanceDeadline - Date.now());
-    clearAutoAdvanceTimer();
     updateDayTimerUi();
 
     if (pauseTimerBtn) {
@@ -150,7 +144,6 @@ function resumeAutoAdvanceTimer() {
         updateDayTimerUi();
 
         if (autoAdvanceRemainingMs <= 0) {
-            clearAutoAdvanceTimer();
             void handleNextDay();
             startAutoAdvanceTimer();
         }
@@ -170,11 +163,11 @@ function renderUI() {
     renderMarketCards();
 
     if (gameData.pendingEvent) {
+        PausedBeforeEvent = autoAdvancePaused
         pauseAutoAdvanceTimer();
         showEventModal(gameData.pendingEvent);
     } else {
         hideEventModal();
-        resumeAutoAdvanceTimer();
     }
 }
 
@@ -440,6 +433,7 @@ function showEventModal(event) {
 function hideEventModal() {
     if (!eventModal) return;
 
+
     eventModal.classList.add('hidden');
     eventModal.setAttribute('aria-hidden', 'true');
     eventModalActions.innerHTML = '';
@@ -543,7 +537,6 @@ async function handleReset() {
         gameData = createNewGame();
         await storage.saveGame(GAME_ID, gameData);
         renderUI();
-        clearAutoAdvanceTimer();
         pauseAutoAdvanceTimer();
     }
 }
@@ -572,9 +565,7 @@ function handleCardAction(event) {
 }
 
 nextDayBtn.addEventListener('click', () => {
-    clearAutoAdvanceTimer();
     void handleNextDay();
-    pauseAutoAdvanceTimer();
 });
 pauseTimerBtn?.addEventListener('click', () => {
     if (autoAdvancePaused) {
@@ -589,6 +580,9 @@ eventModalActions?.addEventListener('click', (event) => {
     const button = event.target.closest('[data-event-choice]');
     if (!button) return;
     void handleEventChoice(button.getAttribute('data-event-choice'));
+    if (!PausedBeforeEvent) {
+        resumeAutoAdvanceTimer();
+    }
 });
 
 initGame();
