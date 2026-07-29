@@ -163,8 +163,6 @@ function renderUI() {
     renderMarketCards();
 
     if (gameData.pendingEvent) {
-        PausedBeforeEvent = autoAdvancePaused
-        pauseAutoAdvanceTimer();
         showEventModal(gameData.pendingEvent);
     } else {
         hideEventModal();
@@ -402,10 +400,16 @@ function showEventModal(event) {
         return;
     }
 
+    PausedBeforeEvent = autoAdvancePaused
+    pauseAutoAdvanceTimer();
+
     const actionType = event.actionType || (event.amount > 0 ? 'gain' : 'info');
     const cashAvailable = (gameData?.portfolio?.cash || 0) >= Math.abs(event.amount || 0);
 
-    if (actionType === 'cost') {
+    if (actionType === 'info') {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'btn btn-primary';
+    } else if (actionType === 'cost') {
         const spendBtn = document.createElement('button');
         spendBtn.className = 'btn btn-secondary';
         spendBtn.type = 'button';
@@ -424,7 +428,7 @@ function showEventModal(event) {
         const actionBtn = document.createElement('button');
         actionBtn.className = 'btn btn-primary';
         actionBtn.type = 'button';
-        actionBtn.textContent = event.buttonText || '▶️';
+        actionBtn.textContent = event.buttonText || 'Продолжить';
         actionBtn.dataset.eventChoice = actionType === 'gain' ? 'receive' : 'close';
         eventModalActions.appendChild(actionBtn);
     }
@@ -548,6 +552,13 @@ async function handleReset() {
 function handleCardAction(event) {
     const button = event.target.closest('[data-action]');
     if (!button) return;
+
+    if (action === 'info') {
+        const ticker = button.getAttribute('data-ticker');
+        const infoText = gameEngine.getInstrumentInfo(ticker);
+        alert(infoText);
+        return;
+    }
 
     const action = button.getAttribute('data-action');
     const ticker = button.getAttribute('data-ticker');

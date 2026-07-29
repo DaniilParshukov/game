@@ -1,4 +1,4 @@
-export class LocalPrices {
+export class RandomPrices {
     constructor() {
         // Генерируем фейковые цены для демонстрации
         this.prices = this.generatePrices();
