@@ -553,18 +553,16 @@ function handleCardAction(event) {
     const button = event.target.closest('[data-action]');
     if (!button) return;
 
-    if (action === 'info') {
-        const ticker = button.getAttribute('data-ticker');
-        const infoText = gameEngine.getInstrumentInfo(ticker);
-        alert(infoText);
-        return;
-    }
-
     const action = button.getAttribute('data-action');
     const ticker = button.getAttribute('data-ticker');
     const index = button.getAttribute('data-index');
 
-    if (action === 'deposit' || action === 'withdraw') {
+    if (action === 'info') {
+        const ticker = button.getAttribute('data-ticker');
+        const infoText = gameEngine.getInstrumentInfo(ticker);
+        showEventModal({ title: `Информация о ${ticker}`, text: infoText, actionType: 'info', buttonText: 'Закрыть' });
+        return;
+    } else if (action === 'deposit' || action === 'withdraw') {
         void handleDepositAction(action, ticker, index);
         return;
     }
