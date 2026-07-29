@@ -559,8 +559,8 @@ function handleCardAction(event) {
 
     if (action === 'info') {
         const ticker = button.getAttribute('data-ticker');
-        const infoText = gameEngine.getInstrumentInfo(ticker);
-        showEventModal({ title: `Информация о ${ticker}`, text: infoText, actionType: 'info', buttonText: 'Закрыть' });
+        const info = gameEngine.getInstrumentInfo(ticker);
+        showEventModal({ title: info.label, text: info.description, actionType: 'info', buttonText: 'Закрыть' });
         return;
     } else if (action === 'deposit' || action === 'withdraw') {
         void handleDepositAction(action, ticker, index);
