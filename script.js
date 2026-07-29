@@ -26,6 +26,10 @@ const eventModal = document.getElementById('eventModal');
 const eventModalTitle = document.getElementById('eventModalTitle');
 const eventModalText = document.getElementById('eventModalText');
 const eventModalActions = document.getElementById('eventModalActions');
+const helpModal = document.getElementById('helpModal');
+const helpModalTitle = document.getElementById('helpModalTitle');
+const helpModalText = document.getElementById('helpModalText');
+const helpModalBtn = document.getElementById('helpModalBtn');
 
 async function initGame() {
     //const saved = await storage.loadGame(GAME_ID);
@@ -387,6 +391,19 @@ async function handleNextDay() {
     }
 }
 
+function showInfoModal(title, text) {
+    if (!helpModal) return;
+
+    helpModalTitle.textContent = title || 'Информация';
+    helpModalText.textContent = text || '';
+
+    PausedBeforeEvent = autoAdvancePaused
+    pauseAutoAdvanceTimer();
+
+    helpModal.classList.remove('hidden');
+    helpModal.setAttribute('aria-hidden', 'false');
+}
+
 function showEventModal(event) {
     if (!eventModal) return;
 
@@ -400,16 +417,10 @@ function showEventModal(event) {
         return;
     }
 
-    PausedBeforeEvent = autoAdvancePaused
-    pauseAutoAdvanceTimer();
-
     const actionType = event.actionType || (event.amount > 0 ? 'gain' : 'info');
     const cashAvailable = (gameData?.portfolio?.cash || 0) >= Math.abs(event.amount || 0);
 
-    if (actionType === 'info') {
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'btn btn-primary';
-    } else if (actionType === 'cost') {
+    if (actionType === 'cost') {
         const spendBtn = document.createElement('button');
         spendBtn.className = 'btn btn-secondary';
         spendBtn.type = 'button';
@@ -433,6 +444,8 @@ function showEventModal(event) {
         eventModalActions.appendChild(actionBtn);
     }
 
+    PausedBeforeEvent = autoAdvancePaused
+    pauseAutoAdvanceTimer();
     eventModal.classList.remove('hidden');
     eventModal.setAttribute('aria-hidden', 'false');
 }
@@ -560,7 +573,7 @@ function handleCardAction(event) {
     if (action === 'info') {
         const ticker = button.getAttribute('data-ticker');
         const info = gameEngine.getInstrumentInfo(ticker);
-        showEventModal({ title: info.label, text: info.description, actionType: 'info', buttonText: 'Закрыть' });
+        showInfoModal(info.label, info.description);
         return;
     } else if (action === 'deposit' || action === 'withdraw') {
         void handleDepositAction(action, ticker, index);
@@ -593,6 +606,15 @@ eventModalActions?.addEventListener('click', (event) => {
     const button = event.target.closest('[data-event-choice]');
     if (!button) return;
     void handleEventChoice(button.getAttribute('data-event-choice'));
+    if (!PausedBeforeEvent) {
+        resumeAutoAdvanceTimer();
+    }
+});
+helpModalBtn.addEventListener('click', (event) => {
+    helpModal.classList.add('hidden');
+    helpModal.setAttribute('aria-hidden', 'true');
+    helpModalTitle.textContent = '';
+    helpModalText.textContent = '';
     if (!PausedBeforeEvent) {
         resumeAutoAdvanceTimer();
     }

@@ -460,6 +460,208 @@
             font-size: 1.3rem;
         }
 
+        /* Модальное окно справки на весь экран */
+        .help-modal {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            background: rgba(1, 6, 15, 0.92);
+            backdrop-filter: blur(12px);
+            z-index: 9999;
+        }
+
+        .help-modal.hidden {
+            display: none;
+        }
+
+        /* Карточка справки на весь экран */
+        .help-modal-card {
+            width: 100vw;
+            height: 100vh;
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 0;
+            padding: 40px 32px 32px;
+            border: none;
+            background: linear-gradient(160deg, rgba(17, 30, 54, 0.99), rgba(6, 12, 24, 0.98));
+            box-shadow: none;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* Заголовок справки */
+        .help-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 24px;
+            flex-shrink: 0;
+        }
+
+        .help-modal-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .help-modal-header h2 .help-icon {
+            width: 44px;
+            height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(45, 212, 191, 0.18);
+            color: var(--accent-2, #2dd4bf);
+            font-size: 1.4rem;
+        }
+
+        .help-modal-close {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #9aa4b8;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .help-modal-close:hover {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        /* Основное содержимое справки - занимает почти весь экран */
+        .help-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .help-modal-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .help-modal-body::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.04);
+            border-radius: 4px;
+        }
+
+        .help-modal-body::-webkit-scrollbar-thumb {
+            background: rgba(45, 212, 191, 0.3);
+            border-radius: 4px;
+        }
+
+        /* Секции справки */
+        .help-section {
+            margin-bottom: 28px;
+        }
+
+        .help-section h3 {
+            font-size: 1.15rem;
+            font-weight: 500;
+            color: #e8edf5;
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .help-section h3 .section-icon {
+            font-size: 1.2rem;
+        }
+
+        .help-section p {
+            margin: 0 0 6px 0;
+            color: var(--muted, #8b95a9);
+            line-height: 1.7;
+            font-size: 0.98rem;
+        }
+
+        .help-section ul {
+            margin: 8px 0 0 0;
+            padding-left: 24px;
+            color: var(--muted, #8b95a9);
+            line-height: 1.8;
+        }
+
+        .help-section ul li {
+            margin-bottom: 4px;
+        }
+
+        .help-section .help-tip {
+            background: rgba(45, 212, 191, 0.07);
+            border-left: 3px solid var(--accent-2, #2dd4bf);
+            padding: 14px 18px;
+            border-radius: 0 10px 10px 0;
+            margin-top: 10px;
+        }
+
+        .help-section .help-tip p {
+            margin: 0;
+            color: #c8d0dd;
+        }
+
+        /* Кнопки внизу справки */
+        .help-modal-footer {
+            padding-top: 24px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            margin-top: 8px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .help-modal-footer .btn {
+            min-width: 140px;
+            padding: 12px 28px;
+        }
+
+        .help-modal-footer .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Адаптив для маленьких экранов */
+        @media (max-width: 640px) {
+            .help-modal-card {
+                padding: 24px 18px 20px;
+            }
+
+            .help-modal-header h2 {
+                font-size: 1.4rem;
+            }
+
+            .help-modal-header h2 .help-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1.1rem;
+            }
+
+            .help-modal-footer .btn {
+                min-width: 100%;
+            }
+        }
+
         @media (max-width: 900px) {
             .asset-grid {
                 grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
@@ -503,6 +705,24 @@
             <h3 id="eventModalTitle">Событие</h3>
             <p id="eventModalText">Текст события</p>
             <div class="event-modal-actions" id="eventModalActions"></div>
+        </div>
+    </div>
+
+    <div id="helpModal" class="help-modal hidden">
+        <div class="help-modal-card">
+            <div class="help-modal-header">
+                <h2>
+                    <span class="help-icon">❓</span>
+                    <p id="helpModalTitle">Справка</p>
+                </h2>
+                <button class="help-modal-close" onclick="closeHelp()">✕</button>
+            </div>
+            <div class="help-modal-body">
+                <p id="helpModalText">Текст справки</p>
+            </div>
+            <div class="help-modal-footer">
+                <button class="btn btn-primary" id="helpModalBtn">Понятно</button>
+            </div>
         </div>
     </div>
 
