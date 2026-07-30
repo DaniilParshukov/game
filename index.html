@@ -44,7 +44,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 16px;
-            padding: 16px 20px;
+            padding: 8px 10px;
             border: 1px solid var(--border);
             border-radius: 20px;
             background: var(--panel);
@@ -181,7 +181,7 @@
         .instrument-card {
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px;
-            padding: clamp(12px, 1.2vw, 16px);
+            padding: clamp(8px, 1vw, 12px);
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -189,7 +189,7 @@
             transition: transform 0.2s ease, border-color 0.2s ease;
             min-height: 0;
             transform: scale(1);
-            font-size: clamp(0.9rem, 0.95vw, 1rem);
+            font-size: clamp(0.85rem, 0.9vw, 0.9rem);
         }
 
         .instrument-card:hover {
@@ -269,21 +269,20 @@
 
         .candle-wrap {
             margin-top: 2px;
-            border-radius: 12px;
-            padding: 6px;
-            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            padding: 4px;
+            background: rgba(255,255,255,0.03);
             cursor: pointer;
-            transition: background 0.2s ease;
+            transition: background 0.12s ease;
+            height: 36px;
+            overflow: hidden;
         }
 
-        .candle-wrap:hover {
-            background: rgba(255,255,255,0.08);
-        }
+        .candle-wrap svg { height: 36px !important; }
 
         .card-controls {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 6px;
             align-items: center;
             margin-top: auto;
             justify-content: space-between;
@@ -679,27 +678,6 @@
             background: rgba(45, 212, 191, 0.18);
             color: var(--accent-2, #2dd4bf);
             font-size: 1.4rem;
-        }
-
-        .help-modal-close {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #9aa4b8;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .help-modal-close:hover {
-            background: rgba(255,255,255,0.12);
-            color: #fff;
-            transform: rotate(90deg);
         }
 
         /* Основное содержимое справки - занимает почти весь экран */
