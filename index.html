@@ -26,12 +26,12 @@
             font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
             color: var(--text);
             background: radial-gradient(circle at top left, #14345d 0%, #14345d 50%, var(--bg) 65%, #050b14 100%);
-            padding: 24px;
+            padding: 0;
             overflow-x: hidden;
         }
 
         .app-shell {
-            max-width: 1280px;
+            max-width: 100%;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
@@ -44,9 +44,9 @@
             justify-content: space-between;
             align-items: center;
             gap: 16px;
-            padding: 20px 24px;
+            padding: 16px 20px;
             border: 1px solid var(--border);
-            border-radius: 24px;
+            border-radius: 20px;
             background: var(--panel);
             box-shadow: var(--shadow);
             backdrop-filter: blur(18px);
@@ -108,11 +108,11 @@
 
         .asset-section {
             border: 1px solid var(--border);
-            border-radius: 24px;
+            border-radius: 20px;
             background: var(--panel);
             box-shadow: var(--shadow);
             backdrop-filter: blur(18px);
-            padding: 24px;
+            padding: 16px;
             flex: 1 1 auto;
             min-height: 0;
         }
@@ -171,7 +171,7 @@
 
         .asset-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
             gap: 14px;
             align-content: start;
             height: 100%;
@@ -392,6 +392,160 @@
         .deposit-line-actions {
             display: flex;
             justify-content: flex-end;
+        }
+
+        /* Групповая карточка акций */
+        .asset-group-card {
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(45,212,191,0.06));
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            grid-column: 1 / -1; /* занимает всю ширину */
+            width: 100%;
+        }
+
+        .asset-group-card:hover {
+            border-color: rgba(59,130,246,0.35);
+        }
+
+        .asset-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .asset-group-header h3 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .asset-group-header .group-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .asset-group-header .btn {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+        }
+
+        /* Сетка акций внутри групповой карточки */
+        .stock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+            gap: 12px;
+        }
+
+        /* Карточка отдельной акции внутри группы */
+        .stock-item {
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.03);
+            transition: background 0.2s ease;
+        }
+
+        .stock-item:hover {
+            background: rgba(255,255,255,0.06);
+        }
+
+        .stock-item .instrument-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+
+        .stock-item .instrument-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .stock-item .instrument-ticker {
+            font-size: 0.72rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .stock-item .instrument-pill {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.07);
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .stock-item .instrument-price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .stock-item .price-value {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .stock-item .price-change {
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .stock-item .price-value.up { color: #2dd4bf; }
+        .stock-item .price-value.down { color: #ff4d6d; }
+        .stock-item .price-change.up { color: #2dd4bf; }
+        .stock-item .price-change.down { color: #ff4d6d; }
+
+        .stock-item .candle-wrap {
+            margin: 4px 0 8px;
+            border-radius: 10px;
+            padding: 4px;
+            background: rgba(255,255,255,0.03);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .stock-item .candle-wrap:hover {
+            background: rgba(255,255,255,0.06);
+        }
+
+        .stock-item .card-controls {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stock-item .card-amount {
+            width: clamp(60px, 5vw, 80px);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            padding: 6px 8px;
+            outline: none;
+            font-size: 0.85rem;
+        }
+
+        .stock-item .action-btn {
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
         }
 
         .event-modal {
@@ -641,8 +795,49 @@
             transform: none;
         }
 
-        /* Адаптив для маленьких экранов */
+        @media (max-width: 900px) {
+            .asset-grid {
+                grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+            }
+        }
+
         @media (max-width: 640px) {
+            .app-shell {
+                padding: 8px;
+                gap: 10px;
+            }
+
+            .topbar {
+                padding: 12px;
+                gap: 8px;
+                border-radius: 16px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .topbar .btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .asset-section {
+                padding: 12px;
+                border-radius: 16px;
+            }
+
+            .asset-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .instrument-card {
+                padding: 12px;
+                border-radius: 14px;
+            }
+
+            .cash-value {
+                font-size: 1.2rem;
+            }
             .help-modal-card {
                 padding: 24px 18px 20px;
             }
@@ -660,19 +855,42 @@
             .help-modal-footer .btn {
                 min-width: 100%;
             }
-        }
 
-        @media (max-width: 900px) {
+            .asset-group-card {
+                padding: 12px;
+                border-radius: 16px;
+            }
+
+            .stock-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .stock-item {
+                padding: 10px 12px;
+            }
+
+            .asset-group-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .asset-group-header .group-actions {
+                justify-content: flex-end;
+            }
+        }
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .app-shell {
+                padding: 12px 20px;
+            }
+
             .asset-grid {
                 grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
             }
-        }
 
-        @media (max-width: 640px) {
-            body { padding: 16px; }
-            .topbar { flex-direction: column; align-items: flex-start; }
-            .asset-grid {
-                grid-template-columns: 1fr;
+            .stock-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
