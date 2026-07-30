@@ -333,19 +333,11 @@ function renderMarketCards() {
 
     const groupCard = `
         <div class="asset-group-card">
-            <div class="asset-group-header">
-                <h3>
-                    <span>📈 Акции</span>
-                    <span style="font-size:0.8rem;font-weight:400;color:var(--muted);">
-                        ${tickers.length} инструментов
-                    </span>
-                </h3>
+            <div class="stock-grid">
+                ${stockItems}
                 <div class="group-actions">
                     <button class="btn btn-muted action-btn" data-action="info" data-ticker="STOCKS_GROUP">❓</button>
                 </div>
-            </div>
-            <div class="stock-grid">
-                ${stockItems}
             </div>
         </div>
     `;
