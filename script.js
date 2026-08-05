@@ -77,7 +77,9 @@ function updateDayTimerUi() {
     }
 
     const progress = 100 - (autoAdvanceRemainingMs / 3000) * 100;
-    dayEl.style.setProperty('--fill', `${Math.max(0, Math.min(100, progress))}%`);
+    const clampedProgress = Math.max(0, Math.min(100, progress));
+    
+    dayEl.style.setProperty('--fill', `${clampedProgress}%`);
 }
 
 function clearAutoAdvanceTimer() {
@@ -220,7 +222,8 @@ function renderMarketCards() {
         { key: 'OFZ', label: 'ОФЗ', rate: '8%', term: '90 дней' },
         { key: 'BONDS', label: 'Корп. обл.', rate: '10%', term: '180 дней' }
     ];
-    const tickers = ['SBER', 'GAZP', 'YNDX', 'USD', 'GOLD'];
+    const tickers = ['USD', 'GOLD'];
+    const stocks = ['SBER', 'GAZP', 'YNDX', 'VTBR'];
 
     // Рендерим депозиты
     const depositCards = depositProducts.map((product) => {
@@ -288,7 +291,7 @@ function renderMarketCards() {
     }).join('');
 
     // Рендерим все акции в одну групповую карточку
-    const stockItems = tickers.map((ticker) => {
+    const stockItems = stocks.map((ticker) => {
         const price = prices.getPrice(ticker, gameData.currentDay);
         const history = prices.getHistory(ticker);
         const prevPrice = history[Math.max(0, Math.min(history.length - 1, gameData.currentDay - 2))] ?? price;
@@ -342,7 +345,52 @@ function renderMarketCards() {
         </div>
     `;
 
-    marketCardsEl.innerHTML = `${depositCards}${groupCard}`;
+    const otherTickers = tickers.map((ticker) => {
+        const price = prices.getPrice(ticker, gameData.currentDay);
+        const history = prices.getHistory(ticker);
+        const prevPrice = history[Math.max(0, Math.min(history.length - 1, gameData.currentDay - 2))] ?? price;
+        const change = price - prevPrice;
+        const changePct = prevPrice ? (change / prevPrice) * 100 : 0;
+        const quantity = gameData.portfolio.assets[ticker] || 0;
+        const label = getTickerLabel(ticker);
+        const directionClass = change >= 0 ? 'up' : 'down';
+        const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} ₽ (${change >= 0 ? '+' : ''}${changePct.toFixed(1)}%)`;
+        const profitInfo = getWeightedAverageProfitInfo(gameData, ticker);
+        const profitText = quantity > 0 ? `${profitInfo.percent >= 0 ? '+' : ''}${profitInfo.percent.toFixed(1)}%` : '0%';
+
+        return `
+            <article class="instrument-card ${ticker}">
+                <div class="instrument-head">
+                    <div>
+                        <div class="instrument-name">${label}</div>
+                        <div class="instrument-ticker">${ticker}</div>
+                    </div>
+                    <span class="instrument-pill-spacer"></span>
+                    <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Нет'}</span>
+                    <span class="instrument-pill">${profitText}</span>
+                    <button class="btn btn-muted action-btn" data-action="info" data-ticker="${ticker}">?</button>
+                </div>
+                <div class="instrument-price-row">
+                    <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
+                    <div class="price-change ${directionClass}">${changeText}</div>
+                </div>
+                <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">${buildPriceChart(history, gameData.currentDay, directionClass)}</div>
+                <div class="card-controls">
+                    <select class="card-amount" data-ticker="${ticker}">
+                        <option value="1">1</option>
+                        <option value="10">10</option>
+                        <option value="100">100</option>
+                        <option value="all" selected>All</option>
+                    </select>
+                    <button class="btn btn-secondary action-btn" data-action="buy" data-ticker="${ticker}">Купить</button>
+                    <button class="btn btn-muted action-btn" data-action="sell" data-ticker="${ticker}">Продать</button>
+                </div>
+            </article>
+        `;
+    }).join('');
+
+
+    marketCardsEl.innerHTML = `${depositCards}${groupCard}${otherTickers}`;
 }
 
 function buildPriceChart(history, day, directionClass) {
@@ -584,20 +632,6 @@ function handleCardAction(event) {
 
     if (action === 'info') {
         const ticker = button.getAttribute('data-ticker');
-        
-        if (ticker === 'STOCKS_GROUP') {
-            showInfoModal(
-                'Акции и валюты',
-                'Здесь представлены акции российских компаний и валютные пары.\n\n' +
-                '• Сбербанк (SBER) — крупнейший банк России\n' +
-                '• Газпром (GAZP) — энергетическая компания\n' +
-                '• Яндекс (YNDX) — IT-компания\n' +
-                '• Доллар (USD) — курс доллара к рублю\n' +
-                '• Золото (GOLD) — цена на золото\n\n' +
-                'Цены меняются каждый день. Покупайте дёшево, продавайте дорого!'
-            );
-            return;
-        }
         
         const info = gameEngine.getInstrumentInfo(ticker);
         showInfoModal(info.label, info.description);
