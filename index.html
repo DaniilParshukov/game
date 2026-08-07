@@ -179,6 +179,8 @@
         }
 
         .instrument-card {
+            width: 25vw;
+            height: 25vh;
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px;
             padding: clamp(8px, 1vw, 12px);
@@ -231,11 +233,17 @@
             flex: 1;
         }
 
+        .price-chart-row {
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            align-items: center;
+        }
+
         .instrument-price-row {
             display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 10px;
+            flex-direction: column;
+            flex: 1;
         }
 
         .price-value {
@@ -274,11 +282,11 @@
             background: rgba(255,255,255,0.03);
             cursor: pointer;
             transition: background 0.12s ease;
-            height: 36px;
+            height: 25px;
             overflow: hidden;
         }
 
-        .candle-wrap svg { height: 36px !important; }
+        .candle-wrap svg { height: 25px !important; }
 
         .card-controls {
             display: flex;
@@ -503,11 +511,6 @@
             font-size: 0.78rem;
             font-weight: 600;
         }
-
-        .stock-item .price-value.up { color: #2dd4bf; }
-        .stock-item .price-value.down { color: #ff4d6d; }
-        .stock-item .price-change.up { color: #2dd4bf; }
-        .stock-item .price-change.down { color: #ff4d6d; }
 
         .stock-item .candle-wrap {
             margin: 4px 0 8px;

@@ -5,7 +5,7 @@ export class LocalPrices {
     }
 
     generatePrices() {
-        const tickers = ['SBER', 'GAZP', 'YNDX', 'VTBR', 'USD', 'GOLD'];
+        const tickers = ['OFZ', 'GOLD', 'BONDS', 'VDO', 'SBER', 'GAZP', 'YNDX', 'VTBR', 'USD', 'GOLD', 'PIF1', 'PIF2'];
         const prices = {};
         
         for (const ticker of tickers) {

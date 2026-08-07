@@ -217,80 +217,30 @@ function getWeightedAverageProfitInfo(gameData, ticker) {
 }
 
 function renderMarketCards() {
-    const depositProducts = [
-        { key: 'BANK', label: 'Банковский счёт', rate: '6%', term: '30 дней' },
-        { key: 'OFZ', label: 'ОФЗ', rate: '8%', term: '90 дней' },
-        { key: 'BONDS', label: 'Корп. обл.', rate: '10%', term: '180 дней' }
-    ];
-    const tickers = ['USD', 'GOLD'];
+    const tickers1 = ['OFZ', 'GOLD', 'BONDS', 'VDO'];
     const stocks = ['SBER', 'GAZP', 'YNDX', 'VTBR'];
+    const tickers2 = ['USD', 'GOLD', 'PIF'];
 
-    // Рендерим депозиты
-    const depositCards = depositProducts.map((product) => {
-        const positions = Array.isArray(gameData.portfolio.deposits?.[product.key]) ? gameData.portfolio.deposits[product.key] : [];
-
-        if (product.key === 'BANK') {
-            return `
-                <article class="instrument-card deposit-card">
-                    <div class="instrument-head">
-                        <div>
-                            <div class="instrument-name">${product.label}</div>
-                            <div class="instrument-ticker">${product.key}</div>
-                        </div>
-                        <span class="instrument-pill-spacer"></span>
-                        <span class="instrument-pill">${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? product.rate : 'кредит ' + 2 * parseFloat(product.rate) + '%'}</span>
-                        <button class="btn btn-muted action-btn" data-action="info" data-ticker="BANK">?</button>
-                    </div>
-                    <div class="instrument-price-row">
-                        <div class="price-value ${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'up' : 'down'}">${Math.round((gameData.portfolio.bankAccount?.balance || 0))} ₽</div>
-                        <div class="price-change ${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'up' : 'down'}">${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'Счёт' : 'Кредит'}</div>
-                    </div>
-                    <div class="card-controls">
-                        <input class="card-amount" type="number" min="100" step="100" value="1000" data-deposit="${product.key}" />
-                        <button class="btn btn-secondary action-btn" data-action="deposit" data-ticker="${product.key}">Вложить</button>
-                        <button class="btn btn-muted action-btn" data-action="withdraw" data-ticker="${product.key}">Снять</button>
-                    </div>
-                </article>
-            `;
-        }
-
-        const lines = positions.length
-            ? positions.map((deposit, index) => {
-                const termDays = deposit.termDays ?? 0;
-                const canWithdraw = termDays === 0;
-                return `
-                    <div class="deposit-line">
-                        <div class="deposit-line-top">
-                            <span>${(deposit.amount || 0).toFixed(0)} ₽</span>
-                            <button class="btn btn-secondary action-btn" data-action="withdraw" data-ticker="${product.key}" data-index="${index}">${canWithdraw ? 'Забрать' : `${termDays}д`}</button>
-                        </div>
-                    </div>
-                `;
-            }).join('')
-            : '<div class="deposit-empty">Нет активных вкладов</div>';
-
-        return `
+    const bankCard =  `
             <article class="instrument-card deposit-card">
                 <div class="instrument-head">
-                    <div>
-                        <div class="instrument-name">${product.label}</div>
-                        <div class="instrument-ticker">${product.key}</div>
-                    </div>
+                    <div class="instrument-name">${'Банковский счёт'}</div>
                     <span class="instrument-pill-spacer"></span>
-                    <span class="instrument-pill">${product.term}</span>
-                    <span class="instrument-pill">${product.rate}</span>
-                    <button class="btn btn-muted action-btn" data-action="info" data-ticker="${product.key}">?</button>
+                    <span class="instrument-pill">${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? '6' : 'кредит ' + 12 + '%'}</span>
+                    <button class="btn btn-muted action-btn" data-action="info" data-ticker="BANK">?</button>
                 </div>
-                <div class="deposit-list">${lines}</div>
+                <div class="instrument-price-row">
+                    <div class="price-value ${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'up' : 'down'}">${Math.round((gameData.portfolio.bankAccount?.balance || 0))} ₽</div>
+                    <div class="price-change ${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'up' : 'down'}">${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'Счёт' : 'Кредит'}</div>
+                </div>
                 <div class="card-controls">
-                    <input class="card-amount" type="number" min="100" step="100" value="1000" data-deposit="${product.key}" />
-                    <button class="btn btn-secondary action-btn" data-action="deposit" data-ticker="${product.key}">Вложить</button>
+                    <input class="card-amount" type="number" min="100" step="100" value="1000" data-deposit="${BANK}" />
+                    <button class="btn btn-secondary action-btn" data-action="deposit" data-ticker="${BANK}">Вложить</button>
+                    <button class="btn btn-muted action-btn" data-action="withdraw" data-ticker="${BANK}">Снять</button>
                 </div>
             </article>
         `;
-    }).join('');
 
-    // Рендерим все акции в одну групповую карточку
     const stockItems = stocks.map((ticker) => {
         const price = prices.getPrice(ticker, gameData.currentDay);
         const history = prices.getHistory(ticker);
@@ -305,21 +255,20 @@ function renderMarketCards() {
         const profitText = quantity > 0 ? `${profitInfo.percent >= 0 ? '+' : ''}${profitInfo.percent.toFixed(1)}%` : '0%';
 
         return `
-            <div class="stock-item" data-ticker="${ticker}">
+            <div class="instrument-card ${ticker}">
                 <div class="instrument-head">
-                    <div>
-                        <div class="instrument-name">${label}</div>
-                        <div class="instrument-ticker">${ticker}</div>
-                    </div>
+                    <div class="instrument-name">${label}</div>
                     <span class="instrument-pill-spacer"></span>
                     <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Нет'}</span>
                     <span class="instrument-pill">${profitText}</span>
                 </div>
-                <div class="instrument-price-row">
-                    <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
-                    <div class="price-change ${directionClass}">${changeText}</div>
+                <div class="price-chart-row">
+                    <div class="instrument-price-row">
+                        <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
+                        <div class="price-change ${directionClass}">${changeText}</div>
+                    </div>
+                    <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">${buildPriceChart(history, gameData.currentDay, directionClass)}</div>
                 </div>
-                <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">${buildPriceChart(history, gameData.currentDay, directionClass)}</div>
                 <div class="card-controls">
                     <select class="card-amount" data-ticker="${ticker}">
                         <option value="1">1</option>
@@ -361,20 +310,21 @@ function renderMarketCards() {
         return `
             <article class="instrument-card ${ticker}">
                 <div class="instrument-head">
-                    <div>
-                        <div class="instrument-name">${label}</div>
-                        <div class="instrument-ticker">${ticker}</div>
-                    </div>
+                    <div class="instrument-name">${label}</div>
                     <span class="instrument-pill-spacer"></span>
                     <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Нет'}</span>
                     <span class="instrument-pill">${profitText}</span>
                     <button class="btn btn-muted action-btn" data-action="info" data-ticker="${ticker}">?</button>
                 </div>
-                <div class="instrument-price-row">
-                    <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
-                    <div class="price-change ${directionClass}">${changeText}</div>
+                <div class="price-chart-row">
+                    <div class="instrument-price-row">
+                        <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
+                        <div class="price-change ${directionClass}">${changeText}</div>
+                    </div>
+                    <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">
+                        ${buildPriceChart(history, gameData.currentDay, directionClass)}
+                    </div>
                 </div>
-                <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">${buildPriceChart(history, gameData.currentDay, directionClass)}</div>
                 <div class="card-controls">
                     <select class="card-amount" data-ticker="${ticker}">
                         <option value="1">1</option>
@@ -550,9 +500,9 @@ async function handleDepositAction(action, ticker, index) {
 
     try {
         if (action === 'deposit') {
-            gameData = gameEngine.openDeposit(gameData, ticker, amount);
+            gameData = gameEngine.openDeposit(gameData, amount);
         } else if (action === 'withdraw') {
-            gameData = gameEngine.withdrawDeposit(gameData, ticker, Number(index), amount);
+            gameData = gameEngine.withdrawDeposit(gameData, Number(index), amount);
         }
 
         await storage.saveGame(GAME_ID, gameData);
@@ -641,7 +591,7 @@ function handleCardAction(event) {
         return;
     }
 
-    const card = button.closest('.stock-item') || button.closest('.instrument-card');
+    const card = button.closest('.instrument-card');
     const select = card?.querySelector('.card-amount');
     const mode = select?.value || '1';
     const amount = mode === 'all' ? null : parseInt(mode, 10);
