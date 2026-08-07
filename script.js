@@ -234,9 +234,9 @@ function renderMarketCards() {
                     <div class="price-change ${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'up' : 'down'}">${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'Счёт' : 'Кредит'}</div>
                 </div>
                 <div class="card-controls">
-                    <input class="card-amount" type="number" min="100" step="100" value="1000" data-deposit="${BANK}" />
-                    <button class="btn btn-secondary action-btn" data-action="deposit" data-ticker="${BANK}">Вложить</button>
-                    <button class="btn btn-muted action-btn" data-action="withdraw" data-ticker="${BANK}">Снять</button>
+                    <input class="card-amount" type="number" min="100" step="100" value="1000" data-deposit="${'BANK'}" />
+                    <button class="btn btn-secondary action-btn" data-action="deposit" data-ticker="${'BANK'}">Вложить</button>
+                    <button class="btn btn-muted action-btn" data-action="withdraw" data-ticker="${'BANK'}">Снять</button>
                 </div>
             </article>
         `;
