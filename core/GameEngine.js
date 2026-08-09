@@ -178,7 +178,7 @@ getInstrumentInfo(ticker) {
         portfolio = this.revaluateAssets(portfolio, newDay);
         
         const monthlyEvents = { ...(gameData.monthlyEvents || {}) };
-        checkSalary(newDay, gameData)
+        this.checkSalary(newDay, gameData)
         const event = this.checkLifeEvents(newDay, { ...gameData, monthlyEvents });
         
         const newGameData = {
