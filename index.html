@@ -17,6 +17,12 @@
             --accent-2: #2dd4bf;
             --danger: #ff4d6d;
             --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+            --space-xs: clamp(4px, 0.6vw, 8px);
+            --space-sm: clamp(6px, 0.8vw, 10px);
+            --space-md: clamp(10px, 1.2vw, 16px);
+            --space-lg: clamp(12px, 1.6vw, 20px);
+            --card-width: clamp(180px, 17vw, 260px);
+            --card-height: clamp(150px, 18vh, 220px);
         }
 
         * { box-sizing: border-box; }
@@ -35,16 +41,17 @@
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: clamp(10px, 1.6vw, 20px);
             min-height: calc(100vh - 48px);
+            padding: clamp(8px, 1vw, 16px);
         }
 
         .topbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 16px;
-            padding: 8px 10px;
+            gap: clamp(8px, 1vw, 16px);
+            padding: clamp(8px, 1vw, 12px) clamp(10px, 1.4vw, 14px);
             border: 1px solid var(--border);
             border-radius: 20px;
             background: var(--panel);
@@ -56,13 +63,6 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
-        }
-
-        .label {
-            font-size: 0.76rem;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            color: var(--muted);
         }
 
         .cash-value {
@@ -112,28 +112,9 @@
             background: var(--panel);
             box-shadow: var(--shadow);
             backdrop-filter: blur(18px);
-            padding: 16px;
+            padding: clamp(10px, 1.2vw, 16px);
             flex: 1 1 auto;
             min-height: 0;
-        }
-
-        .asset-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-            gap: 12px;
-        }
-
-        .asset-header h2 {
-            margin: 0 0 4px;
-            font-size: 1.15rem;
-        }
-
-        .asset-header p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 0.95rem;
         }
 
         .day-pill {
@@ -171,27 +152,27 @@
 
         .asset-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-            gap: 14px;
+            grid-template-columns: repeat(auto-fit, minmax(var(--card-width), 1fr));
+            gap: clamp(8px, 1vw, 14px);
             align-content: start;
             height: 100%;
             min-height: 0;
         }
 
         .instrument-card {
-            width: 20vw;
-            height: 25vh;
+            width: 100%;
+            min-height: var(--card-height);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: clamp(8px, 1vw, 12px);
+            border-radius: 18px;
+            padding: var(--space-sm);
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: var(--space-sm);
             background: linear-gradient(135deg, rgba(59,130,246,0.16), rgba(45,212,191,0.08));
             transition: transform 0.2s ease, border-color 0.2s ease;
             min-height: 0;
             transform: scale(1);
-            font-size: clamp(0.85rem, 0.9vw, 0.9rem);
+            font-size: clamp(0.8rem, 0.88vw, 0.9rem);
         }
 
         .instrument-card:hover {
@@ -262,19 +243,6 @@
         .price-change.up { color: #2dd4bf; }
         .price-change.down { color: #ff4d6d; }
 
-        .metric-label {
-            font-size: 0.72rem;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--muted);
-            margin-bottom: 4px;
-        }
-
-        .metric-value {
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
         .candle-wrap {
             margin-top: 2px;
             border-radius: 8px;
@@ -312,39 +280,6 @@
             padding: clamp(7px, 0.8vw, 8px) clamp(10px, 1vw, 12px);
             border-radius: 999px;
             font-size: clamp(0.8rem, 0.85vw, 0.9rem);
-        }
-
-        .insights {
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 20px;
-        }
-
-        .insight-card {
-            padding: 20px 22px;
-        }
-
-        .insight-title {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-
-        .portfolio-wrap,
-        .log-wrap {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .folio-row,
-        .log-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
 
         .empty-state {
