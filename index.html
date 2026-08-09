@@ -21,14 +21,17 @@
             --space-sm: clamp(6px, 0.8vw, 10px);
             --space-md: clamp(10px, 1.2vw, 16px);
             --space-lg: clamp(12px, 1.6vw, 20px);
-            --card-width: clamp(180px, 17vw, 260px);
-            --card-height: clamp(150px, 18vh, 220px);
+            --viewport-height: 100dvh;
+            --header-height: clamp(54px, 7vh, 74px);
+            --shell-offset: 18px;
+            --card-height: clamp(120px, 13vh, 170px);
         }
 
         * { box-sizing: border-box; }
         body {
             margin: 0;
-            min-height: 100vh;
+            min-height: var(--viewport-height);
+            height: var(--viewport-height);
             font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
             color: var(--text);
             background: radial-gradient(circle at top left, #14345d 0%, #14345d 50%, var(--bg) 65%, #050b14 100%);
@@ -41,9 +44,10 @@
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: clamp(10px, 1.6vw, 20px);
-            min-height: calc(100vh - 48px);
-            padding: clamp(8px, 1vw, 16px);
+            gap: clamp(8px, 1.2vw, 14px);
+            min-height: calc(var(--viewport-height) - var(--shell-offset));
+            height: calc(var(--viewport-height) - var(--shell-offset));
+            padding: clamp(6px, 0.9vw, 10px);
         }
 
         .topbar {
@@ -51,7 +55,8 @@
             justify-content: space-between;
             align-items: center;
             gap: clamp(8px, 1vw, 16px);
-            padding: clamp(8px, 1vw, 12px) clamp(10px, 1.4vw, 14px);
+            min-height: var(--header-height);
+            padding: clamp(6px, 0.8vw, 10px) clamp(10px, 1.2vw, 14px);
             border: 1px solid var(--border);
             border-radius: 20px;
             background: var(--panel);
@@ -112,9 +117,10 @@
             background: var(--panel);
             box-shadow: var(--shadow);
             backdrop-filter: blur(18px);
-            padding: clamp(10px, 1.2vw, 16px);
+            padding: clamp(8px, 1vw, 12px);
             flex: 1 1 auto;
             min-height: 0;
+            overflow: hidden;
         }
 
         .day-pill {
@@ -152,8 +158,8 @@
 
         .asset-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(var(--card-width), 1fr));
-            gap: clamp(8px, 1vw, 14px);
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: clamp(6px, 0.8vw, 10px);
             align-content: start;
             height: 100%;
             min-height: 0;
@@ -167,12 +173,12 @@
             padding: var(--space-sm);
             display: flex;
             flex-direction: column;
-            gap: var(--space-sm);
+            gap: clamp(4px, 0.6vw, 8px);
             background: linear-gradient(135deg, rgba(59,130,246,0.16), rgba(45,212,191,0.08));
             transition: transform 0.2s ease, border-color 0.2s ease;
             min-height: 0;
             transform: scale(1);
-            font-size: clamp(0.8rem, 0.88vw, 0.9rem);
+            font-size: clamp(0.76rem, 0.84vw, 0.88rem);
         }
 
         .instrument-card:hover {
@@ -711,9 +717,15 @@
             transform: none;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1100px) {
             .asset-grid {
-                grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .asset-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 
