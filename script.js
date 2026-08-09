@@ -450,7 +450,7 @@ function showInfoModal(title, text) {
     if (!helpModal) return;
 
     helpModalTitle.textContent = title || 'Информация';
-    helpModalText.textContent = text || '';
+    helpModalText.innerHTML = text || '';
 
     PausedBeforeEvent = autoAdvancePaused
     pauseAutoAdvanceTimer();

@@ -585,7 +585,7 @@
             max-width: 100%;
             max-height: 100%;
             border-radius: 0;
-            padding: 40px 32px 32px;
+            padding: 28px 28px 18px;
             border: none;
             background: linear-gradient(160deg, rgba(17, 30, 54, 0.99), rgba(6, 12, 24, 0.98));
             box-shadow: none;
@@ -600,20 +600,20 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding-bottom: 20px;
+            padding-bottom: 12px;
             border-bottom: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 24px;
+            margin-bottom: 12px;
             flex-shrink: 0;
         }
 
         .help-modal-header h2 {
             margin: 0;
-            font-size: 1.8rem;
+            font-size: 1.7rem;
             font-weight: 600;
             color: #fff;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
         }
 
         .help-modal-header h2 .help-icon {
@@ -632,7 +632,32 @@
         .help-modal-body {
             flex: 1;
             overflow-y: auto;
-            padding-right: 8px;
+            padding: 8px 12px 8px 0;
+            font-size: 1rem;
+            line-height: 1.75;
+        }
+
+        .help-modal-body p,
+        .help-modal-body li,
+        .help-modal-body em,
+        .help-modal-body i,
+        .help-modal-body strong {
+            color: var(--muted, #8b95a9);
+        }
+
+        .help-modal-body p {
+            margin: 0 0 12px;
+        }
+
+        .help-modal-body i,
+        .help-modal-body em {
+            color: #dfe9ff;
+            font-style: italic;
+        }
+
+        .help-modal-body ul {
+            margin: 0 0 12px 20px;
+            padding-left: 8px;
         }
 
         .help-modal-body::-webkit-scrollbar {
