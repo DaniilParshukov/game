@@ -219,7 +219,7 @@ function getWeightedAverageProfitInfo(gameData, ticker) {
 function renderMarketCards() {
     const tickers1 = ['OFZ', 'GOLD', 'BONDS', 'VDO'];
     const stocks = ['SBER', 'GAZP', 'YNDX', 'VTBR'];
-    const tickers2 = ['USD', 'GOLD', 'PIF'];
+    const tickers2 = ['USD', 'PIF1', 'PIF1', 'GOLD'];
 
     const bankCard =  `
             <article class="instrument-card deposit-card">
@@ -240,6 +240,51 @@ function renderMarketCards() {
                 </div>
             </article>
         `;
+
+    const bondsCards = tickers1.map((ticker) => {
+        const price = prices.getPrice(ticker, gameData.currentDay);
+        const history = prices.getHistory(ticker);
+        const prevPrice = history[Math.max(0, Math.min(history.length - 1, gameData.currentDay - 2))] ?? price;
+        const change = price - prevPrice;
+        const changePct = prevPrice ? (change / prevPrice) * 100 : 0;
+        const quantity = gameData.portfolio.assets[ticker] || 0;
+        const label = getTickerLabel(ticker);
+        const directionClass = change >= 0 ? 'up' : 'down';
+        const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} ₽ (${change >= 0 ? '+' : ''}${changePct.toFixed(1)}%)`;
+        const profitInfo = getWeightedAverageProfitInfo(gameData, ticker);
+        const profitText = quantity > 0 ? `${profitInfo.percent >= 0 ? '+' : ''}${profitInfo.percent.toFixed(1)}%` : '0%';
+
+        return `
+            <article class="instrument-card ${ticker}">
+                <div class="instrument-head">
+                    <div class="instrument-name">${label}</div>
+                    <span class="instrument-pill-spacer"></span>
+                    <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Нет'}</span>
+                    <span class="instrument-pill">${profitText}</span>
+                    <button class="btn btn-muted action-btn" data-action="info" data-ticker="${ticker}">?</button>
+                </div>
+                <div class="price-chart-row">
+                    <div class="instrument-price-row">
+                        <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
+                        <div class="price-change ${directionClass}">${changeText}</div>
+                    </div>
+                    <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">
+                        ${buildPriceChart(history, gameData.currentDay, directionClass)}
+                    </div>
+                </div>
+                <div class="card-controls">
+                    <select class="card-amount" data-ticker="${ticker}">
+                        <option value="1">1</option>
+                        <option value="10">10</option>
+                        <option value="100">100</option>
+                        <option value="all" selected>All</option>
+                    </select>
+                    <button class="btn btn-secondary action-btn" data-action="buy" data-ticker="${ticker}">Купить</button>
+                    <button class="btn btn-muted action-btn" data-action="sell" data-ticker="${ticker}">Продать</button>
+                </div>
+            </article>
+        `;
+    }).join('');
 
     const stockItems = stocks.map((ticker) => {
         const price = prices.getPrice(ticker, gameData.currentDay);
@@ -294,7 +339,7 @@ function renderMarketCards() {
         </div>
     `;
 
-    const otherTickers = tickers.map((ticker) => {
+    const otherTickers = tickers2.map((ticker) => {
         const price = prices.getPrice(ticker, gameData.currentDay);
         const history = prices.getHistory(ticker);
         const prevPrice = history[Math.max(0, Math.min(history.length - 1, gameData.currentDay - 2))] ?? price;
@@ -340,7 +385,7 @@ function renderMarketCards() {
     }).join('');
 
 
-    marketCardsEl.innerHTML = `${depositCards}${groupCard}${otherTickers}`;
+    marketCardsEl.innerHTML = `${bankCard}${bondsCards}${groupCard}${otherTickers}`;
 }
 
 function buildPriceChart(history, day, directionClass) {
