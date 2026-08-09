@@ -217,7 +217,7 @@ function getWeightedAverageProfitInfo(gameData, ticker) {
 }
 
 function renderMarketCards() {
-    const tickers1 = ['OFZ', 'GOLD', 'BONDS', 'VDO'];
+    const tickers1 = ['OFZ', 'BONDS', 'VDO'];
     const stocks = ['SBER', 'GAZP', 'YNDX', 'VTBR'];
     const tickers2 = ['USD', 'PIF1', 'PIF1', 'GOLD'];
 
