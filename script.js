@@ -264,12 +264,12 @@ function renderMarketCards() {
                     <button class="btn btn-muted action-btn" data-action="info" data-ticker="${ticker}">?</button>
                 </div>
                 <div class="price-chart-row">
+                    <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">
+                        ${buildPriceChart(history, gameData.currentDay, directionClass)}
+                    </div>
                     <div class="instrument-price-row">
                         <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
                         <div class="price-change ${directionClass}">${changeText}</div>
-                    </div>
-                    <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">
-                        ${buildPriceChart(history, gameData.currentDay, directionClass)}
                     </div>
                 </div>
                 <div class="card-controls">
