@@ -41,12 +41,81 @@ async function initGame() {
         console.log('Загружена сохранённая игра');
     } else {
         gameData = createNewGame();
+        // Попытаться загрузить и применить выбор тикеров из CSV
+        try {
+            const csvMap = await loadTickersCsv();
+            const years = Object.keys(csvMap);
+            if (years.length) {
+                const randomYear = years[Math.floor(Math.random() * years.length)];
+                const rows = csvMap[randomYear] || [];
+                // Собрать массив тикеров (в порядке появления) и применить правила выбора
+                const codes = rows.map(r => (r.Ticker || '').trim()).filter(Boolean);
+
+                const pick = (i) => (codes[i] ? codes[i] : null);
+                const pickRandomRange = (from, to, count) => {
+                    const pool = codes.slice(from, to + 1).filter(Boolean);
+                    const out = [];
+                    while (out.length < Math.min(count, pool.length)) {
+                        const c = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+                        out.push(c);
+                    }
+                    return out;
+                };
+
+                const first = pick(0);
+                const secondOrThird = pick(Math.random() < 0.5 ? 1 : 2);
+                const fourthOrFifth = pick(Math.random() < 0.5 ? 3 : 4);
+                const fourFrom6to13 = pickRandomRange(5, 12, 4);
+                const bankTicker = pick(13) || 'BANK_DEPOSIT_RATE_RUB';
+                const goldTicker = pick(14) || 'GLDRUB_TOM';
+                const usdTicker = pick(15) || 'USD_RUB';
+                const fund1 = pick(16) || null;
+                const fund2 = pick(17) || null;
+
+                gameData.selectedTickers = {
+                    year: randomYear,
+                    bonds: [first, secondOrThird, fourthOrFifth].filter(Boolean),
+                    stocks: fourFrom6to13,
+                    others: [usdTicker, fund1, fund2, goldTicker].filter(Boolean),
+                    bankTicker
+                };
+                console.log(gameData.selectedTickers);
+            }
+        } catch (err) {
+            console.warn('Не удалось загрузить tickers.csv', err);
+        }
+
         await storage.saveGame(GAME_ID, gameData);
         console.log('Создана новая игра');
     }
 
+    
+
     renderUI();
     //startAutoAdvanceTimer();
+}
+
+// Загрузить и распарсить prices/tickers.csv (группировка по году)
+async function loadTickersCsv() {
+    const url = 'prices/tickers.csv';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Не удалось загрузить tickers.csv');
+    const text = await res.text();
+    const lines = text.split(/\r?\n/).map(l => l.trim());
+    const map = {};
+    for (const line of lines) {
+        if (!line) continue;
+        // CSV: Год,Название,Тикер,Дефолт,Надежность,Примечание
+        const parts = line.split(',');
+        if (parts.length < 3) continue;
+        const year = parts[0].trim();
+        const name = parts[1].trim();
+        const ticker = parts[2].trim();
+        if (!/^\d{4}$/.test(year)) continue;
+        if (!map[year]) map[year] = [];
+        map[year].push({ Year: year, Name: name, Ticker: ticker });
+    }
+    return map;
 }
 
 function createNewGame() {
@@ -217,9 +286,9 @@ function getWeightedAverageProfitInfo(gameData, ticker) {
 }
 
 function renderMarketCards() {
-    const tickers1 = ['OFZ', 'BONDS', 'VDO'];
-    const stocks = ['SBER', 'GAZP', 'YNDX', 'VTBR'];
-    const tickers2 = ['USD', 'PIF1', 'PIF1', 'GOLD'];
+    const tickers1 = (gameData?.selectedTickers?.bonds && gameData.selectedTickers.bonds.length) ? gameData.selectedTickers.bonds : ['OFZ', 'BONDS', 'VDO'];
+    const stocks = (gameData?.selectedTickers?.stocks && gameData.selectedTickers.stocks.length) ? gameData.selectedTickers.stocks : ['SBER', 'GAZP', 'YNDX', 'VTBR'];
+    const tickers2 = (gameData?.selectedTickers?.others && gameData.selectedTickers.others.length) ? gameData.selectedTickers.others : ['USD', 'PIF1', 'PIF1', 'GOLD'];
 
     const bankCard =  `
             <article class="instrument-card deposit-card">

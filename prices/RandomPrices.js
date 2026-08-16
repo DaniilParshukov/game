@@ -5,7 +5,7 @@ export class RandomPrices {
     }
 
     generatePrices() {
-        const tickers = ['SBER', 'GAZP', 'YNDX', 'USD', 'GOLD'];
+        const tickers = ['OFZ', 'GOLD', 'BONDS', 'VDO', 'SBER', 'GAZP', 'YNDX', 'VTBR', 'USD', 'GOLD', 'PIF1', 'PIF2'];
         const prices = {};
         
         for (const ticker of tickers) {
@@ -34,14 +34,10 @@ export class RandomPrices {
     }
 
     getCurrentPrice(ticker) {
-        // В реальной игре брали бы последнюю цену из массива
         const lastIndex = this.prices[ticker].length - 1;
         return this.prices[ticker][lastIndex];
     }
 
-    /**
-     * Получить историю цен для графика
-     */
     getHistory(ticker) {
         return this.prices[ticker] || [];
     }
