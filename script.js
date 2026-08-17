@@ -31,6 +31,15 @@ const helpModalTitle = document.getElementById('helpModalTitle');
 const helpModalText = document.getElementById('helpModalText');
 const helpModalBtn = document.getElementById('helpModalBtn');
 
+function shuffleArray(items) {
+    const copy = [...items];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+}
+
 async function initGame() {
     //const saved = await storage.loadGame(GAME_ID);
     // todo:
@@ -41,45 +50,50 @@ async function initGame() {
         console.log('Загружена сохранённая игра');
     } else {
         gameData = createNewGame();
-        // Попытаться загрузить и применить выбор тикеров из CSV
         try {
             const csvMap = await loadTickersCsv();
             const years = Object.keys(csvMap);
             if (years.length) {
                 const randomYear = years[Math.floor(Math.random() * years.length)];
                 const rows = csvMap[randomYear] || [];
-                // Собрать массив тикеров (в порядке появления) и применить правила выбора
-                const codes = rows.map(r => (r.Ticker || '').trim()).filter(Boolean);
+                const trailingSpecialRows = rows.slice(-4);
+                const stockPool = rows.slice(5, rows.length - 4);
 
-                const pick = (i) => (codes[i] ? codes[i] : null);
-                const pickRandomRange = (from, to, count) => {
-                    const pool = codes.slice(from, to + 1).filter(Boolean);
-                    const out = [];
-                    while (out.length < Math.min(count, pool.length)) {
-                        const c = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-                        out.push(c);
-                    }
-                    return out;
-                };
+                const bankTicker = trailingSpecialRows.find(row => /BANK/i.test(row.Ticker) || /BANK/i.test(row.Name))?.Ticker
+                    || 'BANK_DEPOSIT_RATE_RUB';
+                const usdTicker = trailingSpecialRows.find(row => /USD/i.test(row.Ticker) || /USD/i.test(row.Name))?.Ticker
+                    || 'USD_RUB';
+                const fundTickers = trailingSpecialRows
+                    .filter(row => {
+                        const ticker = row.Ticker || '';
+                        const name = row.Name || '';
+                        return !/BANK|USD|GLDRUB|GOLD/i.test(ticker) && !/BANK|USD|GLDRUB|GOLD/i.test(name)
+                            && (ticker.length > 8 || /FUND|ФОНД|EQ|JR|RU000/i.test(name) || /FUND|ФОНД|EQ|JR|RU000/i.test(ticker));
+                    })
+                    .map(row => row.Ticker)
+                    .slice(0, 2);
 
-                const first = pick(0);
-                const secondOrThird = pick(Math.random() < 0.5 ? 1 : 2);
-                const fourthOrFifth = pick(Math.random() < 0.5 ? 3 : 4);
-                const fourFrom6to13 = pickRandomRange(5, 12, 4);
-                const bankTicker = pick(13) || 'BANK_DEPOSIT_RATE_RUB';
-                const goldTicker = pick(14) || 'GLDRUB_TOM';
-                const usdTicker = pick(15) || 'USD_RUB';
-                const fund1 = pick(16) || null;
-                const fund2 = pick(17) || null;
+                const stockCandidates = (stockPool.length ? stockPool : rows)
+                    .map(row => row.Ticker)
+                    .filter(Boolean);
+
+                const stockCount = Math.max(4, Math.min(stockCandidates.length, 4 + Math.floor(Math.random() * Math.max(1, stockCandidates.length - 4))));
+                const stocks = shuffleArray(stockCandidates).slice(0, stockCount);
+
+                const bondCandidates = rows.slice(0, 5).map(row => row.Ticker).filter(Boolean);
+                const first = bondCandidates[0] || 'OFZ';
+                const secondOrThird = bondCandidates[Math.random() < 0.5 ? 1 : 2] || 'BONDS';
+                const fourthOrFifth = bondCandidates[Math.random() < 0.5 ? 3 : 4] || 'VDO';
+
+                const goldTicker = trailingSpecialRows.find(row => /GLDRUB|GOLD/i.test(row.Ticker) || /GLDRUB|GOLD/i.test(row.Name))?.Ticker || 'GLDRUB_TOM';
 
                 gameData.selectedTickers = {
                     year: randomYear,
                     bonds: [first, secondOrThird, fourthOrFifth].filter(Boolean),
-                    stocks: fourFrom6to13,
-                    others: [usdTicker, fund1, fund2, goldTicker].filter(Boolean),
+                    stocks,
+                    others: [goldTicker, usdTicker, ...fundTickers].filter(Boolean).slice(0, 4),
                     bankTicker
                 };
-                console.log(gameData.selectedTickers);
             }
         } catch (err) {
             console.warn('Не удалось загрузить tickers.csv', err);
@@ -88,8 +102,6 @@ async function initGame() {
         await storage.saveGame(GAME_ID, gameData);
         console.log('Создана новая игра');
     }
-
-    
 
     renderUI();
     //startAutoAdvanceTimer();
@@ -105,7 +117,6 @@ async function loadTickersCsv() {
     const map = {};
     for (const line of lines) {
         if (!line) continue;
-        // CSV: Год,Название,Тикер,Дефолт,Надежность,Примечание
         const parts = line.split(',');
         if (parts.length < 3) continue;
         const year = parts[0].trim();
@@ -113,7 +124,6 @@ async function loadTickersCsv() {
         const ticker = parts[2].trim();
         if (!/^\d{4}$/.test(year)) continue;
         if (!map[year]) map[year] = [];
-        console.log({ Year: year, Name: name, Ticker: ticker });
         map[year].push({ Year: year, Name: name, Ticker: ticker });
     }
     return map;
