@@ -1,38 +1,85 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const jsonPath = path.join(__dirname, 'data.json');
-
 export class LocalPrices {
-    constructor(yearRange = null) {
+    constructor(yearRange = null, basePath = './data/') {
         this.yearRange = yearRange;
         this.prices = {};
         this.dateValuePairs = {};
-        this.loadPricesFromJSON();
+        this.basePath = basePath;
+        this.isLoaded = false;
+        this.availableRanges = [];
     }
 
-    loadPricesFromJSON() {
+    // Загрузка данных из JSON файла
+    async loadPricesFromJSON() {
         try {
-            const jsonData = fs.readFileSync(jsonPath, 'utf8');
-            const data = JSON.parse(jsonData);
-
-            if (this.yearRange && data[this.yearRange]) {
-                this.processYearRange(data[this.yearRange]);
-            } else {
-                const firstRange = Object.keys(data)[0];
-                if (firstRange) {
-                    this.processYearRange(data[firstRange]);
-                }
+            // Сначала загружаем список доступных годов
+            await this.loadAvailableRanges();
+            
+            if (this.availableRanges.length === 0) {
+                throw new Error('Нет доступных данных');
             }
+
+            // Определяем какой диапазон загружать
+            let rangeToLoad = this.yearRange;
+            if (!rangeToLoad || !this.availableRanges.includes(rangeToLoad)) {
+                rangeToLoad = this.availableRanges[0];
+            }
+
+            // Загружаем данные для выбранного диапазона
+            const response = await fetch(`${this.basePath}${rangeToLoad}.json`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            this.processYearRange(data);
+            this.isLoaded = true;
+            this.yearRange = rangeToLoad;
+            
+            return true;
         } catch (error) {
             console.error('Ошибка загрузки данных из JSON:', error);
+            return false;
+        }
+    }
+
+    // Загрузка списка доступных диапазонов
+    async loadAvailableRanges() {
+        try {
+            const response = await fetch(`${this.basePath}manifest.json`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            this.availableRanges = data.ranges || [];
+            return this.availableRanges;
+        } catch (error) {
+            console.error('Ошибка загрузки списка диапазонов:', error);
+            // Если нет manifest.json, пытаемся загрузить data.json
+            try {
+                const response = await fetch(`${this.basePath}data.json`);
+                if (!response.ok) throw new Error('No data.json found');
+                const data = await response.json();
+                this.availableRanges = Object.keys(data);
+                // Если загрузили data.json, можем его обработать
+                if (this.availableRanges.length > 0) {
+                    this.processYearRange(data[this.availableRanges[0]]);
+                    this.isLoaded = true;
+                    this.yearRange = this.availableRanges[0];
+                }
+                return this.availableRanges;
+            } catch (e) {
+                console.error('Не удалось загрузить данные:', e);
+                return [];
+            }
         }
     }
 
     processYearRange(yearData) {
+        // Очищаем предыдущие данные
+        this.prices = {};
+        this.dateValuePairs = {};
+        
         for (const [ticker, tickerData] of Object.entries(yearData)) {
             if (tickerData.price && Array.isArray(tickerData.price)) {
                 this.prices[ticker] = tickerData.price;
@@ -45,6 +92,10 @@ export class LocalPrices {
     }
 
     getPrice(ticker, day) {
+        if (!this.isLoaded) {
+            throw new Error('Данные еще не загружены. Дождитесь загрузки.');
+        }
+        
         if (!this.prices[ticker]) {
             throw new Error(`Неизвестный тикер: ${ticker}`);
         }
@@ -54,47 +105,34 @@ export class LocalPrices {
     }
 
     getHistory(ticker) {
+        if (!this.isLoaded) {
+            throw new Error('Данные еще не загружены. Дождитесь загрузки.');
+        }
         return this.prices[ticker] || [];
     }
 
     getDateValuePairs(ticker) {
+        if (!this.isLoaded) {
+            throw new Error('Данные еще не загружены. Дождитесь загрузки.');
+        }
         return this.dateValuePairs[ticker] || [];
     }
 
     getAvailableYearRanges() {
-        try {
-            const jsonPath = path.join(__dirname, 'prices_data.json');
-            const jsonData = fs.readFileSync(jsonPath, 'utf8');
-            const data = JSON.parse(jsonData);
-            return Object.keys(data);
-        } catch (error) {
-            console.error('Ошибка получения доступных годов:', error);
-            return [];
-        }
+        return this.availableRanges;
     }
 
     // Метод для смены года
-    setYearRange(yearRange) {
+    async setYearRange(yearRange) {
+        if (!this.availableRanges.includes(yearRange)) {
+            throw new Error(`Диапазон ${yearRange} не найден`);
+        }
+        
         this.yearRange = yearRange;
         this.prices = {};
         this.dateValuePairs = {};
-        this.loadPricesFromJSON();
+        this.isLoaded = false;
+        
+        await this.loadPricesFromJSON();
     }
 }
-
-// Пример использования:
-/*
-// Создаем экземпляр с конкретным годовым диапазоном
-const prices = new LocalPrices('2007-08-01_2008-08-31');
-
-// Получение цен
-console.log(prices.getPrice('BANK_DEPOSIT_RATE_RUB', 5));
-console.log(prices.getHistory('RU000A0DZ3A9'));
-
-// Смена года
-prices.setYearRange('2021-08-01_2022-08-31');
-console.log(prices.getPrice('STOCKS_SBER', 1));
-
-// Получение доступных годов
-console.log(prices.getAvailableYearRanges());
-*/
