@@ -3,7 +3,7 @@ import { LocalStorageAdapter } from './storage/LocalStorageAdapter.js';
 import { LocalPrices } from './prices/LocalPrices.js';
 
 const storage = new LocalStorageAdapter();
-const prices = await LocalPrices.create(null, './data/data.json');
+const prices = null;
 const gameEngine = new GameEngine(storage, prices);
 
 let gameData = null;
@@ -47,6 +47,7 @@ async function initGame() {
 
     if (saved) {
         gameData = saved;
+        prices = await LocalPrices.create(gameData.year);
         console.log('Загружена сохранённая игра');
     } else {
         gameData = createNewGame();
@@ -86,9 +87,11 @@ async function initGame() {
                 const fourthOrFifth = bondCandidates[Math.random() < 0.5 ? 3 : 4] || 'VDO';
 
                 const goldTicker = trailingSpecialRows.find(row => /GLDRUB|GOLD/i.test(row.Ticker) || /GLDRUB|GOLD/i.test(row.Name))?.Ticker || 'GLDRUB_TOM';
-
+                
+                prices = await LocalPrices.create(randomYear);
+                
+                gameData.year = randomYear;
                 gameData.selectedTickers = {
-                    year: randomYear,
                     bonds: [first, secondOrThird, fourthOrFifth].filter(Boolean),
                     stocks,
                     others: [goldTicker, usdTicker, ...fundTickers].filter(Boolean).slice(0, 4),
