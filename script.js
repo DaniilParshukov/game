@@ -3,7 +3,7 @@ import { LocalStorageAdapter } from './storage/LocalStorageAdapter.js';
 import { LocalPrices } from './prices/LocalPrices.js';
 
 const storage = new LocalStorageAdapter();
-const prices = new LocalPrices();
+const prices = await LocalPrices.create(null, './data/data.json');
 const gameEngine = new GameEngine(storage, prices);
 
 let gameData = null;
