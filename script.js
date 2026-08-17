@@ -113,6 +113,7 @@ async function loadTickersCsv() {
         const ticker = parts[2].trim();
         if (!/^\d{4}$/.test(year)) continue;
         if (!map[year]) map[year] = [];
+        console.log({ Year: year, Name: name, Ticker: ticker });
         map[year].push({ Year: year, Name: name, Ticker: ticker });
     }
     return map;
