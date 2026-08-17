@@ -61,9 +61,9 @@ async function initGame() {
                 const stockPool = rows.slice(5, rows.length - 4);
 
                 const bankTicker = trailingSpecialRows.find(row => /BANK/i.test(row.Ticker) || /BANK/i.test(row.Name))?.Ticker
-                    || 'BANK_DEPOSIT_RATE_RUB';
+                    || 'BANK';
                 const usdTicker = trailingSpecialRows.find(row => /USD/i.test(row.Ticker) || /USD/i.test(row.Name))?.Ticker
-                    || 'USD_RUB';
+                    || 'USD';
                 const fundTickers = trailingSpecialRows
                     .filter(row => {
                         const ticker = row.Ticker || '';

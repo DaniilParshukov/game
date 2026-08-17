@@ -1,5 +1,5 @@
 export class LocalPrices {
-    constructor(yearRange = null, dataUrl = './data.json') {
+    constructor(yearRange = null, dataUrl = './prices/data.json') {
         this.yearRange = yearRange;
         this.prices = {};
         this.dateValuePairs = {};
