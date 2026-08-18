@@ -10,8 +10,9 @@ export class LocalPrices {
     }
 
     // Приватный метод инициализации (вызывается только из фабричного метода)
-    async #init(yearRange) {
+    async #init(year) {
         try {
+            yearRange = String(year) + "-08-01_" + String(year + 1) + "-08-31";
             const response = await fetch(this.dataUrl);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
