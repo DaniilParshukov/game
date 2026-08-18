@@ -69,7 +69,7 @@ export class LocalPrices {
         }
         
         if (!this.prices[ticker]) {
-            throw new Error(`Неизвестный тикер: ${ticker}`);
+            throw new Error(`Неизвестный тикер: ${ticker}, доступные тикеры: ${Object.keys(this.prices).join(', ')}`);
         }
         
         const dayIndex = Math.min(day - 1, this.prices[ticker].length - 1);
