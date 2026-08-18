@@ -42,7 +42,7 @@ export class LocalPrices {
     }
 
     // Статический фабричный метод
-    static async create(yearRange = null, dataUrl = './data.json') {
+    static async create(yearRange = null, dataUrl = './prices/data.json') {
         const instance = new LocalPrices(yearRange, dataUrl);
         await instance.#init(yearRange);
         return instance;
