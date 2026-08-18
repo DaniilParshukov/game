@@ -17,22 +17,7 @@ export class LocalPrices {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
-            const text = await response.text();
-            this.allData = JSON.parse(text, (key, value) => {
-                if (typeof value === 'string' && value.toLowerCase() === 'nan') {
-                    return 0;
-                }
-                // Если значение null или undefined, тоже можно заменить на 0
-                if (value === null || value === undefined) {
-                    return 0;
-                }
-                // Если это число и оно NaN (хотя JSON не поддерживает NaN, но на всякий случай)
-                if (typeof value === 'number' && isNaN(value)) {
-                    return 0;
-                }
-                return value;
-            });
-            
+            this.allData = await response.json();
             this.availableRanges = Object.keys(this.allData);
             
             if (this.availableRanges.length === 0) {
