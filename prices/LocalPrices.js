@@ -12,7 +12,7 @@ export class LocalPrices {
     // Приватный метод инициализации (вызывается только из фабричного метода)
     async #init(year) {
         try {
-            let yearRange = String(year) + "-08-01_" + String(year + 1) + "-08-31";
+            let yearRange = year + "-08-01_" + String(parseInt(year) + 1) + "-08-31";
             console.log(`Загрузка данных для диапазона: ${yearRange}`);
             const response = await fetch(this.dataUrl);
             if (!response.ok) {

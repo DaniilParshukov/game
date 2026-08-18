@@ -56,7 +56,6 @@ async function initGame() {
             const years = Object.keys(csvMap);
             if (years.length) {
                 const randomYear = years[Math.floor(Math.random() * years.length)];
-                console.log(`Выбран случайный год: ${randomYear}, ${typeof randomYear}`);
                 const rows = csvMap[randomYear] || [];
                 const trailingSpecialRows = rows.slice(-4);
                 const stockPool = rows.slice(5, rows.length - 4);
@@ -123,10 +122,10 @@ async function loadTickersCsv() {
         if (!line) continue;
         const parts = line.split(',');
         if (parts.length < 3) continue;
-        const year = parseInt(parts[0].trim());
+        const year = parts[0].trim();
         const name = parts[1].trim();
         const ticker = parts[2].trim();
-        if (isNaN(year)) continue;
+        if (!/^\d{4}$/.test(year)) continue;
         if (!map[year]) map[year] = [];
         map[year].push({ Name: name, Ticker: ticker });
     }
