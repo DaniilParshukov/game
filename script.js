@@ -122,10 +122,10 @@ async function loadTickersCsv() {
         if (!line) continue;
         const parts = line.split(',');
         if (parts.length < 3) continue;
-        const year = parts[0].trim();
+        const year = parseInt(parts[0].trim());
         const name = parts[1].trim();
         const ticker = parts[2].trim();
-        if (!/^\d{4}$/.test(year)) continue;
+        if (isNaN(year)) continue;
         if (!map[year]) map[year] = [];
         map[year].push({ Year: year, Name: name, Ticker: ticker });
     }

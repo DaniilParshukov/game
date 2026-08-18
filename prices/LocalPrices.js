@@ -12,7 +12,8 @@ export class LocalPrices {
     // Приватный метод инициализации (вызывается только из фабричного метода)
     async #init(year) {
         try {
-            const yearRange = String(year) + "-08-01_" + String(year + 1) + "-08-31";
+            let yearRange = String(year) + "-08-01_" + String(year + 1) + "-08-31";
+            console.log(`Загрузка данных для диапазона: ${yearRange}`);
             const response = await fetch(this.dataUrl);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -25,13 +26,11 @@ export class LocalPrices {
                 throw new Error('Нет доступных данных');
             }
 
-            let rangeToLoad = yearRange || this.availableRanges[0];
-            if (!this.availableRanges.includes(rangeToLoad)) {
-                rangeToLoad = this.availableRanges[0];
+            if (!this.availableRanges.includes(yearRange)) {
+                throw new Error(`Диапазон ${yearRange} не найден`);
             }
 
-            this.yearRange = rangeToLoad;
-            this.processYearRange(this.allData[rangeToLoad]);
+            this.processYearRange(this.allData[yearRange]);
             this.isLoaded = true;
             
             return this;
