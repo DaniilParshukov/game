@@ -57,8 +57,8 @@ async function initGame() {
             if (years.length) {
                 const randomYear = years[Math.floor(Math.random() * years.length)];
                 const rows = csvMap[randomYear] || [];
-                const trailingSpecialRows = rows.slice(-4);
-                const stockPool = rows.slice(5, rows.length - 4);
+                const trailingSpecialRows = rows.slice(-5);
+                const stockPool = rows.slice(5, rows.length - 5);
 
                 const bankTicker = trailingSpecialRows.find(row => /BANK/i.test(row.Ticker) || /BANK/i.test(row.Name))?.Ticker
                     || 'BANK';
@@ -74,11 +74,11 @@ async function initGame() {
                     .map(row => row.Ticker)
                     .slice(0, 2);
 
-                const stockCandidates = (stockPool.length ? stockPool : rows)
+                const stockCandidates = (stockPool)
                     .map(row => row.Ticker)
                     .filter(Boolean);
 
-                const stockCount = Math.max(4, Math.min(stockCandidates.length, 4 + Math.floor(Math.random() * Math.max(1, stockCandidates.length - 4))));
+                const stockCount = Math.min(4, stockCandidates.length);
                 const stocks = shuffleArray(stockCandidates).slice(0, stockCount);
 
                 const bondCandidates = rows.slice(0, 5).map(row => row.Ticker).filter(Boolean);
@@ -94,7 +94,7 @@ async function initGame() {
                 gameData.selectedTickers = {
                     bonds: [first, secondOrThird, fourthOrFifth].filter(Boolean),
                     stocks,
-                    others: [goldTicker, usdTicker, ...fundTickers].filter(Boolean).slice(0, 4),
+                    others: [sdTicker, ...fundTickers, goldTicker].filter(Boolean).slice(0, 4),
                     bankTicker
                 };
             }
