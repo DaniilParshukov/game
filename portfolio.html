@@ -440,17 +440,17 @@
     <div class="actions-panel">
         <div class="actions-title">Что сделать?</div>
 
-        <div class="action-item">
+        <div class="action-item" data-go="trade.html">
             <div class="title">Купить актив</div>
             <div class="desc">Выбери инструмент и сумму</div>
         </div>
 
-        <div class="action-item">
+        <div class="action-item" data-go="trade.html">
             <div class="title">Продать актив</div>
             <div class="desc">Зафиксируй прибыль или убыток</div>
         </div>
 
-        <div class="action-item">
+        <div class="action-item" data-go="teaching.html">
             <div class="title">Обучение</div>
             <div class="desc">Разберись, как работает инструмент</div>
         </div>
@@ -527,13 +527,13 @@
                 const rows = Array.from(document.querySelectorAll('.asset-row'));
                 const values = [
                     { label: 'Накопительный счёт', value: bankBalance, color: 'fill-green' },
-                    { label: 'ОФЗ', value: collectAssetValue(portfolio, ['OFZ', 'BONDS', 'VDO', 'PIF1', 'PIF2']), color: 'fill-dark' },
+                    { label: 'ОФЗ', value: collectAssetValue(portfolio, ['OFZ']), color: 'fill-dark' },
                     { label: 'Корп. облигации', value: collectAssetValue(portfolio, ['BONDS']), color: 'fill-mint' },
                     { label: 'ВДО', value: collectAssetValue(portfolio, ['VDO']), color: 'fill-gold' },
                     { label: 'ПИФ', value: collectAssetValue(portfolio, ['PIF1', 'PIF2']), color: 'fill-sand' },
-                    { label: 'Акции', value: collectAssetValue(portfolio, Object.keys(portfolio.assets || {}).filter((ticker) => !['BANK', 'OFZ', 'BONDS', 'VDO', 'PIF1', 'PIF2', 'USD', 'GLDRUB', 'GOLD'].includes(ticker))), color: 'fill-blue' },
+                    { label: 'Акции', value: collectAssetValue(portfolio, Object.keys(portfolio.assets || {}).filter((ticker) => !['BANK', 'OFZ', 'BONDS', 'VDO', 'PIF1', 'PIF2', 'USD', 'GOLD'].includes(ticker))), color: 'fill-blue' },
                     { label: 'Иностранная валюта', value: collectAssetValue(portfolio, ['USD']), color: 'fill-purple' },
-                    { label: 'Золото', value: collectAssetValue(portfolio, ['GOLD', 'GLDRUB']), color: 'fill-teal' }
+                    { label: 'Золото', value: collectAssetValue(portfolio, ['GOLD']), color: 'fill-teal' }
                 ];
 
                 rows.forEach((row, index) => {
