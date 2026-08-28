@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Копилка — Финал года</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+        /* ── reset & base ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #F6F8FA;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* ── главный контейнер ── */
+        .page {
+            position: relative;
+            width: 1440px;
+            height: 1024px;
+            background: #F6F8FA;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        /* ── КОПИЛКА (заголовок) ── */
+        .kopilka-title {
+            position: absolute;
+            width: 260px;
+            height: 50.4px;
+            left: 56px;
+            top: 34px;
+            font-weight: 800;
+            font-size: 36px;
+            line-height: 44px;
+            color: #0D4F35;
+        }
+
+        /* ── иконка Group 6 ── */
+        .icon-decor {
+            position: absolute;
+            width: 69px;
+            height: 63.19px;
+            left: 278px;
+            top: 15px;
+            pointer-events: none;
+        }
+        .icon-decor img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* ── бейдж "ФИНАЛ ИГРЫ" ── */
+        .final-badge {
+            position: absolute;
+            width: 150px;
+            height: 38px;
+            left: 56px;
+            top: 91px;
+            background: #0D4F35;
+            border-radius: 19px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 17px;
+            color: #FFFFFF;
+        }
+
+        /* ── заголовок "Год завершён!" ── */
+        .main-title {
+            position: absolute;
+            width: 700px;
+            height: 78.4px;
+            left: 56px;
+            top: 154px;
+            font-weight: 800;
+            font-size: 56px;
+            line-height: 68px;
+            color: #0D4F35;
+        }
+
+        /* ── подзаголовок ── */
+        .sub-title {
+            position: absolute;
+            width: 700px;
+            height: 33.6px;
+            left: 58px;
+            top: 220px;
+            font-weight: 400;
+            font-size: 24px;
+            line-height: 29px;
+            color: #4D6E57;
+        }
+
+        /* ── бейдж "12 месяцев пройдено" ── */
+        .months-badge {
+            position: absolute;
+            width: 190px;
+            height: 38px;
+            left: 58px;
+            top: 262px;
+            background: #D1EDD6;
+            border-radius: 19px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 17px;
+            color: #0D4F35;
+        }
+
+        /* ── большая карточка капитала ── */
+        .capital-card {
+            position: absolute;
+            width: 1328px;
+            height: 150px;
+            left: 56px;
+            top: 328px;
+            background: #0D4F35;
+            border-radius: 28px;
+            padding: 28px 0 0 32px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .capital-left {
+            flex: 0 0 auto;
+            margin-right: 100px;
+        }
+        .capital-left .label {
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 19px;
+            color: #D1EDD6;
+        }
+        .capital-left .amount {
+            font-weight: 800;
+            font-size: 48px;
+            line-height: 58px;
+            color: #FFFFFF;
+            margin-top: 4px;
+        }
+
+        .capital-center {
+            flex: 0 0 auto;
+            margin-right: 160px;
+        }
+        .capital-center .growth {
+            font-weight: 800;
+            font-size: 32px;
+            line-height: 39px;
+            color: #C7F26B;
+        }
+        .capital-center .percent {
+            font-weight: 600;
+            font-size: 18px;
+            line-height: 22px;
+            color: #C7F26B;
+        }
+
+        .capital-right {
+            flex: 0 0 auto;
+        }
+        .capital-right .start {
+            font-weight: 400;
+            font-size: 18px;
+            line-height: 22px;
+            color: #D1EDD6;
+        }
+        .capital-right .growth-label {
+            font-weight: 400;
+            font-size: 16px;
+            line-height: 19px;
+            color: #D1EDD6;
+            margin-top: 4px;
+        }
+        .capital-right .growth-amount {
+            font-weight: 700;
+            font-size: 26px;
+            line-height: 31px;
+            color: #FFFFFF;
+            margin-top: 2px;
+        }
+
+        /* ── "Результаты игры" ── */
+        .results-title {
+            position: absolute;
+            width: 450px;
+            height: 44.8px;
+            left: 56px;
+            top: 515px;
+            font-weight: 800;
+            font-size: 32px;
+            line-height: 39px;
+            color: #0D4F35;
+        }
+
+        /* ── 4 карточки статистики ── */
+        .stat-card {
+            position: absolute;
+            width: 300px;
+            height: 105px;
+            background: #FFFFFF;
+            border: 1px solid #D1EDD6;
+            border-radius: 20px;
+            padding: 19px 0 0 20px;
+        }
+        .stat-card--start { left: 56px; top: 565px; }
+        .stat-card--end { left: 382px; top: 565px; }
+        .stat-card--growth { left: 708px; top: 565px; }
+        .stat-card--yield { left: 1034px; top: 565px; }
+
+        .stat-card .label {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 17px;
+            color: #4D6E57;
+        }
+        .stat-card .value {
+            font-weight: 800;
+            font-size: 27px;
+            line-height: 33px;
+            color: #0D4F35;
+            margin-top: 6px;
+        }
+
+        /* ── левая панель: структура активов ── */
+        .structure-panel {
+            position: absolute;
+            width: 620px;
+            height: 260px;
+            left: 56px;
+            top: 700px;
+            background: #FFFFFF;
+            border: 1px solid #D1EDD6;
+            border-radius: 22px;
+            padding: 26px 0 0 26px;
+        }
+
+        .structure-title {
+            font-weight: 700;
+            font-size: 22px;
+            line-height: 27px;
+            color: #0D4F35;
+            margin-bottom: 14px;
+        }
+
+        /* цветные бары */
+        .bars {
+            display: flex;
+            gap: 0;
+            height: 24px;
+            margin-bottom: 26px;
+        }
+        .bar {
+            height: 24px;
+            border-radius: 0;
+        }
+        .bar:first-child { border-radius: 4px 0 0 4px; }
+        .bar:last-child { border-radius: 0 4px 4px 0; }
+
+        .bar--1 { width: 62.4px; background: #4AA670; }
+        .bar--2 { width: 124.8px; background: #0D4F35; }
+        .bar--3 { width: 93.6px; background: #C7F26B; }
+        .bar--4 { width: 41.6px; background: #6BB885; }
+        .bar--5 { width: 114.4px; background: #94CC8F; }
+        .bar--6 { width: 31.2px; background: #5C8F66; }
+        .bar--7 { width: 26px; background: #ABDBA1; }
+        .bar--8 { width: 26px; background: #40734F; }
+
+        .structure-legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-item .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        .legend-item .name {
+            font-weight: 600;
+            font-size: 12px;
+            line-height: 15px;
+            color: #0D4F35;
+        }
+        .legend-item .value {
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 15px;
+            color: #4D6E57;
+            margin-left: auto;
+        }
+
+        /* ── правая панель: доходность по активам ── */
+        .earnings-panel {
+            position: absolute;
+            width: 680px;
+            height: 260px;
+            left: 704px;
+            top: 700px;
+            background: #FFFFFF;
+            border: 1px solid #D1EDD6;
+            border-radius: 22px;
+            padding: 26px 0 0 26px;
+        }
+
+        .earnings-title {
+            font-weight: 700;
+            font-size: 22px;
+            line-height: 27px;
+            color: #0D4F35;
+            margin-bottom: 16px;
+        }
+
+        .earning-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            height: 184px;
+        }
+
+        .earning-col {
+            display: flex;
+            flex-direction: column;
+            padding-right: 16px;
+        }
+        .earning-col:last-child {
+            padding-right: 0;
+            padding-left: 16px;
+        }
+
+        .earning-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 46px;
+            border-bottom: 1px solid #D1EDD6;
+            flex-shrink: 0;
+        }
+        .earning-row:last-child {
+            border-bottom: none;
+        }
+
+        .earning-row .name {
+            font-weight: 600;
+            font-size: 13px;
+            line-height: 16px;
+            color: #0D4F35;
+        }
+        .earning-row .amount {
+            font-weight: 700;
+            font-size: 13px;
+            line-height: 16px;
+            text-align: right;
+        }
+        .earning-row .amount.positive {
+            color: #4AA670;
+        }
+        .earning-row .amount.negative {
+            color: #A64A4A;
+        }
+
+        /* ── подвал ── */
+        .footer-note {
+            position: absolute;
+            width: 900px;
+            height: 24px;
+            left: 56px;
+            top: 988px;
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 17px;
+            color: #4D6E57;
+        }
+
+        /* ── адаптив ── */
+        @media (max-width: 1440px) {
+            .page {
+                transform: scale(0.8);
+                transform-origin: top left;
+            }
+        }
+        @media (max-width: 1200px) {
+            .page {
+                transform: scale(0.6);
+                transform-origin: top left;
+            }
+        }
+        @media (max-width: 900px) {
+            .page {
+                transform: scale(0.45);
+                transform-origin: top left;
+            }
+        }
+        @media (max-width: 600px) {
+            .page {
+                transform: scale(0.3);
+                transform-origin: top left;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+
+    <!-- заголовок "КОПИЛКА" -->
+    <div class="kopilka-title">КОПИЛКА</div>
+
+    <!-- иконка Group 6 -->
+    <div class="icon-decor">
+        <img src="icon.svg" alt="Иконка" />
+    </div>
+
+    <!-- бейдж "ФИНАЛ ИГРЫ" -->
+    <div class="final-badge">ФИНАЛ ИГРЫ</div>
+
+    <!-- заголовок -->
+    <div class="main-title">Год завершён!</div>
+
+    <!-- подзаголовок -->
+    <div class="sub-title">Посмотри, к чему привели твои финансовые решения.</div>
+
+    <!-- бейдж "12 месяцев пройдено" -->
+    <div class="months-badge">12 месяцев пройдено</div>
+
+    <!-- большая карточка капитала -->
+    <div class="capital-card">
+        <div class="capital-left">
+            <div class="label">ТВОЙ ИТОГОВЫЙ КАПИТАЛ</div>
+            <div class="amount">312 480 ₽</div>
+        </div>
+        <div class="capital-center">
+            <div class="growth">+62 480 ₽</div>
+            <div class="percent">+25,0% за год</div>
+        </div>
+        <div class="capital-right">
+            <div class="start">Ты начал(а) с 250 000 ₽</div>
+            <div class="growth-label">Рост капитала</div>
+            <div class="growth-amount">62 480 ₽</div>
+        </div>
+    </div>
+
+    <!-- "Результаты игры" -->
+    <div class="results-title">Результаты игры</div>
+
+    <!-- 4 карточки статистики -->
+    <div class="stat-card stat-card--start">
+        <div class="label">Было в начале</div>
+        <div class="value">250 000 ₽</div>
+    </div>
+    <div class="stat-card stat-card--end">
+        <div class="label">Стало в конце</div>
+        <div class="value">312 480 ₽</div>
+    </div>
+    <div class="stat-card stat-card--growth">
+        <div class="label">Прирост</div>
+        <div class="value">+62 480 ₽</div>
+    </div>
+    <div class="stat-card stat-card--yield">
+        <div class="label">Доходность</div>
+        <div class="value">+25,0%</div>
+    </div>
+
+    <!-- левая панель: структура активов -->
+    <div class="structure-panel">
+        <div class="structure-title">Структура активов на конец года</div>
+
+        <div class="bars">
+            <div class="bar bar--1"></div>
+            <div class="bar bar--2"></div>
+            <div class="bar bar--3"></div>
+            <div class="bar bar--4"></div>
+            <div class="bar bar--5"></div>
+            <div class="bar bar--6"></div>
+            <div class="bar bar--7"></div>
+            <div class="bar bar--8"></div>
+        </div>
+
+        <div class="structure-legend">
+            <div class="legend-item">
+                <span class="dot" style="background:#4AA670;"></span>
+                <span class="name">Накопительный счёт</span>
+                <span class="value">12% · 37 498 ₽</span>
+            </div>
+            <div class="legend-item">
+                <span class="dot" style="background:#0D4F35;"></span>
+                <span class="name">ОФЗ</span>
+                <span class="value">24% · 74 995 ₽</span>
+            </div>
+            <div class="legend-item">
+                <span class="dot" style="background:#C7F26B;"></span>
+                <span class="name">Корп. облигации</span>
+                <span class="value">18% · 56 246 ₽</span>
+            </div>
+            <div class="legend-item">
+                <span class="dot" style="background:#6BB885;"></span>
+                <span class="name">ВДО</span>
+                <span class="value">8% · 24 998 ₽</span>
+            </div>
+            <div class="legend-item">
+                <span class="dot" style="background:#94CC8F;"></span>
+                <span class="name">Акции</span>
+                <span class="value">22% · 68 746 ₽</span>
+            </div>
+            <div class="legend-item">
+                <span class="dot" style="background:#5C8F66;"></span>
+                <span class="name">Иностранная валюта</span>
+                <span class="value">6% · 18 749 ₽</span>
+            </div>
+            <div class="legend-item">
+                <span class="dot" style="background:#ABDBA1;"></span>
+                <span class="name">ПИФ</span>
+                <span class="value">5% · 15 624 ₽</span>
+            </div>
+            <div class="legend-item">
+                <span class="dot" style="background:#40734F;"></span>
+                <span class="name">Золото</span>
+                <span class="value">5% · 15 624 ₽</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- правая панель: доходность по активам -->
+    <div class="earnings-panel">
+        <div class="earnings-title">Сколько заработано на каждом активе</div>
+
+        <div class="earning-grid">
+            <div class="earning-col">
+                <div class="earning-row">
+                    <span class="name">Накопительный счёт</span>
+                    <span class="amount positive">+4 120 ₽</span>
+                </div>
+                <div class="earning-row">
+                    <span class="name">Корп. облигации</span>
+                    <span class="amount positive">+8 930 ₽</span>
+                </div>
+                <div class="earning-row">
+                    <span class="name">Акции</span>
+                    <span class="amount positive">+28 640 ₽</span>
+                </div>
+                <div class="earning-row">
+                    <span class="name">ПИФ</span>
+                    <span class="amount positive">+10 320 ₽</span>
+                </div>
+            </div>
+            <div class="earning-col">
+                <div class="earning-row">
+                    <span class="name">ОФЗ</span>
+                    <span class="amount positive">+12 480 ₽</span>
+                </div>
+                <div class="earning-row">
+                    <span class="name">ВДО</span>
+                    <span class="amount negative">−1 240 ₽</span>
+                </div>
+                <div class="earning-row">
+                    <span class="name">Иностранная валюта</span>
+                    <span class="amount negative">−6 570 ₽</span>
+                </div>
+                <div class="earning-row">
+                    <span class="name">Золото</span>
+                    <span class="amount positive">+5 800 ₽</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- подвал -->
+    <div class="footer-note">Важно: результат игры зависит от твоих решений и изменений стоимости активов.</div>
+
+</div>
+
+</body>
+</html>

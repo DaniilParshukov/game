@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Копилка — Покупка и продажа</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+        /* ── reset & base ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #F6F8FA;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* ── главный контейнер ── */
+        .page {
+            position: relative;
+            width: 1440px;
+            height: 1024px;
+            background: #F6F8FA;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        /* ── КОПИЛКА (заголовок) ── */
+        .kopilka-title {
+            position: absolute;
+            width: 260px;
+            height: 50.4px;
+            left: 56px;
+            top: 34px;
+            font-weight: 800;
+            font-size: 36px;
+            line-height: 44px;
+            color: #0D4F35;
+        }
+
+        /* ── иконка Group 6 ── */
+        .icon-decor {
+            position: absolute;
+            width: 69px;
+            height: 63.19px;
+            left: 278px;
+            top: 15px;
+            pointer-events: none;
+        }
+        .icon-decor img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* ── бейдж "ПОКУПКА И ПРОДАЖА" ── */
+        .trade-badge {
+            position: absolute;
+            width: 250px;
+            height: 38px;
+            left: 56px;
+            top: 91px;
+            background: #0D4F35;
+            border-radius: 19px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 17px;
+            color: #FFFFFF;
+        }
+
+        /* ── заголовок ── */
+        .main-title {
+            position: absolute;
+            width: 760px;
+            height: 67.2px;
+            left: 56px;
+            top: 154px;
+            font-weight: 800;
+            font-size: 48px;
+            line-height: 58px;
+            color: #0D4F35;
+        }
+
+        /* ── подзаголовок ── */
+        .sub-title {
+            position: absolute;
+            width: 700px;
+            height: 30.8px;
+            left: 58px;
+            top: 210px;
+            font-weight: 400;
+            font-size: 22px;
+            line-height: 27px;
+            color: #4D6E57;
+        }
+
+        /* ── переключатель Купить/Продать ── */
+        .toggle-switch {
+            position: absolute;
+            width: 440px;
+            height: 62px;
+            left: 56px;
+            top: 260px;
+            background: #FFFFFF;
+            border: 1px solid #D1EDD6;
+            border-radius: 22px;
+            display: flex;
+            padding: 6px;
+            cursor: pointer;
+        }
+        .toggle-switch .option {
+            width: 210px;
+            height: 50px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            line-height: 24px;
+            transition: all 0.3s;
+            cursor: pointer;
+            user-select: none;
+        }
+        .toggle-switch .option.active {
+            background: #0D4F35;
+            color: #FFFFFF;
+        }
+        .toggle-switch .option.inactive {
+            background: transparent;
+            color: #0D4F35;
+        }
+        .toggle-switch .option.inactive:hover {
+            background: #f0f5ee;
+        }
+
+        /* ── левая панель (выбор актива) ── */
+        .assets-panel {
+            position: absolute;
+            width: 790px;
+            height: 585px;
+            left: 56px;
+            top: 352px;
+            background: #FFFFFF;
+            border: 1px solid #D1EDD6;
+            border-radius: 24px;
+            padding: 30px 0 0 32px;
+        }
+
+        .assets-title {
+            font-weight: 700;
+            font-size: 28px;
+            line-height: 34px;
+            color: #0D4F35;
+            margin-bottom: 8px;
+        }
+
+        .assets-sub {
+            font-weight: 400;
+            font-size: 16px;
+            line-height: 19px;
+            color: #4D6E57;
+            margin-bottom: 22px;
+        }
+
+        .asset-grid {
+            display: grid;
+            grid-template-columns: 340px 340px;
+            gap: 12px 25px;
+        }
+
+        .asset-card {
+            width: 340px;
+            height: 110px;
+            border-radius: 18px;
+            padding: 20px 0 0 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .asset-card.active {
+            background: #D1EDD6;
+            border: 1px solid #4AA670;
+        }
+        .asset-card.inactive {
+            background: rgba(240, 250, 237, 0.2);
+            border: 1px solid transparent;
+        }
+        .asset-card.inactive:hover {
+            background: rgba(240, 250, 237, 0.5);
+        }
+
+        .asset-card .name {
+            font-weight: 700;
+            font-size: 19px;
+            line-height: 23px;
+            color: #0D4F35;
+        }
+        .asset-card .name.faded {
+            color: rgba(13, 79, 53, 0.2);
+        }
+        .asset-card .desc {
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 17px;
+            color: #4D6E57;
+            margin-top: 6px;
+        }
+        .asset-card .desc.faded {
+            color: rgba(77, 110, 87, 0.2);
+        }
+        .asset-card .arrow {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            font-size: 20px;
+            line-height: 24px;
+            color: #4AA670;
+        }
+        .asset-card .arrow.faded {
+            color: rgba(74, 166, 112, 0.2);
+        }
+
+        /* ── правая панель (детали сделки) ── */
+        .deal-panel {
+            position: absolute;
+            width: 508px;
+            height: 385px;
+            left: 871px;
+            top: 543px;
+            background: #FFFFFF;
+            border: 1px solid #D1EDD6;
+            border-radius: 24px;
+            padding: 30px 0 0 32px;
+        }
+
+        .deal-title {
+            font-weight: 700;
+            font-size: 24px;
+            line-height: 29px;
+            color: #0D4F35;
+            margin-bottom: 20px;
+        }
+
+        .deal-label {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 17px;
+            color: #4D6E57;
+            margin-bottom: 4px;
+        }
+
+        .deal-asset-name {
+            font-weight: 700;
+            font-size: 24px;
+            line-height: 29px;
+            color: #0D4F35;
+            margin-bottom: 20px;
+        }
+
+        .deal-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .deal-left {
+            display: flex;
+            flex-direction: column;
+        }
+        .deal-left .label {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 17px;
+            color: #4D6E57;
+            margin-bottom: 8px;
+        }
+
+        .deal-input-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        .deal-input {
+            width: 190px;
+            height: 52px;
+            background: #F0FAED;
+            border: 1px solid #D1EDD6;
+            border-radius: 14px;
+            padding: 0 16px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            line-height: 24px;
+            color: #0D4F35;
+            outline: none;
+        }
+        .deal-input:focus {
+            border-color: #4AA670;
+        }
+        .deal-input-unit {
+            font-weight: 400;
+            font-size: 16px;
+            line-height: 19px;
+            color: #4D6E57;
+            margin-left: 8px;
+        }
+
+        .deal-right {
+            text-align: right;
+        }
+        .deal-right .label {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 17px;
+            color: #4D6E57;
+        }
+        .deal-right .amount {
+            font-weight: 800;
+            font-size: 28px;
+            line-height: 34px;
+            color: #0D4F35;
+            margin-top: 2px;
+        }
+
+        .deal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .btn-buy {
+            width: 205px;
+            height: 55px;
+            background: #0D4F35;
+            border-radius: 17px;
+            border: none;
+            font-weight: 700;
+            font-size: 20px;
+            line-height: 24px;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-buy:hover {
+            background: #1a6a4a;
+        }
+        .btn-sell {
+            width: 205px;
+            height: 55px;
+            background: #E0F2E0;
+            border: 1px solid #4AA670;
+            border-radius: 17px;
+            font-weight: 700;
+            font-size: 20px;
+            line-height: 24px;
+            color: #0D4F35;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-sell:hover {
+            background: #c8e8c8;
+        }
+
+        .deal-available {
+            font-weight: 400;
+            font-size: 36px;
+            line-height: 44px;
+            color: #4D6E57;
+            margin-top: 16px;
+        }
+
+        /* ── верхняя карточка выбора (для облигаций, акций, ПИФ) ── */
+        .selection-card {
+            position: absolute;
+            width: 508px;
+            height: 315px;
+            left: 871px;
+            top: 200px;
+            background: #0D4F35;
+            border-radius: 24px;
+            padding: 30px 0 0 32px;
+            display: none;
+        }
+        .selection-card.visible {
+            display: block;
+        }
+
+        .selection-card .title {
+            font-weight: 700;
+            font-size: 28px;
+            line-height: 34px;
+            color: #FFFFFF;
+        }
+        .selection-card .sub {
+            font-weight: 600;
+            font-size: 15px;
+            line-height: 18px;
+            color: #D1EDD6;
+            margin: 6px 0 16px;
+        }
+
+        .selection-item {
+            width: 444px;
+            height: 46px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 18px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .selection-item.active {
+            background: #C7F26B;
+        }
+        .selection-item.inactive {
+            background: #175E40;
+        }
+        .selection-item.inactive:hover {
+            background: #1f7a54;
+        }
+
+        .selection-item .name {
+            font-weight: 700;
+            font-size: 16px;
+            line-height: 19px;
+        }
+        .selection-item.active .name {
+            color: #0D4F35;
+        }
+        .selection-item.inactive .name {
+            color: #FFFFFF;
+        }
+
+        .selection-item .price {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 17px;
+        }
+        .selection-item.active .price {
+            color: #0D4F35;
+        }
+        .selection-item.inactive .price {
+            color: #D1EDD6;
+        }
+
+        /* ── карточка актива (для счёта, валюты, золота) ── */
+        .asset-info-card {
+            position: absolute;
+            width: 508px;
+            height: 156px;
+            left: 871px;
+            top: 352px;
+            background: #0D4F35;
+            border-radius: 24px;
+            padding: 24px 0 0 32px;
+            display: none;
+        }
+        .asset-info-card.visible {
+            display: block;
+        }
+
+        .asset-info-card .title {
+            font-weight: 700;
+            font-size: 28px;
+            line-height: 34px;
+            color: #FFFFFF;
+        }
+
+        .asset-info-card .info-row {
+            width: 444px;
+            height: 46px;
+            background: #C7F26B;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 18px;
+            margin-top: 12px;
+        }
+        .asset-info-card .info-row .label {
+            font-weight: 700;
+            font-size: 16px;
+            line-height: 19px;
+            color: #0D4F35;
+        }
+        .asset-info-card .info-row .value {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 17px;
+            color: #0D4F35;
+        }
+
+        /* ── адаптив ── */
+        @media (max-width: 1440px) {
+            .page {
+                transform: scale(0.8);
+                transform-origin: top left;
+            }
+        }
+        @media (max-width: 1200px) {
+            .page {
+                transform: scale(0.6);
+                transform-origin: top left;
+            }
+        }
+        @media (max-width: 900px) {
+            .page {
+                transform: scale(0.45);
+                transform-origin: top left;
+            }
+        }
+        @media (max-width: 600px) {
+            .page {
+                transform: scale(0.3);
+                transform-origin: top left;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+
+    <!-- заголовок "КОПИЛКА" -->
+    <div class="kopilka-title">КОПИЛКА</div>
+
+    <!-- иконка Group 6 -->
+    <div class="icon-decor">
+        <img src="icon.svg" alt="Иконка" />
+    </div>
+
+    <!-- бейдж -->
+    <div class="trade-badge">ПОКУПКА И ПРОДАЖА</div>
+
+    <!-- заголовок -->
+    <div class="main-title">Что хочешь сделать?</div>
+
+    <!-- подзаголовок -->
+    <div class="sub-title">Выбери действие и финансовый инструмент.</div>
+
+    <!-- переключатель Купить/Продать -->
+    <div class="toggle-switch" id="toggleSwitch">
+        <div class="option active" data-value="buy">Купить</div>
+        <div class="option inactive" data-value="sell">Продать</div>
+    </div>
+
+    <!-- левая панель: выбор актива -->
+    <div class="assets-panel">
+        <div class="assets-title">Выбери актив</div>
+        <div class="assets-sub">Нажми на категорию, чтобы выбрать конкретный инструмент.</div>
+
+        <div class="asset-grid">
+            <!-- Накопительный счёт -->
+            <div class="asset-card active" data-asset="account">
+                <div class="name">Накопительный счёт</div>
+                <div class="desc">10% годовых</div>
+                <div class="arrow">→</div>
+            </div>
+
+            <!-- Облигации -->
+            <div class="asset-card" data-asset="bonds">
+                <div class="name">Облигации</div>
+                <div class="desc">ОФЗ · Корпоративные · ВДО</div>
+                <div class="arrow">→</div>
+            </div>
+
+            <!-- ПИФ -->
+            <div class="asset-card" data-asset="pif">
+                <div class="name">ПИФ</div>
+                <div class="desc">Паи фонда</div>
+                <div class="arrow">→</div>
+            </div>
+
+            <!-- Акции -->
+            <div class="asset-card" data-asset="stocks">
+                <div class="name">Акции</div>
+                <div class="desc">Доля компании</div>
+                <div class="arrow">→</div>
+            </div>
+
+            <!-- Иностранная валюта -->
+            <div class="asset-card" data-asset="currency">
+                <div class="name">Иностранная валюта</div>
+                <div class="desc">USD</div>
+                <div class="arrow">→</div>
+            </div>
+
+            <!-- Золото -->
+            <div class="asset-card" data-asset="gold">
+                <div class="name">Золото</div>
+                <div class="desc">1 лот = 1 грамм</div>
+                <div class="arrow">→</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== КАРТОЧКИ ВЫБОРА (для облигаций, акций, ПИФ) ====== -->
+
+    <!-- Облигации -->
+    <div class="selection-card" id="bondsSelection">
+        <div class="title">Облигации</div>
+        <div class="sub">Выбери тип</div>
+        <div class="selection-item active" data-bond="ofz">
+            <span class="name">ОФЗ</span>
+            <span class="price">800 руб.</span>
+        </div>
+        <div class="selection-item inactive" data-bond="corp">
+            <span class="name">Корпоративные</span>
+            <span class="price">500 руб.</span>
+        </div>
+        <div class="selection-item inactive" data-bond="vdo">
+            <span class="name">ВДО</span>
+            <span class="price">300 руб.</span>
+        </div>
+    </div>
+
+    <!-- Акции -->
+    <div class="selection-card" id="stocksSelection">
+        <div class="title">Акции</div>
+        <div class="sub">Выбери акции</div>
+        <div class="selection-item active" data-stock="stock1">
+            <span class="name">Акция1</span>
+            <span class="price">3 200 ₽ / акция</span>
+        </div>
+        <div class="selection-item inactive" data-stock="stock2">
+            <span class="name">Акция2</span>
+            <span class="price">1 200 ₽ / акция</span>
+        </div>
+        <div class="selection-item inactive" data-stock="stock3">
+            <span class="name">Акция3</span>
+            <span class="price">300 ₽ / акция</span>
+        </div>
+    </div>
+
+    <!-- ПИФ -->
+    <div class="selection-card" id="pifSelection">
+        <div class="title">ПИФ</div>
+        <div class="sub">Выбери фонд</div>
+        <div class="selection-item active" data-pif="pif1">
+            <span class="name">ПИФ1</span>
+            <span class="price">1 250 руб. за пай</span>
+        </div>
+        <div class="selection-item inactive" data-pif="pif2">
+            <span class="name">ПИФ2</span>
+            <span class="price">1 800 руб. за пай</span>
+        </div>
+    </div>
+
+    <!-- ====== КАРТОЧКИ ИНФОРМАЦИИ (для счёта, валюты, золота) ====== -->
+
+    <!-- Накопительный счёт -->
+    <div class="asset-info-card visible" id="accountInfo">
+        <div class="title">Накопительный счет</div>
+        <div class="info-row">
+            <span class="label">Ставка</span>
+            <span class="value">10% годовых</span>
+        </div>
+    </div>
+
+    <!-- Иностранная валюта -->
+    <div class="asset-info-card" id="currencyInfo">
+        <div class="title">Иностранная валюта</div>
+        <div class="info-row">
+            <span class="label">USD</span>
+            <span class="value">85,05 руб. / 1 USD</span>
+        </div>
+    </div>
+
+    <!-- Золото -->
+    <div class="asset-info-card" id="goldInfo">
+        <div class="title">Золото</div>
+        <div class="info-row">
+            <span class="label">1 грамм</span>
+            <span class="value">10 000 руб.</span>
+        </div>
+    </div>
+
+    <!-- ====== ПАНЕЛЬ СДЕЛКИ ====== -->
+    <div class="deal-panel" id="dealPanel">
+        <div class="deal-title">Параметры сделки</div>
+
+        <div class="deal-label">Выбранный актив</div>
+        <div class="deal-asset-name" id="selectedAssetName">Накопительный счет</div>
+
+        <div class="deal-row">
+            <div class="deal-left">
+                <span class="label" id="quantityLabel">Сумма к пополнению/снятию</span>
+                <div class="deal-input-wrapper">
+                    <input class="deal-input" type="text" value="10 000" id="quantityInput" />
+                    <span class="deal-input-unit" id="unitLabel">₽</span>
+                </div>
+            </div>
+            <div class="deal-right">
+                <div class="label">Стоимость сделки</div>
+                <div class="amount" id="totalAmount">10 000 ₽</div>
+            </div>
+        </div>
+
+        <div class="deal-buttons">
+            <button class="btn-buy" id="buyBtn">Купить</button>
+            <button class="btn-sell" id="sellBtn">Продать</button>
+        </div>
+
+        <div class="deal-available">Доступно: 80 000 ₽</div>
+    </div>
+
+</div>
+
+<script>
+    // ── состояние ──
+    let currentAsset = 'account';
+    let currentAction = 'buy';
+    let currentBond = 'ofz';
+    let currentStock = 'stock1';
+    let currentPif = 'pif1';
+
+    // ── DOM элементы ──
+    const toggleSwitch = document.getElementById('toggleSwitch');
+    const buyOption = toggleSwitch.querySelector('.option[data-value="buy"]');
+    const sellOption = toggleSwitch.querySelector('.option[data-value="sell"]');
+
+    const assetCards = document.querySelectorAll('.asset-card');
+    const selectedAssetName = document.getElementById('selectedAssetName');
+    const quantityLabel = document.getElementById('quantityLabel');
+    const unitLabel = document.getElementById('unitLabel');
+    const quantityInput = document.getElementById('quantityInput');
+    const totalAmount = document.getElementById('totalAmount');
+    const buyBtn = document.getElementById('buyBtn');
+    const sellBtn = document.getElementById('sellBtn');
+
+    const accountInfo = document.getElementById('accountInfo');
+    const currencyInfo = document.getElementById('currencyInfo');
+    const goldInfo = document.getElementById('goldInfo');
+    const bondsSelection = document.getElementById('bondsSelection');
+    const stocksSelection = document.getElementById('stocksSelection');
+    const pifSelection = document.getElementById('pifSelection');
+
+    // ── данные активов ──
+    const assetData = {
+        account: {
+            name: 'Накопительный счет',
+            unit: '₽',
+            label: 'Сумма к пополнению/снятию',
+            price: 1,
+            info: 'accountInfo'
+        },
+        bonds: {
+            name: 'ОФЗ',
+            unit: 'шт.',
+            label: 'Количество',
+            price: 800,
+            info: 'bondsSelection'
+        },
+        pif: {
+            name: 'ПИФ1',
+            unit: 'шт.',
+            label: 'Количество',
+            price: 1250,
+            info: 'pifSelection'
+        },
+        stocks: {
+            name: 'Акция1',
+            unit: 'шт.',
+            label: 'Количество',
+            price: 3200,
+            info: 'stocksSelection'
+        },
+        currency: {
+            name: 'USD',
+            unit: 'шт.',
+            label: 'Количество',
+            price: 85.05,
+            info: 'currencyInfo'
+        },
+        gold: {
+            name: 'Золото',
+            unit: 'г',
+            label: 'Количество',
+            price: 10000,
+            info: 'goldInfo'
+        }
+    };
+
+    // ── обновить интерфейс ──
+    function updateUI() {
+        // Обновить активные карточки
+        assetCards.forEach(card => {
+            const asset = card.dataset.asset;
+            if (asset === currentAsset) {
+                card.classList.add('active');
+                card.classList.remove('inactive');
+                card.querySelector('.name').classList.remove('faded');
+                card.querySelector('.desc').classList.remove('faded');
+                card.querySelector('.arrow').classList.remove('faded');
+            } else {
+                card.classList.remove('active');
+                card.classList.add('inactive');
+                card.querySelector('.name').classList.add('faded');
+                card.querySelector('.desc').classList.add('faded');
+                card.querySelector('.arrow').classList.add('faded');
+            }
+        });
+
+        // Скрыть все карточки
+        document.querySelectorAll('.selection-card, .asset-info-card').forEach(el => {
+            el.classList.remove('visible');
+        });
+
+        // Показать нужную карточку
+        const data = assetData[currentAsset];
+        const infoEl = document.getElementById(data.info);
+        if (infoEl) infoEl.classList.add('visible');
+
+        // Обновить название
+        selectedAssetName.textContent = data.name;
+
+        // Обновить метки
+        quantityLabel.textContent = data.label;
+        unitLabel.textContent = data.unit;
+
+        // Обновить кнопки
+        buyBtn.textContent = currentAction === 'buy' ? 'Купить' : 'Продать';
+        sellBtn.textContent = currentAction === 'buy' ? 'Продать' : 'Купить';
+
+        // Обновить стоимость
+        updateTotal();
+    }
+
+    // ── обновить стоимость ──
+    function updateTotal() {
+        const data = assetData[currentAsset];
+        const quantity = parseFloat(quantityInput.value.replace(/\s/g, '')) || 0;
+        const total = quantity * data.price;
+        totalAmount.textContent = total.toLocaleString('ru-RU') + ' ₽';
+    }
+
+    // ── переключение актива ──
+    function selectAsset(asset) {
+        if (asset === currentAsset) return;
+        currentAsset = asset;
+
+        // Если это облигации — показываем выбранный подтип
+        if (asset === 'bonds') {
+            const active = bondsSelection.querySelector('.selection-item.active');
+            if (active) {
+                const bond = active.dataset.bond;
+                const prices = { ofz: 800, corp: 500, vdo: 300 };
+                const names = { ofz: 'ОФЗ', corp: 'Корпоративные', vdo: 'ВДО' };
+                assetData.bonds.name = names[bond];
+                assetData.bonds.price = prices[bond];
+            }
+        }
+
+        // Если это ПИФ
+        if (asset === 'pif') {
+            const active = pifSelection.querySelector('.selection-item.active');
+            if (active) {
+                const pif = active.dataset.pif;
+                const prices = { pif1: 1250, pif2: 1800 };
+                const names = { pif1: 'ПИФ1', pif2: 'ПИФ2' };
+                assetData.pif.name = names[pif];
+                assetData.pif.price = prices[pif];
+            }
+        }
+
+        // Если это акции
+        if (asset === 'stocks') {
+            const active = stocksSelection.querySelector('.selection-item.active');
+            if (active) {
+                const stock = active.dataset.stock;
+                const prices = { stock1: 3200, stock2: 1200, stock3: 300 };
+                const names = { stock1: 'Акция1', stock2: 'Акция2', stock3: 'Акция3' };
+                assetData.stocks.name = names[stock];
+                assetData.stocks.price = prices[stock];
+            }
+        }
+
+        updateUI();
+    }
+
+    // ── событие: клик по карточке актива ──
+    assetCards.forEach(card => {
+        card.addEventListener('click', () => {
+            selectAsset(card.dataset.asset);
+        });
+    });
+
+    // ── событие: выбор подтипа (облигации) ──
+    document.querySelectorAll('#bondsSelection .selection-item').forEach(item => {
+        item.addEventListener('click', () => {
+            document.querySelectorAll('#bondsSelection .selection-item').forEach(el => {
+                el.classList.remove('active');
+                el.classList.add('inactive');
+            });
+            item.classList.add('active');
+            item.classList.remove('inactive');
+            const bond = item.dataset.bond;
+            const prices = { ofz: 800, corp: 500, vdo: 300 };
+            const names = { ofz: 'ОФЗ', corp: 'Корпоративные', vdo: 'ВДО' };
+            assetData.bonds.name = names[bond];
+            assetData.bonds.price = prices[bond];
+            selectedAssetName.textContent = names[bond];
+            updateTotal();
+        });
+    });
+
+    // ── событие: выбор подтипа (акции) ──
+    document.querySelectorAll('#stocksSelection .selection-item').forEach(item => {
+        item.addEventListener('click', () => {
+            document.querySelectorAll('#stocksSelection .selection-item').forEach(el => {
+                el.classList.remove('active');
+                el.classList.add('inactive');
+            });
+            item.classList.add('active');
+            item.classList.remove('inactive');
+            const stock = item.dataset.stock;
+            const prices = { stock1: 3200, stock2: 1200, stock3: 300 };
+            const names = { stock1: 'Акция1', stock2: 'Акция2', stock3: 'Акция3' };
+            assetData.stocks.name = names[stock];
+            assetData.stocks.price = prices[stock];
+            selectedAssetName.textContent = names[stock];
+            updateTotal();
+        });
+    });
+
+    // ── событие: выбор подтипа (ПИФ) ──
+    document.querySelectorAll('#pifSelection .selection-item').forEach(item => {
+        item.addEventListener('click', () => {
+            document.querySelectorAll('#pifSelection .selection-item').forEach(el => {
+                el.classList.remove('active');
+                el.classList.add('inactive');
+            });
+            item.classList.add('active');
+            item.classList.remove('inactive');
+            const pif = item.dataset.pif;
+            const prices = { pif1: 1250, pif2: 1800 };
+            const names = { pif1: 'ПИФ1', pif2: 'ПИФ2' };
+            assetData.pif.name = names[pif];
+            assetData.pif.price = prices[pif];
+            selectedAssetName.textContent = names[pif];
+            updateTotal();
+        });
+    });
+
+    // ── событие: переключение Купить/Продать ──
+    toggleSwitch.addEventListener('click', (e) => {
+        const option = e.target.closest('.option');
+        if (!option) return;
+        if (option.classList.contains('active')) return;
+
+        buyOption.classList.toggle('active');
+        buyOption.classList.toggle('inactive');
+        sellOption.classList.toggle('active');
+        sellOption.classList.toggle('inactive');
+
+        currentAction = option.dataset.value;
+        updateUI();
+    });
+
+    // ── событие: ввод количества ──
+    quantityInput.addEventListener('input', updateTotal);
+
+    // ── событие: кнопки Купить/Продать ──
+    buyBtn.addEventListener('click', () => {
+        const action = currentAction === 'buy' ? 'покупка' : 'продажа';
+        const name = assetData[currentAsset].name;
+        const qty = quantityInput.value;
+        const total = totalAmount.textContent;
+        alert(`${action} ${name}\nКоличество: ${qty}\nСумма: ${total}`);
+    });
+
+    sellBtn.addEventListener('click', () => {
+        const action = currentAction === 'buy' ? 'продажа' : 'покупка';
+        const name = assetData[currentAsset].name;
+        const qty = quantityInput.value;
+        const total = totalAmount.textContent;
+        alert(`${action} ${name}\nКоличество: ${qty}\nСумма: ${total}`);
+    });
+
+    // ── инициализация ──
+    updateUI();
+</script>
+
+</body>
+</html>

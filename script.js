@@ -41,6 +41,12 @@ function shuffleArray(items) {
 }
 
 async function initGame() {
+    const hasGameShell = !!(marketCardsEl && nextDayBtn && pauseTimerBtn && resetBtn);
+    if (!hasGameShell) {
+        console.info('Game shell not present on this page; skipping legacy game bootstrap.');
+        return;
+    }
+
     //const saved = await storage.loadGame(GAME_ID);
     // todo:
     const saved = null
@@ -240,7 +246,7 @@ function resumeAutoAdvanceTimer() {
 }
 
 function renderUI() {
-    if (!gameData) return;
+    if (!gameData || !balanceEl || !totalStateEl) return;
 
     const portfolio = gameData.portfolio;
     const total = gameEngine.getTotalValue(portfolio);
@@ -249,7 +255,9 @@ function renderUI() {
     totalStateEl.textContent = `Общее состояние: ${Math.round(total)} ₽`;
     updateDayTimerUi();
 
-    renderMarketCards();
+    if (marketCardsEl) {
+        renderMarketCards();
+    }
 
     if (gameData.pendingEvent) {
         showEventModal(gameData.pendingEvent);
@@ -729,7 +737,7 @@ function handleCardAction(event) {
     }
 }
 
-nextDayBtn.addEventListener('click', () => {
+nextDayBtn?.addEventListener('click', () => {
     void handleNextDay();
 });
 pauseTimerBtn?.addEventListener('click', () => {
@@ -739,8 +747,8 @@ pauseTimerBtn?.addEventListener('click', () => {
         pauseAutoAdvanceTimer();
     }
 });
-resetBtn.addEventListener('click', handleReset);
-marketCardsEl.addEventListener('click', handleCardAction);
+resetBtn?.addEventListener('click', handleReset);
+marketCardsEl?.addEventListener('click', handleCardAction);
 eventModalActions?.addEventListener('click', (event) => {
     const button = event.target.closest('[data-event-choice]');
     if (!button) return;
@@ -749,7 +757,7 @@ eventModalActions?.addEventListener('click', (event) => {
         resumeAutoAdvanceTimer();
     }
 });
-helpModalBtn.addEventListener('click', (event) => {
+helpModalBtn?.addEventListener('click', (event) => {
     helpModal.classList.add('hidden');
     helpModal.setAttribute('aria-hidden', 'true');
     helpModalTitle.textContent = '';
@@ -759,7 +767,9 @@ helpModalBtn.addEventListener('click', (event) => {
     }
 });
 
-initGame();
+if (document.getElementById('marketCards') || document.getElementById('day') || document.getElementById('balance')) {
+    initGame();
+}
 
 window.game = {
     data: () => gameData,

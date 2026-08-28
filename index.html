@@ -1,905 +1,351 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Игра «КОПИЛКА»</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Копилка — Финансовая игра</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <style>
-        :root {
-            color-scheme: dark;
-            --bg: #07111f;
-            --panel: rgba(10, 19, 34, 0.9);
-            --panel-2: rgba(17, 30, 54, 0.95);
-            --border: rgba(255,255,255,0.08);
-            --text: #f4f6fb;
-            --muted: #8fa0bd;
-            --accent: #3b82f6;
-            --accent-2: #2dd4bf;
-            --danger: #ff4d6d;
-            --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
-            --space-xs: clamp(4px, 0.6vw, 8px);
-            --space-sm: clamp(6px, 0.8vw, 10px);
-            --space-md: clamp(10px, 1.2vw, 16px);
-            --space-lg: clamp(12px, 1.6vw, 20px);
-            --viewport-height: 100dvh;
-            --header-height: clamp(54px, 7vh, 74px);
-            --shell-offset: 18px;
-            --card-height: clamp(120px, 13vh, 170px);
+        /* ── reset & base ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        * { box-sizing: border-box; }
         body {
-            margin: 0;
-            min-height: var(--viewport-height);
-            height: var(--viewport-height);
-            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
-            color: var(--text);
-            background: radial-gradient(circle at top left, #14345d 0%, #14345d 50%, var(--bg) 65%, #050b14 100%);
-            padding: 0;
-            overflow-x: hidden;
-        }
-
-        .app-shell {
-            max-width: 100%;
-            margin: 0 auto;
+            font-family: 'Inter', sans-serif;
+            background: #F6F8FA;
             display: flex;
-            flex-direction: column;
-            gap: clamp(8px, 1.2vw, 14px);
-            min-height: calc(var(--viewport-height) - var(--shell-offset));
-            height: calc(var(--viewport-height) - var(--shell-offset));
-            padding: clamp(6px, 0.9vw, 10px);
-        }
-
-        .topbar {
-            display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            gap: clamp(8px, 1vw, 16px);
-            min-height: var(--header-height);
-            padding: clamp(6px, 0.8vw, 10px) clamp(10px, 1.2vw, 14px);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            background: var(--panel);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(18px);
+            min-height: 100vh;
         }
 
-        .cash-pill {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .cash-value {
-            font-size: 1.4rem;
-            font-weight: 700;
-        }
-
-        .secondary {
-            color: var(--muted);
-            font-size: 0.95rem;
-        }
-
-        .btn {
-            border: none;
-            border-radius: 999px;
-            padding: 10px 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-        }
-
-        .btn-primary {
-            color: white;
-            background: linear-gradient(135deg, var(--accent), #5b93ff);
-            box-shadow: 0 12px 24px rgba(59, 130, 246, 0.28);
-        }
-
-        .btn-secondary {
-            color: var(--text);
-            background: rgba(255,255,255,0.06);
-            border: 1px solid var(--border);
-        }
-
-        .btn-muted {
-            color: var(--muted);
-            background: transparent;
-            border: 1px solid var(--border);
-        }
-
-        .asset-section {
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            background: var(--panel);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(18px);
-            padding: clamp(8px, 1vw, 12px);
-            flex: 1 1 auto;
-            min-height: 0;
-            overflow: hidden;
-        }
-
-        .day-pill {
+        /* ── главный контейнер (точна копия макета) ── */
+        .page {
             position: relative;
-            overflow: hidden;
-            color: var(--muted);
-            font-size: 0.95rem;
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.06);
-            min-width: 132px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            isolation: isolate;
-        }
-
-        /* Одна полоска, которая растет из центра */
-        .day-pill::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(var(--fill, 0%) * 1%);
-            height: 100%;
-            background: linear-gradient(90deg, rgba(45,212,191,0.22), rgba(59,130,246,0.28));
-            border-radius: 999px;
-            z-index: 0;
-            transition: width 0.1s linear;
-        }
-
-        .day-pill-label {
-            position: relative;
-            z-index: 1;
-            white-space: nowrap;
-        }
-
-        .asset-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: clamp(6px, 0.8vw, 10px);
-            align-content: start;
-            height: 100%;
-            min-height: 0;
-        }
-
-        .instrument-card {
-            width: 100%;
-            min-height: var(--card-height);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 18px;
-            padding: var(--space-sm);
-            display: flex;
-            flex-direction: column;
-            gap: clamp(4px, 0.6vw, 8px);
-            background: linear-gradient(135deg, rgba(59,130,246,0.16), rgba(45,212,191,0.08));
-            transition: transform 0.2s ease, border-color 0.2s ease;
-            min-height: 0;
-            transform: scale(1);
-            font-size: clamp(0.76rem, 0.84vw, 0.88rem);
-        }
-
-        .instrument-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(59,130,246,0.35);
-        }
-
-        .instrument-head {
-            display: flex;
-            justify-content: space-between;
-            gap: 8px;
-            align-items: flex-start;
-        }
-
-        .instrument-name {
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        .instrument-ticker {
-            margin-top: 2px;
-            font-size: 0.78rem;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--muted);
-        }
-
-        .instrument-pill {
-            font-size: 0.77rem;
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.07);
-            color: var(--muted);
-            white-space: nowrap;
-        }
-
-        .instrument-pill-spacer {
-            content: '';
-            flex: 1;
-        }
-
-        .price-chart-row {
-            display: flex;
-            flex-direction: row;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .instrument-price-row {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-
-        .price-value {
-            font-size: clamp(1rem, 1.1vw, 1.2rem);
-            font-weight: 700;
-        }
-
-        .price-value.up { color: #2dd4bf; }
-        .price-value.down { color: #ff4d6d; }
-
-        .price-change {
-            font-size: clamp(0.78rem, 0.86vw, 0.9rem);
-            font-weight: 600;
-        }
-
-        .price-change.up { color: #2dd4bf; }
-        .price-change.down { color: #ff4d6d; }
-
-        .candle-wrap {
-            margin-top: 2px;
-            border-radius: 8px;
-            padding: 4px;
-            background: rgba(255,255,255,0.03);
-            cursor: pointer;
-            transition: background 0.12s ease;
-            height: 25px;
-            overflow: hidden;
-        }
-
-        .candle-wrap svg { height: 25px !important; }
-
-        .card-controls {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            margin-top: auto;
-            justify-content: space-between;
-        }
-
-        .card-amount {
-            width: clamp(70px, 6.5vw, 100px);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: rgba(255,255,255,0.04);
-            color: var(--text);
-            padding: 8px 10px;
-            outline: none;
-            appearance: none;
-            font-size: 0.9rem;
-        }
-
-        .action-btn {
-            padding: clamp(7px, 0.8vw, 8px) clamp(10px, 1vw, 12px);
-            border-radius: 999px;
-            font-size: clamp(0.8rem, 0.85vw, 0.9rem);
-        }
-
-        .empty-state {
-            color: var(--muted);
-            padding: 10px 0;
-        }
-
-        .deposit-list {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            margin-top: 2px;
-        }
-
-        .deposit-line {
-            padding: 2px 4px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            height: 26px;
-            display: flex;
-            align-items: center;
-        }
-
-        .deposit-line-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            font-size: 12px;
-            line-height: 1;
-        }
-
-        .deposit-line-top .action-btn {
-            padding: 0px 8px;
-            height: 20px;
-            font-size: 11px;
-            line-height: 20px;
-        }
-
-        .deposit-lock {
-            color: var(--muted);
-            font-size: 0.76rem;
-        }
-
-        .deposit-empty {
-            color: var(--muted);
-            font-size: 0.88rem;
-            padding: 6px 0;
-        }
-
-        .deposit-line-actions {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        /* Групповая карточка акций */
-        .asset-group-card {
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 16px;
-            background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(45,212,191,0.06));
-            transition: transform 0.2s ease, border-color 0.2s ease;
-            grid-column: 1 / -1; /* занимает всю ширину */
-            width: 100%;
-        }
-
-        .asset-group-card:hover {
-            border-color: rgba(59,130,246,0.35);
-        }
-
-        .asset-group-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .asset-group-header h3 {
-            margin: 0;
-            font-size: 1.05rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .asset-group-header .group-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .asset-group-header .btn {
-            padding: 6px 14px;
-            font-size: 0.85rem;
-        }
-
-        /* Сетка акций внутри групповой карточки */
-        .stock-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-            gap: 12px;
-        }
-
-        /* Карточка отдельной акции внутри группы */
-        .stock-item {
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 16px;
-            padding: 12px 14px;
-            background: rgba(255,255,255,0.03);
-            transition: background 0.2s ease;
-        }
-
-        .stock-item:hover {
-            background: rgba(255,255,255,0.06);
-        }
-
-        .stock-item .instrument-head {
-            display: flex;
-            justify-content: space-between;
-            gap: 6px;
-            align-items: flex-start;
-            margin-bottom: 6px;
-        }
-
-        .stock-item .instrument-name {
-            font-size: 0.95rem;
-            font-weight: 700;
-        }
-
-        .stock-item .instrument-ticker {
-            font-size: 0.72rem;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--muted);
-        }
-
-        .stock-item .instrument-pill {
-            font-size: 0.7rem;
-            padding: 4px 8px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.07);
-            color: var(--muted);
-            white-space: nowrap;
-        }
-
-        .stock-item .instrument-price-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 8px;
-            margin-bottom: 6px;
-        }
-
-        .stock-item .price-value {
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        .stock-item .price-change {
-            font-size: 0.78rem;
-            font-weight: 600;
-        }
-
-        .stock-item .candle-wrap {
-            margin: 4px 0 8px;
-            border-radius: 10px;
-            padding: 4px;
-            background: rgba(255,255,255,0.03);
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .stock-item .candle-wrap:hover {
-            background: rgba(255,255,255,0.06);
-        }
-
-        .stock-item .card-controls {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .stock-item .card-amount {
-            width: clamp(60px, 5vw, 80px);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: rgba(255,255,255,0.04);
-            color: var(--text);
-            padding: 6px 8px;
-            outline: none;
-            font-size: 0.85rem;
-        }
-
-        .stock-item .action-btn {
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-size: 0.8rem;
-        }
-
-        .event-modal {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            background: rgba(1, 6, 15, 0.78);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-        }
-
-        .event-modal.hidden {
-            display: none;
-        }
-
-        .event-modal-card {
-            width: min(92vw, 420px);
-            border-radius: 24px;
-            padding: 24px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: linear-gradient(145deg, rgba(17, 30, 54, 0.98), rgba(10, 19, 34, 0.96));
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
-            text-align: center;
-        }
-
-        .event-modal-card h3 {
-            margin: 12px 0 8px;
-            font-size: 1.2rem;
-        }
-
-        .event-modal-card p {
-            margin: 0 0 18px;
-            color: var(--muted);
-            line-height: 1.6;
-        }
-
-        .event-modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .event-modal-actions .btn {
-            min-width: 150px;
-        }
-
-        .event-modal-actions .btn:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .event-modal-icon {
-            width: 48px;
-            height: 48px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: rgba(45, 212, 191, 0.16);
-            color: var(--accent-2);
-            font-size: 1.3rem;
-        }
-
-        /* Модальное окно справки на весь экран */
-        .help-modal {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            background: rgba(1, 6, 15, 0.92);
-            backdrop-filter: blur(12px);
-            z-index: 9999;
-        }
-
-        .help-modal.hidden {
-            display: none;
-        }
-
-        /* Карточка справки на весь экран */
-        .help-modal-card {
-            width: 100vw;
-            height: 100vh;
-            max-width: 100%;
-            max-height: 100%;
-            border-radius: 0;
-            padding: 28px 28px 18px;
-            border: none;
-            background: linear-gradient(160deg, rgba(17, 30, 54, 0.99), rgba(6, 12, 24, 0.98));
-            box-shadow: none;
-            text-align: left;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-
-        /* Заголовок справки */
-        .help-modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 12px;
+            width: 1440px;
+            height: 1024px;
+            background: #F6F8FA;
             flex-shrink: 0;
+            overflow: hidden;
         }
 
-        .help-modal-header h2 {
-            margin: 0;
-            font-size: 1.7rem;
-            font-weight: 600;
-            color: #fff;
+        /* ── КОПИЛКА (заголовок) ── */
+        .kopilka-title {
+            position: absolute;
+            width: 258px;
+            height: 48px;
+            left: 51px;
+            top: 39px;
+            font-weight: 800;
+            font-size: 40px;
+            line-height: 48px;
+            color: #144733;
+        }
+
+        /* ── зелёный прямоугольник "ФИНАНСОВАЯ ИГРА" ── */
+        .game-badge {
+            position: absolute;
+            width: 266px;
+            height: 57px;
+            left: 56px;
+            top: 108px;
+            background: #C7F26B;
+            border-radius: 33px;
             display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .help-modal-header h2 .help-icon {
-            width: 44px;
-            height: 44px;
-            display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
-            background: rgba(45, 212, 191, 0.18);
-            color: var(--accent-2, #2dd4bf);
-            font-size: 1.4rem;
+        }
+        .game-badge span {
+            font-weight: 600;
+            font-size: 20px;
+            line-height: 24px;
+            color: #144733;
         }
 
-        /* Основное содержимое справки - занимает почти весь экран */
-        .help-modal-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px 12px 8px 0;
-            font-size: 1rem;
-            line-height: 1.75;
+        /* ── "Построй своё финансовое будущее" ── */
+        .main-headline {
+            position: absolute;
+            width: 720px;
+            height: 154px;
+            left: 56px;
+            top: 190px;
+            font-weight: 800;
+            font-size: 64px;
+            line-height: 77px;
+            color: #144733;
         }
 
-        .help-modal-body p,
-        .help-modal-body li,
-        .help-modal-body em,
-        .help-modal-body i,
-        .help-modal-body strong {
-            color: var(--muted, #8b95a9);
+        /* ── подзаголовок ── */
+        .subhead {
+            position: absolute;
+            width: 650px;
+            height: 48px;
+            left: 70px;
+            top: 357px;
+            font-weight: 400;
+            font-size: 20px;
+            line-height: 24px;
+            color: #6E7870;
         }
 
-        .help-modal-body p {
-            margin: 0 0 12px;
-        }
-
-        .help-modal-body i,
-        .help-modal-body em {
-            color: #dfe9ff;
-            font-style: italic;
-        }
-
-        .help-modal-body ul {
-            margin: 0 0 12px 20px;
-            padding-left: 8px;
-        }
-
-        .help-modal-body::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .help-modal-body::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.04);
-            border-radius: 4px;
-        }
-
-        .help-modal-body::-webkit-scrollbar-thumb {
-            background: rgba(45, 212, 191, 0.3);
-            border-radius: 4px;
-        }
-
-        /* Секции справки */
-        .help-section {
-            margin-bottom: 28px;
-        }
-
-        .help-section h3 {
-            font-size: 1.15rem;
-            font-weight: 500;
-            color: #e8edf5;
-            margin: 0 0 10px 0;
+        /* ── кнопка "Начать игру →" ── */
+        .btn-start {
+            position: absolute;
+            width: 276.51px;
+            height: 77.93px;
+            left: 60px;
+            top: 440px;
+            background: #144733;
+            border-radius: 22.6235px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: none;
+        }
+        .btn-start:hover {
+            background: #1a5a47;
+        }
+        .btn-start span {
+            font-weight: 600;
+            font-size: 25.1373px;
+            line-height: 30px;
+            color: #ffffff;
         }
 
-        .help-section h3 .section-icon {
-            font-size: 1.2rem;
+        /* ── "20-30 минут" + "12 игровых месяцев" ── */
+        .info-badge {
+            position: absolute;
+            height: 60.03px;
+            background: #FFFCF7;
+            border-radius: 30.017px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            font-weight: 600;
+            font-size: 20.5379px;
+            line-height: 25px;
+            color: #1A241C;
+        }
+        .info-badge--time {
+            width: 189.58px;
+            left: 350px;
+            top: 448px;
+        }
+        .info-badge--months {
+            width: 236px;
+            left: 556px;
+            top: 448px;
         }
 
-        .help-section p {
-            margin: 0 0 6px 0;
-            color: var(--muted, #8b95a9);
-            line-height: 1.7;
-            font-size: 0.98rem;
+        /* ── правая карточка "ТВОЙ КАПИТАЛ" ── */
+        .capital-card {
+            position: absolute;
+            width: 584.24px;
+            height: 764px;
+            left: 806px;
+            top: 83px;
+            background: #144733;
+            border-radius: 35.9529px;
+            padding: 133.56px 0 0 50.56px;
         }
-
-        .help-section ul {
-            margin: 8px 0 0 0;
-            padding-left: 24px;
-            color: var(--muted, #8b95a9);
-            line-height: 1.8;
+        .capital-card .label {
+            font-weight: 600;
+            font-size: 15.7294px;
+            line-height: 19px;
+            color: #B3C7BD;
+            letter-spacing: 0.3px;
         }
-
-        .help-section ul li {
-            margin-bottom: 4px;
-        }
-
-        .help-section .help-tip {
-            background: rgba(45, 212, 191, 0.07);
-            border-left: 3px solid var(--accent-2, #2dd4bf);
-            padding: 14px 18px;
-            border-radius: 0 10px 10px 0;
+        .capital-card .amount {
+            font-weight: 800;
+            font-size: 58.4235px;
+            line-height: 71px;
+            color: #ffffff;
             margin-top: 10px;
         }
-
-        .help-section .help-tip p {
-            margin: 0;
-            color: #c8d0dd;
+        .capital-card .growth {
+            font-weight: 600;
+            font-size: 20.2235px;
+            line-height: 24px;
+            color: #C7F26B;
+            margin-top: 8px;
         }
 
-        /* Кнопки внизу справки */
-        .help-modal-footer {
-            padding-top: 24px;
-            border-top: 1px solid rgba(255,255,255,0.06);
-            margin-top: 8px;
+        /* ── гистограмма (столбцы) ── */
+        .histogram {
+            position: absolute;
+            bottom: 44px;
+            left: 61.79px;
             display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
+            gap: 16.46px;
+            align-items: flex-end;
+        }
+        .bar {
+            width: 33.71px;
+            background: #C7F26B;
+            border-radius: 8.98824px;
             flex-shrink: 0;
         }
+        .bar--1 { height: 44.94px; }
+        .bar--2 { height: 78.65px; }
+        .bar--3 { height: 61.79px; }
+        .bar--4 { height: 101.12px; }
+        .bar--5 { height: 92.13px; }
+        .bar--6 { height: 117.97px; }
+        .bar--7 { height: 140.44px; }
+        .bar--8 { height: 179.76px; }
 
-        .help-modal-footer .btn {
-            min-width: 140px;
-            padding: 12px 28px;
+        /* ── блок "Как это работает" ── */
+        .how-it-works {
+            position: absolute;
+            width: 690px;
+            height: 336px;
+            left: 60px;
+            top: 572px;
+            background: #FFFCF7;
+            border-radius: 29.7084px;
+            padding: 37.5px 0 0 34.66px;
+        }
+        .how-it-works .title {
+            font-weight: 800;
+            font-size: 29.7084px;
+            line-height: 36px;
+            color: #144733;
         }
 
-        .help-modal-footer .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
+        .steps {
+            margin-top: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .step {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .step .step-title {
+            font-weight: 700;
+            font-size: 22.8px;
+            line-height: 28px;
+            color: #144733;
+        }
+        .step .step-desc {
+            font-weight: 400;
+            font-size: 18.57px;
+            line-height: 22px;
+            color: #6F7890;
         }
 
-        @media (max-width: 1100px) {
-            .asset-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
+        /* ── маленький иконный довесок (Group 6) ── */
+        .icon-decor {
+            position: absolute;
+            width: 69px;
+            height: 63.19px;
+            left: 278px;
+            top: 15px;
+            /* чисто декоративно, ничего не мешает */
+            pointer-events: none;
         }
 
-        @media (max-width: 760px) {
-            .asset-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+        /* ── адаптив (чтобы не ломалось на мелких экранах) ── */
+        @media (max-width: 1440px) {
+            .page {
+                transform: scale(0.8);
+                transform-origin: top left;
             }
         }
-
-        @media (max-width: 640px) {
-            .app-shell {
-                padding: 8px;
-                gap: 10px;
-            }
-
-            .topbar {
-                padding: 12px;
-                gap: 8px;
-                border-radius: 16px;
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .topbar .btn {
-                width: 100%;
-                text-align: center;
-            }
-
-            .asset-section {
-                padding: 12px;
-                border-radius: 16px;
-            }
-
-            .asset-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-
-            .instrument-card {
-                padding: 12px;
-                border-radius: 14px;
-            }
-
-            .cash-value {
-                font-size: 1.2rem;
-            }
-            .help-modal-card {
-                padding: 24px 18px 20px;
-            }
-
-            .help-modal-header h2 {
-                font-size: 1.4rem;
-            }
-
-            .help-modal-header h2 .help-icon {
-                width: 36px;
-                height: 36px;
-                font-size: 1.1rem;
-            }
-
-            .help-modal-footer .btn {
-                min-width: 100%;
-            }
-
-            .asset-group-card {
-                padding: 12px;
-                border-radius: 16px;
-            }
-
-            .stock-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-
-            .stock-item {
-                padding: 10px 12px;
-            }
-
-            .asset-group-header {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-            }
-
-            .asset-group-header .group-actions {
-                justify-content: flex-end;
+        @media (max-width: 1200px) {
+            .page {
+                transform: scale(0.6);
+                transform-origin: top left;
             }
         }
-        @media (min-width: 641px) and (max-width: 1024px) {
-            .app-shell {
-                padding: 12px 20px;
+        @media (max-width: 900px) {
+            .page {
+                transform: scale(0.45);
+                transform-origin: top left;
             }
-
-            .asset-grid {
-                grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-            }
-
-            .stock-grid {
-                grid-template-columns: repeat(2, 1fr);
+        }
+        @media (max-width: 600px) {
+            .page {
+                transform: scale(0.3);
+                transform-origin: top left;
             }
         }
     </style>
 </head>
 <body>
-    <div class="app-shell">
-        <header class="topbar">
-            <div class="cash-pill">
-                <strong class="cash-value" id="balance">0 руб.</strong>
-                <span class="secondary" id="totalState">Общее состояние: 0 руб.</span>
-            </div>
-            <div class="day-pill" id="day">
-                <span class="day-pill-label" id="dayText">День 1 / 365</span>
-            </div>
-            <button class="btn btn-muted" id="pauseTimer">▶️</button>
-            <button class="btn btn-primary" id="nextDay">Следующий день</button>
-            <button class="btn btn-muted" id="reset">Сброс</button>
-        </header>
 
-        <main class="content">
-            <section class="asset-section">
-                <div class="asset-grid" id="marketCards"></div>
-            </section>
-        </main>
-    </div>
+<div class="page">
 
-    <div class="event-modal hidden" id="eventModal" aria-hidden="true">
-        <div class="event-modal-card">
-            <div class="event-modal-icon">✦</div>
-            <h3 id="eventModalTitle">Событие</h3>
-            <p id="eventModalText">Текст события</p>
-            <div class="event-modal-actions" id="eventModalActions"></div>
+    <!-- заголовок "КОПИЛКА" -->
+    <div class="kopilka-title">КОПИЛКА</div>
+
+    <!-- зелёный чип "ФИНАНСОВАЯ ИГРА" -->
+    <div class="game-badge"><span>ФИНАНСОВАЯ ИГРА</span></div>
+
+    <!-- главный заголовок -->
+    <div class="main-headline">Построй своё<br />финансовое будущее</div>
+
+    <!-- подзаголовок -->
+    <div class="subhead">Принимай решения, переживай неожиданные события, инвестируй и смотри, к чему приведут твои решения.</div>
+
+    <!-- кнопка "Начать игру →" -->
+    <button class="btn-start"><span>Начать игру →</span></button>
+
+    <!-- два информационных бейджа -->
+    <div class="info-badge info-badge--time">20-30 минут</div>
+    <div class="info-badge info-badge--months">12 игровых месяцев</div>
+
+    <!-- правая карточка с капиталом -->
+    <div class="capital-card">
+        <div class="label">ТВОЙ КАПИТАЛ</div>
+        <div class="amount">1 248 600 ₽</div>
+        <div class="growth">+18,4% за 12 месяцев</div>
+
+        <!-- гистограмма (прямо внутри карточки, позиционируем относительно неё) -->
+        <div class="histogram">
+            <div class="bar bar--1"></div>
+            <div class="bar bar--2"></div>
+            <div class="bar bar--3"></div>
+            <div class="bar bar--4"></div>
+            <div class="bar bar--5"></div>
+            <div class="bar bar--6"></div>
+            <div class="bar bar--7"></div>
+            <div class="bar bar--8"></div>
         </div>
     </div>
 
-    <div id="helpModal" class="help-modal hidden">
-        <div class="help-modal-card">
-            <div class="help-modal-header">
-                <h2>
-                    <span class="help-icon">❓</span>
-                    <p id="helpModalTitle">Справка</p>
-                </h2>
+    <!-- блок "Как это работает" -->
+    <div class="how-it-works">
+        <div class="title">Как это работает</div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-title">01 Живи</div>
+                <div class="step-desc">Получай зарплату, доходы и неожиданные расходы</div>
             </div>
-            <div class="help-modal-body">
-                <p id="helpModalText">Текст справки</p>
+            <div class="step">
+                <div class="step-title">02 Решай</div>
+                <div class="step-desc">Покупай активы и меняй состав портфеля</div>
             </div>
-            <div class="help-modal-footer">
-                <button class="btn btn-primary" id="helpModalBtn">Понятно</button>
+            <div class="step">
+                <div class="step-title">03 Смотри результат</div>
+                <div class="step-desc">Проверь, как решения повлияли на капитал</div>
             </div>
         </div>
     </div>
 
-    <script type="module" src="script.js"></script>
+    <div class="icon-decor">
+        <img src="icon.svg" alt="Иконка" width="69" height="63" />
+    </div>
+
+</div>
+
 </body>
 </html>
