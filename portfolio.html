@@ -356,8 +356,8 @@
     </div>
 
     <!-- верхняя навигация -->
-    <div class="nav-portfolio">Мой портфель</div>
-    <div class="nav-profile">Алексей</div>
+    <a href="portfolio.html" class="nav-portfolio" data-go="portfolio.html">Портфель</a>
+    <a href="registration.html" class="nav-profile" data-go="registration.html">Алексей</a>
 
     <!-- бейдж месяца -->
     <div class="month-badge">МЕСЯЦ 1 ИЗ 12</div>
@@ -440,31 +440,32 @@
     <div class="actions-panel">
         <div class="actions-title">Что сделать?</div>
 
-        <div class="action-item">
+        <div class="action-item" data-go="trade.html">
             <div class="title">Купить актив</div>
             <div class="desc">Выбери инструмент и сумму</div>
         </div>
 
-        <div class="action-item">
+        <div class="action-item" data-go="trade.html">
             <div class="title">Продать актив</div>
             <div class="desc">Зафиксируй прибыль или убыток</div>
         </div>
 
-        <div class="action-item">
+        <div class="action-item" data-go="teaching.html">
             <div class="title">Обучение</div>
             <div class="desc">Разберись, как работает инструмент</div>
         </div>
 
-        <div class="action-item">
+        <div class="action-item" data-go="results.html">
             <div class="title">Жизненные ситуации</div>
             <div class="desc">Проверь, что изменилось в этом году</div>
         </div>
     </div>
 
     <!-- кнопка "Завершить месяц →" -->
-    <button class="btn-finish-month">Завершить месяц →</button>
+    <button class="btn-finish-month" data-go="results.html">Завершить месяц →</button>
 
 </div>
 
+    <script src="app-shell.js"></script>
 </body>
 </html>
