@@ -3,33 +3,12 @@ import { LocalStorageAdapter } from './storage/LocalStorageAdapter.js';
 import { LocalPrices } from './prices/LocalPrices.js';
 
 const storage = new LocalStorageAdapter();
-let prices = null;
-const gameEngine = new GameEngine(storage, prices);
-
-let gameData = null;
 const GAME_ID = 'my_game';
-let autoAdvanceTimer = null;
-let autoAdvanceRemainingMs = 3000;
-let autoAdvanceDeadline = null;
-let autoAdvancePaused = true;
-let PausedBeforeEvent = true;
 
-const balanceEl = document.getElementById('balance');
-const totalStateEl = document.getElementById('totalState');
-const dayEl = document.getElementById('day');
-const dayTextEl = document.getElementById('dayText');
-const marketCardsEl = document.getElementById('marketCards');
-const nextDayBtn = document.getElementById('nextDay');
-const pauseTimerBtn = document.getElementById('pauseTimer');
-const resetBtn = document.getElementById('reset');
-const eventModal = document.getElementById('eventModal');
-const eventModalTitle = document.getElementById('eventModalTitle');
-const eventModalText = document.getElementById('eventModalText');
-const eventModalActions = document.getElementById('eventModalActions');
-const helpModal = document.getElementById('helpModal');
-const helpModalTitle = document.getElementById('helpModalTitle');
-const helpModalText = document.getElementById('helpModalText');
-const helpModalBtn = document.getElementById('helpModalBtn');
+let prices = null;
+let gameData = null;
+
+const gameEngine = new GameEngine(storage, prices);
 
 function shuffleArray(items) {
     const copy = [...items];
@@ -40,102 +19,116 @@ function shuffleArray(items) {
     return copy;
 }
 
-async function initGame() {
-    const hasGameShell = !!(marketCardsEl && nextDayBtn && pauseTimerBtn && resetBtn);
-    if (!hasGameShell) {
-        console.info('Game shell not present on this page; skipping legacy game bootstrap.');
-        return;
-    }
-
-    //const saved = await storage.loadGame(GAME_ID);
-    // todo:
-    const saved = null
-
-    if (saved) {
-        gameData = saved;
-        prices = await LocalPrices.create(gameData.year);
-        console.log('Загружена сохранённая игра');
-    } else {
-        gameData = createNewGame();
-        try {
-            const csvMap = await loadTickersCsv();
-            const years = Object.keys(csvMap);
-            if (years.length) {
-                const randomYear = years[Math.floor(Math.random() * years.length)];
-                const rows = csvMap[randomYear] || [];
-                const trailingSpecialRows = rows.slice(-5);
-                const stockPool = rows.slice(5, rows.length - 5);
-
-                const bankTicker = trailingSpecialRows.find(row => /BANK/i.test(row.Ticker) || /BANK/i.test(row.Name))?.Ticker
-                    || 'BANK';
-                const usdTicker = trailingSpecialRows.find(row => /USD/i.test(row.Ticker) || /USD/i.test(row.Name))?.Ticker
-                    || 'USD';
-                const fundTickers = trailingSpecialRows
-                    .filter(row => {
-                        const ticker = row.Ticker || '';
-                        const name = row.Name || '';
-                        return !/BANK|USD|GLDRUB|GOLD/i.test(ticker) && !/BANK|USD|GLDRUB|GOLD/i.test(name)
-                            && (ticker.length > 8 || /FUND|ФОНД|EQ|JR|RU000/i.test(name) || /FUND|ФОНД|EQ|JR|RU000/i.test(ticker));
-                    })
-                    .map(row => row.Ticker)
-                    .slice(0, 2);
-
-                const stockCandidates = (stockPool)
-                    .map(row => row.Ticker)
-                    .filter(Boolean);
-
-                const stockCount = Math.min(3, stockCandidates.length);
-                const stocks = shuffleArray(stockCandidates).slice(0, stockCount);
-
-                const bondCandidates = rows.slice(0, 5).map(row => row.Ticker).filter(Boolean);
-                const first = bondCandidates[0] || 'OFZ';
-                const secondOrThird = bondCandidates[Math.random() < 0.5 ? 1 : 2] || 'BONDS';
-                const fourthOrFifth = bondCandidates[Math.random() < 0.5 ? 3 : 4] || 'VDO';
-
-                const goldTicker = trailingSpecialRows.find(row => /GLDRUB|GOLD/i.test(row.Ticker) || /GLDRUB|GOLD/i.test(row.Name))?.Ticker || 'GLDRUB_TOM';
-                
-                prices = await LocalPrices.create(randomYear);
-                
-                gameData.year = randomYear;
-                gameData.selectedTickers = {
-                    bonds: [first, secondOrThird, fourthOrFifth].filter(Boolean),
-                    stocks,
-                    others: [sdTicker, ...fundTickers, goldTicker].filter(Boolean).slice(0, 4),
-                    bankTicker
-                };
-            }
-        } catch (err) {
-            console.warn('Не удалось загрузить tickers.csv', err);
-        }
-
-        await storage.saveGame(GAME_ID, gameData);
-        console.log('Создана новая игра');
-    }
-
-    renderUI();
-    //startAutoAdvanceTimer();
-}
-
-// Загрузить и распарсить prices/tickers.csv (группировка по году)
 async function loadTickersCsv() {
     const url = 'prices/tickers.csv';
     const res = await fetch(url);
     if (!res.ok) throw new Error('Не удалось загрузить tickers.csv');
+
     const text = await res.text();
-    const lines = text.split(/\r?\n/).map(l => l.trim());
+    const lines = text.split(/\r?\n/).map((line) => line.trim());
     const map = {};
+
     for (const line of lines) {
         if (!line) continue;
+
         const parts = line.split(',');
         if (parts.length < 3) continue;
+
         const year = parts[0].trim();
         const name = parts[1].trim();
         const ticker = parts[2].trim();
+
         if (!/^\d{4}$/.test(year)) continue;
         if (!map[year]) map[year] = [];
+
         map[year].push({ Name: name, Ticker: ticker });
     }
+
     return map;
+}
+
+function buildSelectedTickers(rows) {
+    const trailingSpecialRows = rows.slice(-5);
+    const stockPool = rows.slice(5, rows.length - 5);
+
+    const bankTicker = trailingSpecialRows.find((row) => /BANK/i.test(row.Ticker) || /BANK/i.test(row.Name))?.Ticker || 'BANK';
+    const usdTicker = trailingSpecialRows.find((row) => /USD/i.test(row.Ticker) || /USD/i.test(row.Name))?.Ticker || 'USD';
+
+    const fundTickers = trailingSpecialRows
+        .filter((row) => {
+            const ticker = row.Ticker || '';
+            const name = row.Name || '';
+            return !/BANK|USD|GLDRUB|GOLD/i.test(ticker)
+                && !/BANK|USD|GLDRUB|GOLD/i.test(name)
+                && (ticker.length > 8 || /FUND|ФОНД|EQ|JR|RU000/i.test(name) || /FUND|ФОНД|EQ|JR|RU000/i.test(ticker));
+        })
+        .map((row) => row.Ticker)
+        .slice(0, 2);
+
+    const stockCandidates = stockPool.map((row) => row.Ticker).filter(Boolean);
+    const stockCount = Math.min(3, stockCandidates.length);
+    const stocks = shuffleArray(stockCandidates).slice(0, stockCount);
+
+    const bondCandidates = rows.slice(0, 5).map((row) => row.Ticker).filter(Boolean);
+    const first = bondCandidates[0] || 'OFZ';
+    const secondOrThird = bondCandidates[Math.random() < 0.5 ? 1 : 2] || 'BONDS';
+    const fourthOrFifth = bondCandidates[Math.random() < 0.5 ? 3 : 4] || 'VDO';
+
+    const goldTicker = trailingSpecialRows.find((row) => /GLDRUB|GOLD/i.test(row.Ticker) || /GLDRUB|GOLD/i.test(row.Name))?.Ticker || 'GLDRUB_TOM';
+
+    return {
+        bonds: [first, secondOrThird, fourthOrFifth].filter(Boolean),
+        stocks,
+        others: [usdTicker, ...fundTickers, goldTicker].filter(Boolean).slice(0, 4),
+        bankTicker
+    };
+}
+
+async function ensureTickerSelection() {
+    if (!gameData) {
+        await loadGame();
+    }
+
+    if (gameData.selectedTickers && gameData.year) {
+        return gameData.selectedTickers;
+    }
+
+    try {
+        const csvMap = await loadTickersCsv();
+        const years = Object.keys(csvMap);
+        if (!years.length) {
+            gameData.selectedTickers = {
+                bonds: ['OFZ', 'BONDS', 'VDO'],
+                stocks: ['SBER', 'GAZP', 'YNDX'],
+                others: ['USD', 'GLDRUB_TOM'],
+                bankTicker: 'BANK'
+            };
+            gameData.year = '2024';
+            return gameData.selectedTickers;
+        }
+
+        const randomYear = years[Math.floor(Math.random() * years.length)];
+        const rows = csvMap[randomYear] || [];
+        const selectedTickers = buildSelectedTickers(rows);
+
+        gameData.year = randomYear;
+        gameData.selectedTickers = selectedTickers;
+
+        prices = await LocalPrices.create(randomYear);
+        gameEngine.prices = prices;
+
+        return selectedTickers;
+    } catch (err) {
+        console.warn('Не удалось загрузить tickers.csv', err);
+        gameData.year = gameData.year || '2024';
+        gameData.selectedTickers = {
+            bonds: ['OFZ', 'BONDS', 'VDO'],
+            stocks: ['SBER', 'GAZP', 'YNDX'],
+            others: ['USD', 'GLDRUB_TOM'],
+            bankTicker: 'BANK'
+        };
+        return gameData.selectedTickers;
+    }
 }
 
 function createNewGame() {
@@ -154,625 +147,58 @@ function createNewGame() {
     };
 }
 
-function updateDayTimerUi() {
-    if (dayTextEl) {
-        dayTextEl.textContent = `День ${gameData.currentDay} / 365`;
-    }
-
-    if (!dayEl) return;
-    if (gameData.currentDay >= 365) {
-        dayEl.style.setProperty('--fill', '100%');
-        return;
-    }
-
-    const progress = 100 - (autoAdvanceRemainingMs / 3000) * 100;
-    const clampedProgress = Math.max(0, Math.min(100, progress));
-    
-    dayEl.style.setProperty('--fill', `${clampedProgress}%`);
-}
-
-function clearAutoAdvanceTimer() {
-    if (autoAdvanceTimer) {
-        clearInterval(autoAdvanceTimer);
-        autoAdvanceTimer = null;
-    }
-}
-
-function startAutoAdvanceTimer() {
-    clearAutoAdvanceTimer();
-
-    autoAdvanceRemainingMs = 3000;
-    autoAdvanceDeadline = Date.now() + autoAdvanceRemainingMs;
-    autoAdvancePaused = false;
-    updateDayTimerUi();
-
-    if (pauseTimerBtn) {
-        pauseTimerBtn.disabled = false;
-        pauseTimerBtn.textContent = '⏸️';
-    }
-
-    if (!gameData || gameData.currentDay >= 365) {
-        return;
-    }
-
-    autoAdvanceTimer = setInterval(() => {
-        if (!gameData || autoAdvancePaused) return;
-
-        autoAdvanceRemainingMs = Math.max(0, autoAdvanceDeadline - Date.now());
-        updateDayTimerUi();
-
-        if (autoAdvanceRemainingMs <= 0) {
-            void handleNextDay();
-            startAutoAdvanceTimer();
+async function loadGame() {
+    const saved = await storage.loadGame(GAME_ID);
+    if (saved) {
+        gameData = saved;
+        if (saved.year) {
+            prices = await LocalPrices.create(saved.year);
+            gameEngine.prices = prices;
         }
-    }, 80);
-}
-
-function pauseAutoAdvanceTimer() {
-    if (!gameData || gameData.currentDay >= 365 || autoAdvancePaused) return;
-
-    clearAutoAdvanceTimer();
-    autoAdvancePaused = true;
-    autoAdvanceRemainingMs = Math.max(0, autoAdvanceDeadline - Date.now());
-    updateDayTimerUi();
-
-    if (pauseTimerBtn) {
-        pauseTimerBtn.textContent = '▶️';
-    }
-}
-
-function resumeAutoAdvanceTimer() {
-    if (!gameData || gameData.currentDay >= 365 || !autoAdvancePaused) return;
-
-    autoAdvancePaused = false;
-    autoAdvanceDeadline = Date.now() + autoAdvanceRemainingMs;
-    updateDayTimerUi();
-
-    if (pauseTimerBtn) {
-        pauseTimerBtn.textContent = '⏸️';
+        return gameData;
     }
 
-    autoAdvanceTimer = setInterval(() => {
-        if (!gameData || autoAdvancePaused) return;
-
-        autoAdvanceRemainingMs = Math.max(0, autoAdvanceDeadline - Date.now());
-        updateDayTimerUi();
-
-        if (autoAdvanceRemainingMs <= 0) {
-            void handleNextDay();
-            startAutoAdvanceTimer();
-        }
-    }, 80);
-}
-
-function renderUI() {
-    if (!gameData || !balanceEl || !totalStateEl) return;
-
-    const portfolio = gameData.portfolio;
-    const total = gameEngine.getTotalValue(portfolio);
-
-    balanceEl.textContent = `${Math.round(portfolio.cash)} ₽`;
-    totalStateEl.textContent = `Общее состояние: ${Math.round(total)} ₽`;
-    updateDayTimerUi();
-
-    if (marketCardsEl) {
-        renderMarketCards();
-    }
-
-    if (gameData.pendingEvent) {
-        showEventModal(gameData.pendingEvent);
-    } else {
-        hideEventModal();
-    }
-}
-
-function getWeightedAverageProfitInfo(gameData, ticker) {
-    const quantity = gameData?.portfolio?.assets?.[ticker] || 0;
-    if (!quantity) {
-        return { percent: 0, avgCost: 0, amount: 0 };
-    }
-
-    const currentPrice = prices.getPrice(ticker, gameData.currentDay);
-    const transactions = (gameData?.history || []).filter((entry) => entry?.ticker === ticker && (entry?.type === 'BUY' || entry?.type === 'SELL'));
-
-    let remainingQuantity = 0;
-    let costBasis = 0;
-
-    for (const entry of transactions) {
-        const amount = Number(entry?.amount || 0);
-        if (!amount) continue;
-
-        if (entry.type === 'BUY') {
-            remainingQuantity += amount;
-            costBasis += amount * Number(entry.price || 0);
-        } else if (entry.type === 'SELL') {
-            const sellQty = Math.min(amount, remainingQuantity);
-            if (remainingQuantity <= 0) continue;
-            const avgCost = remainingQuantity > 0 ? costBasis / remainingQuantity : 0;
-            costBasis -= avgCost * sellQty;
-            remainingQuantity -= sellQty;
-        }
-    }
-
-    if (remainingQuantity <= 0 || !costBasis) {
-        return { percent: 0, avgCost: 0, amount: 0 };
-    }
-
-    const avgCost = costBasis / remainingQuantity;
-    const percent = avgCost > 0 ? ((currentPrice - avgCost) / avgCost) * 100 : 0;
-    return {
-        percent,
-        avgCost,
-        amount: (currentPrice - avgCost) * quantity
-    };
-}
-
-function renderMarketCards() {
-    const tickers1 = (gameData?.selectedTickers?.bonds && gameData.selectedTickers.bonds.length) ? gameData.selectedTickers.bonds : ['OFZ', 'BONDS', 'VDO'];
-    const stocks = (gameData?.selectedTickers?.stocks && gameData.selectedTickers.stocks.length) ? gameData.selectedTickers.stocks : ['SBER', 'GAZP', 'YNDX', 'VTBR'];
-    const tickers2 = (gameData?.selectedTickers?.others && gameData.selectedTickers.others.length) ? gameData.selectedTickers.others : ['USD', 'PIF1', 'PIF1', 'GOLD'];
-
-    const bankCard =  `
-            <article class="instrument-card deposit-card">
-                <div class="instrument-head">
-                    <div class="instrument-name">${'Банковский счёт'}</div>
-                    <span class="instrument-pill-spacer"></span>
-                    <span class="instrument-pill">${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? '6' : 'кредит ' + 12 + '%'}</span>
-                    <button class="btn btn-muted action-btn" data-action="info" data-ticker="BANK">?</button>
-                </div>
-                <div class="instrument-price-row">
-                    <div class="price-value ${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'up' : 'down'}">${Math.round((gameData.portfolio.bankAccount?.balance || 0))} ₽</div>
-                    <div class="price-change ${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'up' : 'down'}">${Math.round((gameData.portfolio.bankAccount?.balance || 0)) >= 0 ? 'Счёт' : 'Кредит'}</div>
-                </div>
-                <div class="card-controls">
-                    <input class="card-amount" type="number" min="100" step="100" value="1000" data-deposit="${'BANK'}" />
-                    <button class="btn btn-secondary action-btn" data-action="deposit" data-ticker="${'BANK'}">Вложить</button>
-                    <button class="btn btn-muted action-btn" data-action="withdraw" data-ticker="${'BANK'}">Снять</button>
-                </div>
-            </article>
-        `;
-
-    const bondsCards = tickers1.map((ticker) => {
-        const price = prices.getPrice(ticker, gameData.currentDay);
-        const history = prices.getHistory(ticker);
-        const prevPrice = history[Math.max(0, Math.min(history.length - 1, gameData.currentDay - 2))] ?? price;
-        const change = price - prevPrice;
-        const changePct = prevPrice ? (change / prevPrice) * 100 : 0;
-        const quantity = gameData.portfolio.assets[ticker] || 0;
-        const label = getTickerLabel(ticker);
-        const directionClass = change >= 0 ? 'up' : 'down';
-        const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} ₽ (${change >= 0 ? '+' : ''}${changePct.toFixed(1)}%)`;
-        const profitInfo = getWeightedAverageProfitInfo(gameData, ticker);
-        const profitText = quantity > 0 ? `${profitInfo.percent >= 0 ? '+' : ''}${profitInfo.percent.toFixed(1)}%` : '0%';
-
-        return `
-            <article class="instrument-card ${ticker}">
-                <div class="instrument-head">
-                    <div class="instrument-name">${label}</div>
-                    <span class="instrument-pill-spacer"></span>
-                    <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Нет'}</span>
-                    <span class="instrument-pill">${profitText}</span>
-                    <button class="btn btn-muted action-btn" data-action="info" data-ticker="${ticker}">?</button>
-                </div>
-                <div class="price-chart-row">
-                    <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">
-                        ${buildPriceChart(history, gameData.currentDay, directionClass)}
-                    </div>
-                    <div class="instrument-price-row">
-                        <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
-                        <div class="price-change ${directionClass}">${changeText}</div>
-                    </div>
-                </div>
-                <div class="card-controls">
-                    <select class="card-amount" data-ticker="${ticker}">
-                        <option value="1">1</option>
-                        <option value="10">10</option>
-                        <option value="100">100</option>
-                        <option value="all" selected>All</option>
-                    </select>
-                    <button class="btn btn-secondary action-btn" data-action="buy" data-ticker="${ticker}">Купить</button>
-                    <button class="btn btn-muted action-btn" data-action="sell" data-ticker="${ticker}">Продать</button>
-                </div>
-            </article>
-        `;
-    }).join('');
-
-    const stockItems = stocks.map((ticker) => {
-        const price = prices.getPrice(ticker, gameData.currentDay);
-        const history = prices.getHistory(ticker);
-        const prevPrice = history[Math.max(0, Math.min(history.length - 1, gameData.currentDay - 2))] ?? price;
-        const change = price - prevPrice;
-        const changePct = prevPrice ? (change / prevPrice) * 100 : 0;
-        const quantity = gameData.portfolio.assets[ticker] || 0;
-        const label = getTickerLabel(ticker);
-        const directionClass = change >= 0 ? 'up' : 'down';
-        const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} ₽ (${change >= 0 ? '+' : ''}${changePct.toFixed(1)}%)`;
-        const profitInfo = getWeightedAverageProfitInfo(gameData, ticker);
-        const profitText = quantity > 0 ? `${profitInfo.percent >= 0 ? '+' : ''}${profitInfo.percent.toFixed(1)}%` : '0%';
-
-        return `
-            <div class="instrument-card ${ticker}">
-                <div class="instrument-head">
-                    <div class="instrument-name">${label}</div>
-                    <span class="instrument-pill-spacer"></span>
-                    <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Нет'}</span>
-                    <span class="instrument-pill">${profitText}</span>
-                </div>
-                <div class="price-chart-row">
-                    <div class="instrument-price-row">
-                        <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
-                        <div class="price-change ${directionClass}">${changeText}</div>
-                    </div>
-                    <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">${buildPriceChart(history, gameData.currentDay, directionClass)}</div>
-                </div>
-                <div class="card-controls">
-                    <select class="card-amount" data-ticker="${ticker}">
-                        <option value="1">1</option>
-                        <option value="10">10</option>
-                        <option value="100">100</option>
-                        <option value="all" selected>All</option>
-                    </select>
-                    <button class="btn btn-secondary action-btn" data-action="buy" data-ticker="${ticker}">Купить</button>
-                    <button class="btn btn-muted action-btn" data-action="sell" data-ticker="${ticker}">Продать</button>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    const groupCard = `
-        <div class="asset-group-card">
-            <div class="stock-grid">
-                ${stockItems}
-                <div class="group-actions">
-                    <button class="btn btn-muted action-btn" data-action="info" data-ticker="STOCKS_GROUP">❓</button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    const otherTickers = tickers2.map((ticker) => {
-        const price = prices.getPrice(ticker, gameData.currentDay);
-        const history = prices.getHistory(ticker);
-        const prevPrice = history[Math.max(0, Math.min(history.length - 1, gameData.currentDay - 2))] ?? price;
-        const change = price - prevPrice;
-        const changePct = prevPrice ? (change / prevPrice) * 100 : 0;
-        const quantity = gameData.portfolio.assets[ticker] || 0;
-        const label = getTickerLabel(ticker);
-        const directionClass = change >= 0 ? 'up' : 'down';
-        const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} ₽ (${change >= 0 ? '+' : ''}${changePct.toFixed(1)}%)`;
-        const profitInfo = getWeightedAverageProfitInfo(gameData, ticker);
-        const profitText = quantity > 0 ? `${profitInfo.percent >= 0 ? '+' : ''}${profitInfo.percent.toFixed(1)}%` : '0%';
-
-        return `
-            <article class="instrument-card ${ticker}">
-                <div class="instrument-head">
-                    <div class="instrument-name">${label}</div>
-                    <span class="instrument-pill-spacer"></span>
-                    <span class="instrument-pill">${quantity > 0 ? `${quantity} шт.` : 'Нет'}</span>
-                    <span class="instrument-pill">${profitText}</span>
-                    <button class="btn btn-muted action-btn" data-action="info" data-ticker="${ticker}">?</button>
-                </div>
-                <div class="price-chart-row">
-                    <div class="instrument-price-row">
-                        <div class="price-value ${directionClass}">${price.toFixed(2)} ₽</div>
-                        <div class="price-change ${directionClass}">${changeText}</div>
-                    </div>
-                    <div class="candle-wrap" title="${ticker}: ${price.toFixed(2)} ₽">
-                        ${buildPriceChart(history, gameData.currentDay, directionClass)}
-                    </div>
-                </div>
-                <div class="card-controls">
-                    <select class="card-amount" data-ticker="${ticker}">
-                        <option value="1">1</option>
-                        <option value="10">10</option>
-                        <option value="100">100</option>
-                        <option value="all" selected>All</option>
-                    </select>
-                    <button class="btn btn-secondary action-btn" data-action="buy" data-ticker="${ticker}">Купить</button>
-                    <button class="btn btn-muted action-btn" data-action="sell" data-ticker="${ticker}">Продать</button>
-                </div>
-            </article>
-        `;
-    }).join('');
-
-
-    marketCardsEl.innerHTML = `${bankCard}${bondsCards}${groupCard}${otherTickers}`;
-}
-
-function buildPriceChart(history, day, directionClass) {
-    const slice = history.slice(Math.max(0, day - 24), Math.min(day, history.length - 1));
-    if (!slice.length) return '<div class="empty-state">Нет данных</div>';
-
-    const width = 180;
-    const height = 54;
-    const padding = 4;
-    const max = Math.max(...slice);
-    const min = Math.min(...slice);
-    const range = max - min || 1;
-
-    const points = slice.map((value, index) => {
-        const x = padding + (index / Math.max(1, slice.length - 1)) * (width - padding * 2);
-        const y = padding + ((max - value) / range) * (height - padding * 2);
-        return { x, y };
-    });
-
-    const linePath = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ');
-    const lastPoint = points[points.length - 1];
-    const firstPoint = points[0];
-    const color = directionClass == 'up' ? '#2dd4bf' : '#ff4d6d';
-
-    return `
-        <svg viewBox="0 0 ${width} ${height}" width="100%" height="54" preserveAspectRatio="none">
-            <rect x="0" y="0" width="${width}" height="${height}" rx="8" fill="rgba(255,255,255,0.02)"></rect>
-            <path d="${linePath}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-            <circle cx="${lastPoint.x.toFixed(2)}" cy="${lastPoint.y.toFixed(2)}" r="2.8" fill="${color}"></circle>
-            <circle cx="${firstPoint.x.toFixed(2)}" cy="${firstPoint.y.toFixed(2)}" r="1.8" fill="rgba(255,255,255,0.6)"></circle>
-        </svg>
-    `;
-}
-
-function getTickerLabel(ticker) {
-    switch (ticker) {
-        case 'SBER': return 'Сбербанк';
-        case 'GAZP': return 'Газпром';
-        case 'YNDX': return 'Яндекс';
-        case 'USD': return 'Доллар';
-        case 'GOLD': return 'Золото';
-        default: return ticker;
-    }
-}
-
-async function handleNextDay() {
-    if (gameData.currentDay >= 365) {
-        alert('Игра завершена. Нажмите "Сброс", чтобы начать заново');
-        return;
-    }
-
-    gameData = gameEngine.nextDay(gameData);
+    gameData = createNewGame();
+    await ensureTickerSelection();
     await storage.saveGame(GAME_ID, gameData);
-    renderUI();
-
-    if (gameData.currentDay === 365) {
-        showFinalResult();
-    }
+    return gameData;
 }
 
-function showInfoModal(title, text) {
-    if (!helpModal) return;
+async function initializeGame() {
+    if (!gameData) {
+        await loadGame();
+    }
 
-    helpModalTitle.textContent = title || 'Информация';
-    helpModalText.innerHTML = text || '';
+    if (!gameData.selectedTickers) {
+        await ensureTickerSelection();
+    }
 
-    PausedBeforeEvent = autoAdvancePaused
-    pauseAutoAdvanceTimer();
+    if (!prices) {
+        const year = gameData?.year || '2024';
+        prices = await LocalPrices.create(year);
+        gameEngine.prices = prices;
+    }
 
-    helpModal.classList.remove('hidden');
-    helpModal.setAttribute('aria-hidden', 'false');
+    return gameData;
 }
 
-function showEventModal(event) {
-    if (!eventModal) return;
-
-    eventModalTitle.textContent = event?.title || 'Событие';
-    eventModalText.textContent = event?.text || '';
-    eventModalActions.innerHTML = '';
-
-    if (!event) {
-        eventModal.classList.add('hidden');
-        eventModal.setAttribute('aria-hidden', 'true');
-        return;
-    }
-
-    const actionType = event.actionType || (event.amount > 0 ? 'gain' : 'info');
-    const cashAvailable = (gameData?.portfolio?.cash || 0) >= Math.abs(event.amount || 0);
-
-    if (actionType === 'cost') {
-        const spendBtn = document.createElement('button');
-        spendBtn.className = 'btn btn-secondary';
-        spendBtn.type = 'button';
-        spendBtn.textContent = cashAvailable ? `Потратить наличные (${Math.round(Math.abs(event.amount || 0))} ₽)` : `Потратить наличные (нет)`;
-        spendBtn.disabled = !cashAvailable;
-        spendBtn.dataset.eventChoice = 'cash';
-        eventModalActions.appendChild(spendBtn);
-
-        const bankBtn = document.createElement('button');
-        bankBtn.className = 'btn btn-primary';
-        bankBtn.type = 'button';
-        bankBtn.textContent = `Взять из банка (${Math.round(Math.abs(event.amount || 0))} ₽)`;
-        bankBtn.dataset.eventChoice = 'BANK';
-        eventModalActions.appendChild(bankBtn);
-    } else {
-        const actionBtn = document.createElement('button');
-        actionBtn.className = 'btn btn-primary';
-        actionBtn.type = 'button';
-        actionBtn.textContent = event.buttonText || 'Продолжить';
-        actionBtn.dataset.eventChoice = actionType === 'gain' ? 'receive' : 'close';
-        eventModalActions.appendChild(actionBtn);
-    }
-
-    PausedBeforeEvent = autoAdvancePaused
-    pauseAutoAdvanceTimer();
-    eventModal.classList.remove('hidden');
-    eventModal.setAttribute('aria-hidden', 'false');
-}
-
-function hideEventModal() {
-    if (!eventModal) return;
-
-
-    eventModal.classList.add('hidden');
-    eventModal.setAttribute('aria-hidden', 'true');
-    eventModalActions.innerHTML = '';
-}
-
-async function handleEventChoice(choice) {
-    if (!gameData?.pendingEvent) {
-        hideEventModal();
-        return;
-    }
-
-    try {
-        gameData = gameEngine.applyEventDecision(gameData, gameData.pendingEvent, choice);
-        await storage.saveGame(GAME_ID, gameData);
-        renderUI();
-    } catch (error) {
-        alert(`Ошибка: ${error.message}`);
-    }
-}
-
-function showFinalResult() {
-    const recommendation = gameEngine.getRecommendation(gameData);
-    const total = gameEngine.getTotalValue(gameData.portfolio);
-
-    setTimeout(() => {
-        alert(`Игра завершена.\nИтоговая сумма: ${Math.round(total)} руб.\nПрибыль: ${Math.round(recommendation.profit)} руб. (${recommendation.percent.toFixed(1)}%)\n\n${recommendation.text}`);
-    }, 500);
-}
-
-async function handleDepositAction(action, ticker, index) {
-    const card = marketCardsEl.querySelector(`.instrument-card [data-deposit="${ticker}"]`)?.closest('.instrument-card');
-    const input = card?.querySelector('[data-deposit]');
-    const amount = input ? parseFloat(input.value) : 0;
-
-    try {
-        if (action === 'deposit') {
-            gameData = gameEngine.openDeposit(gameData, amount);
-        } else if (action === 'withdraw') {
-            gameData = gameEngine.withdrawDeposit(gameData, Number(index), amount);
-        }
-
-        await storage.saveGame(GAME_ID, gameData);
-        renderUI();
-    } catch (error) {
-        alert(`Ошибка: ${error.message}`);
-    }
-}
-
-async function handleTrade(type, ticker, amount, mode) {
-    let resolvedAmount = amount;
-
-    if (mode === 'all') {
-        if (type === 'buy') {
-            const price = prices.getPrice(ticker, gameData.currentDay);
-            resolvedAmount = Math.max(1, Math.floor(gameData.portfolio.cash / price));
-        } else {
-            resolvedAmount = gameData.portfolio.assets[ticker] || 0;
-        }
-    }
-
-    if (!ticker || !resolvedAmount || resolvedAmount <= 0) {
-        alert('Введите количество');
-        return;
-    }
-
-    try {
-        if (type === 'buy') {
-            const price = prices.getPrice(ticker, gameData.currentDay);
-            const cost = price * resolvedAmount;
-
-            if (gameData.portfolio.cash < cost) {
-                alert(`Недостаточно средств. Нужно: ${cost.toFixed(2)} ₽, есть: ${gameData.portfolio.cash.toFixed(2)} ₽`);
-                return;
-            }
-
-            gameData = gameEngine.buyAsset(gameData, ticker, resolvedAmount);
-        } else {
-            if (!gameData.portfolio.assets[ticker]) {
-                alert(`У вас нет актива ${ticker}`);
-                return;
-            }
-
-            if (gameData.portfolio.assets[ticker] < resolvedAmount) {
-                alert(`У вас только ${gameData.portfolio.assets[ticker]} акций ${ticker}`);
-                return;
-            }
-
-            gameData = gameEngine.sellAsset(gameData, ticker, resolvedAmount);
-        }
-
-        await storage.saveGame(GAME_ID, gameData);
-        renderUI();
-    } catch (error) {
-        alert(`Ошибка: ${error.message}`);
-    }
-}
-
-async function handleReset() {
-    if (confirm('Сбросить игру?')) {
-        await storage.deleteGame(GAME_ID);
-        gameData = createNewGame();
-        await storage.saveGame(GAME_ID, gameData);
-        pauseAutoAdvanceTimer();
-        autoAdvanceRemainingMs = 3000;
-        renderUI();
-    }
-}
-
-function handleCardAction(event) {
-    const button = event.target.closest('[data-action]');
-    if (!button) return;
-
-    const action = button.getAttribute('data-action');
-    const ticker = button.getAttribute('data-ticker');
-    const index = button.getAttribute('data-index');
-
-    if (action === 'info') {
-        const ticker = button.getAttribute('data-ticker');
-        
-        const info = gameEngine.getInstrumentInfo(ticker);
-        showInfoModal(info.label, info.description);
-        return;
-    } else if (action === 'deposit' || action === 'withdraw') {
-        void handleDepositAction(action, ticker, index);
-        return;
-    }
-
-    const card = button.closest('.instrument-card');
-    const select = card?.querySelector('.card-amount');
-    const mode = select?.value || '1';
-    const amount = mode === 'all' ? null : parseInt(mode, 10);
-
-    if (action === 'buy' || action === 'sell') {
-        void handleTrade(action, ticker, amount, mode);
-    }
-}
-
-nextDayBtn?.addEventListener('click', () => {
-    void handleNextDay();
-});
-pauseTimerBtn?.addEventListener('click', () => {
-    if (autoAdvancePaused) {
-        resumeAutoAdvanceTimer();
-    } else {
-        pauseAutoAdvanceTimer();
-    }
-});
-resetBtn?.addEventListener('click', handleReset);
-marketCardsEl?.addEventListener('click', handleCardAction);
-eventModalActions?.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-event-choice]');
-    if (!button) return;
-    void handleEventChoice(button.getAttribute('data-event-choice'));
-    if (!PausedBeforeEvent) {
-        resumeAutoAdvanceTimer();
-    }
-});
-helpModalBtn?.addEventListener('click', (event) => {
-    helpModal.classList.add('hidden');
-    helpModal.setAttribute('aria-hidden', 'true');
-    helpModalTitle.textContent = '';
-    helpModalText.textContent = '';
-    if (!PausedBeforeEvent) {
-        resumeAutoAdvanceTimer();
-    }
-});
-
-if (document.getElementById('marketCards') || document.getElementById('day') || document.getElementById('balance')) {
-    initGame();
+async function resetGame() {
+    await storage.deleteGame(GAME_ID);
+    gameData = createNewGame();
+    await storage.saveGame(GAME_ID, gameData);
+    return gameData;
 }
 
 window.game = {
     data: () => gameData,
     engine: gameEngine,
-    prices: prices
+    getPrices: () => prices,
+    initialize: initializeGame,
+    reset: resetGame
 };
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('DOMContentLoaded', () => {
+        void initializeGame();
+    });
+}

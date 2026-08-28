@@ -726,301 +726,342 @@
 </div>
 
 <script>
-    // ── состояние ──
-    let currentAsset = 'account';
-    let currentAction = 'buy';
-    let currentBond = 'ofz';
-    let currentStock = 'stock1';
-    let currentPif = 'pif1';
-
-    // ── DOM элементы ──
-    const toggleSwitch = document.getElementById('toggleSwitch');
-    const buyOption = toggleSwitch.querySelector('.option[data-value="buy"]');
-    const sellOption = toggleSwitch.querySelector('.option[data-value="sell"]');
-
-    const assetCards = document.querySelectorAll('.asset-card');
-    const selectedAssetName = document.getElementById('selectedAssetName');
-    const quantityLabel = document.getElementById('quantityLabel');
-    const unitLabel = document.getElementById('unitLabel');
-    const quantityInput = document.getElementById('quantityInput');
-    const totalAmount = document.getElementById('totalAmount');
-    const buyBtn = document.getElementById('buyBtn');
-    const sellBtn = document.getElementById('sellBtn');
-
-    const accountInfo = document.getElementById('accountInfo');
-    const currencyInfo = document.getElementById('currencyInfo');
-    const goldInfo = document.getElementById('goldInfo');
-    const bondsSelection = document.getElementById('bondsSelection');
-    const stocksSelection = document.getElementById('stocksSelection');
-    const pifSelection = document.getElementById('pifSelection');
-
-    // ── данные активов ──
-    const assetData = {
-        account: {
-            name: 'Накопительный счет',
-            unit: '₽',
-            label: 'Сумма к пополнению/снятию',
-            price: 1,
-            info: 'accountInfo'
-        },
-        bonds: {
-            name: 'ОФЗ',
-            unit: 'шт.',
-            label: 'Количество',
-            price: 800,
-            info: 'bondsSelection'
-        },
-        pif: {
-            name: 'ПИФ1',
-            unit: 'шт.',
-            label: 'Количество',
-            price: 1250,
-            info: 'pifSelection'
-        },
-        stocks: {
-            name: 'Акция1',
-            unit: 'шт.',
-            label: 'Количество',
-            price: 3200,
-            info: 'stocksSelection'
-        },
-        currency: {
-            name: 'USD',
-            unit: 'шт.',
-            label: 'Количество',
-            price: 85.05,
-            info: 'currencyInfo'
-        },
-        gold: {
-            name: 'Золото',
-            unit: 'г',
-            label: 'Количество',
-            price: 10000,
-            info: 'goldInfo'
-        }
-    };
-
-    // ── обновить интерфейс ──
-    function updateUI() {
-        // Обновить активные карточки
-        assetCards.forEach(card => {
-            const asset = card.dataset.asset;
-            if (asset === currentAsset) {
-                card.classList.add('active');
-                card.classList.remove('inactive');
-                card.querySelector('.name').classList.remove('faded');
-                card.querySelector('.desc').classList.remove('faded');
-                card.querySelector('.arrow').classList.remove('faded');
-            } else {
-                card.classList.remove('active');
-                card.classList.add('inactive');
-                card.querySelector('.name').classList.add('faded');
-                card.querySelector('.desc').classList.add('faded');
-                card.querySelector('.arrow').classList.add('faded');
-            }
-        });
-
-        // Скрыть все карточки
-        document.querySelectorAll('.selection-card, .asset-info-card').forEach(el => {
-            el.classList.remove('visible');
-        });
-
-        // Показать нужную карточку
-        const data = assetData[currentAsset];
-        const infoEl = document.getElementById(data.info);
-        if (infoEl) infoEl.classList.add('visible');
-
-        // Обновить название
-        selectedAssetName.textContent = data.name;
-
-        // Обновить метки
-        quantityLabel.textContent = data.label;
-        unitLabel.textContent = data.unit;
-
-        // Обновить кнопки
-        buyBtn.textContent = currentAction === 'buy' ? 'Купить' : 'Продать';
-        sellBtn.textContent = currentAction === 'buy' ? 'Продать' : 'Купить';
-
-        // Обновить стоимость
-        updateTotal();
-    }
-
-    // ── обновить стоимость ──
-    function updateTotal() {
-        const data = assetData[currentAsset];
-        const quantity = parseFloat(quantityInput.value.replace(/\s/g, '')) || 0;
-        const total = quantity * data.price;
-        totalAmount.textContent = total.toLocaleString('ru-RU') + ' ₽';
-    }
-
-    // ── переключение актива ──
-    function selectAsset(asset) {
-        if (asset === currentAsset) return;
-        currentAsset = asset;
-
-        // Если это облигации — показываем выбранный подтип
-        if (asset === 'bonds') {
-            const active = bondsSelection.querySelector('.selection-item.active');
-            if (active) {
-                const bond = active.dataset.bond;
-                const prices = { ofz: 800, corp: 500, vdo: 300 };
-                const names = { ofz: 'ОФЗ', corp: 'Корпоративные', vdo: 'ВДО' };
-                assetData.bonds.name = names[bond];
-                assetData.bonds.price = prices[bond];
-            }
-        }
-
-        // Если это ПИФ
-        if (asset === 'pif') {
-            const active = pifSelection.querySelector('.selection-item.active');
-            if (active) {
-                const pif = active.dataset.pif;
-                const prices = { pif1: 1250, pif2: 1800 };
-                const names = { pif1: 'ПИФ1', pif2: 'ПИФ2' };
-                assetData.pif.name = names[pif];
-                assetData.pif.price = prices[pif];
-            }
-        }
-
-        // Если это акции
-        if (asset === 'stocks') {
-            const active = stocksSelection.querySelector('.selection-item.active');
-            if (active) {
-                const stock = active.dataset.stock;
-                const prices = { stock1: 3200, stock2: 1200, stock3: 300 };
-                const names = { stock1: 'Акция1', stock2: 'Акция2', stock3: 'Акция3' };
-                assetData.stocks.name = names[stock];
-                assetData.stocks.price = prices[stock];
-            }
-        }
-
-        updateUI();
-    }
-
-    // ── событие: клик по карточке актива ──
-    assetCards.forEach(card => {
-        card.addEventListener('click', () => {
-            selectAsset(card.dataset.asset);
-        });
-    });
-
-    // ── событие: выбор подтипа (облигации) ──
-    document.querySelectorAll('#bondsSelection .selection-item').forEach(item => {
-        item.addEventListener('click', () => {
-            document.querySelectorAll('#bondsSelection .selection-item').forEach(el => {
-                el.classList.remove('active');
-                el.classList.add('inactive');
-            });
-            item.classList.add('active');
-            item.classList.remove('inactive');
-            const bond = item.dataset.bond;
-            const prices = { ofz: 800, corp: 500, vdo: 300 };
-            const names = { ofz: 'ОФЗ', corp: 'Корпоративные', vdo: 'ВДО' };
-            assetData.bonds.name = names[bond];
-            assetData.bonds.price = prices[bond];
-            selectedAssetName.textContent = names[bond];
-            updateTotal();
-        });
-    });
-
-    // ── событие: выбор подтипа (акции) ──
-    document.querySelectorAll('#stocksSelection .selection-item').forEach(item => {
-        item.addEventListener('click', () => {
-            document.querySelectorAll('#stocksSelection .selection-item').forEach(el => {
-                el.classList.remove('active');
-                el.classList.add('inactive');
-            });
-            item.classList.add('active');
-            item.classList.remove('inactive');
-            const stock = item.dataset.stock;
-            const prices = { stock1: 3200, stock2: 1200, stock3: 300 };
-            const names = { stock1: 'Акция1', stock2: 'Акция2', stock3: 'Акция3' };
-            assetData.stocks.name = names[stock];
-            assetData.stocks.price = prices[stock];
-            selectedAssetName.textContent = names[stock];
-            updateTotal();
-        });
-    });
-
-    // ── событие: выбор подтипа (ПИФ) ──
-    document.querySelectorAll('#pifSelection .selection-item').forEach(item => {
-        item.addEventListener('click', () => {
-            document.querySelectorAll('#pifSelection .selection-item').forEach(el => {
-                el.classList.remove('active');
-                el.classList.add('inactive');
-            });
-            item.classList.add('active');
-            item.classList.remove('inactive');
-            const pif = item.dataset.pif;
-            const prices = { pif1: 1250, pif2: 1800 };
-            const names = { pif1: 'ПИФ1', pif2: 'ПИФ2' };
-            assetData.pif.name = names[pif];
-            assetData.pif.price = prices[pif];
-            selectedAssetName.textContent = names[pif];
-            updateTotal();
-        });
-    });
-
-    // ── событие: переключение Купить/Продать ──
-    toggleSwitch.addEventListener('click', (e) => {
-        const option = e.target.closest('.option');
-        if (!option) return;
-        if (option.classList.contains('active')) return;
-
-        buyOption.classList.toggle('active');
-        buyOption.classList.toggle('inactive');
-        sellOption.classList.toggle('active');
-        sellOption.classList.toggle('inactive');
-
-        currentAction = option.dataset.value;
-        updateUI();
-    });
-
-    // ── событие: ввод количества ──
-    quantityInput.addEventListener('input', updateTotal);
-
-    // ── событие: кнопки Купить/Продать ──
-    buyBtn.addEventListener('click', () => {
-        const action = currentAction === 'buy' ? 'покупка' : 'продажа';
-        const name = assetData[currentAsset].name;
-        const qty = quantityInput.value;
-        const total = totalAmount.textContent;
-        alert(`${action} ${name}\nКоличество: ${qty}\nСумма: ${total}`);
-    });
-
-    sellBtn.addEventListener('click', () => {
-        const action = currentAction === 'buy' ? 'продажа' : 'покупка';
-        const name = assetData[currentAsset].name;
-        const qty = quantityInput.value;
-        const total = totalAmount.textContent;
-        alert(`${action} ${name}\nКоличество: ${qty}\nСумма: ${total}`);
-    });
-
-    // ── инициализация ──
-    updateUI();
-</script>
-
-<script>
     (() => {
         const STORAGE_KEY = 'game_my_game';
+        const defaultState = {
+            currentDay: 1,
+            portfolio: {
+                cash: 10000,
+                assets: {},
+                assetValues: {},
+                deposits: {},
+                bankAccount: { balance: 0, rate: 0.06 }
+            },
+            selectedTickers: {
+                bonds: ['OFZ', 'BONDS', 'VDO'],
+                stocks: ['SBER', 'GAZP', 'YNDX'],
+                others: ['USD', 'GLDRUB_TOM'],
+                bankTicker: 'BANK'
+            }
+        };
+
+        let currentAsset = 'account';
+        let currentAction = 'buy';
+        let currentBond = 0;
+        let currentStock = 0;
+        let currentPif = 0;
+
+        const toggleSwitch = document.getElementById('toggleSwitch');
+        const buyOption = toggleSwitch.querySelector('.option[data-value="buy"]');
+        const sellOption = toggleSwitch.querySelector('.option[data-value="sell"]');
+
+        const assetCards = document.querySelectorAll('.asset-card');
+        const selectedAssetName = document.getElementById('selectedAssetName');
+        const quantityLabel = document.getElementById('quantityLabel');
+        const unitLabel = document.getElementById('unitLabel');
+        const quantityInput = document.getElementById('quantityInput');
+        const totalAmount = document.getElementById('totalAmount');
+        const buyBtn = document.getElementById('buyBtn');
+        const sellBtn = document.getElementById('sellBtn');
+
+        const bondsSelection = document.getElementById('bondsSelection');
+        const stocksSelection = document.getElementById('stocksSelection');
+        const pifSelection = document.getElementById('pifSelection');
+
+        const assetData = {
+            account: {
+                name: 'Накопительный счет',
+                unit: '₽',
+                label: 'Сумма к пополнению/снятию',
+                price: 1,
+                info: 'accountInfo'
+            },
+            bonds: {
+                name: 'ОФЗ',
+                unit: 'шт.',
+                label: 'Количество',
+                price: 800,
+                info: 'bondsSelection'
+            },
+            pif: {
+                name: 'ПИФ1',
+                unit: 'шт.',
+                label: 'Количество',
+                price: 1250,
+                info: 'pifSelection'
+            },
+            stocks: {
+                name: 'Акция1',
+                unit: 'шт.',
+                label: 'Количество',
+                price: 3200,
+                info: 'stocksSelection'
+            },
+            currency: {
+                name: 'USD',
+                unit: 'шт.',
+                label: 'Количество',
+                price: 85.05,
+                info: 'currencyInfo'
+            },
+            gold: {
+                name: 'Золото',
+                unit: 'г',
+                label: 'Количество',
+                price: 10000,
+                info: 'goldInfo'
+            }
+        };
 
         function readGameState() {
+            const liveState = window.game && typeof window.game.data === 'function' ? window.game.data() : null;
+            if (liveState) return liveState;
+
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
-                return raw ? JSON.parse(raw) : null;
+                return raw ? JSON.parse(raw) : defaultState;
             } catch (error) {
                 console.warn('Не удалось прочитать состояние игры', error);
-                return null;
+                return defaultState;
             }
         }
 
         function safeNumber(value) {
-            return Number(value || 0);
+            return Number.isFinite(Number(value)) ? Number(value) : 0;
         }
 
         function formatMoney(value) {
             return `${Math.round(safeNumber(value)).toLocaleString('ru-RU')} ₽`;
         }
+
+        function resolveTickerByAsset() {
+            const state = readGameState();
+            const selected = state?.selectedTickers || defaultState.selectedTickers;
+
+            if (currentAsset === 'account') return selected.bankTicker || 'BANK';
+            if (currentAsset === 'bonds') return selected.bonds?.[currentBond] || 'OFZ';
+            if (currentAsset === 'stocks') return selected.stocks?.[currentStock] || 'SBER';
+            if (currentAsset === 'pif') {
+                return selected.others?.find((ticker) => /PIF|FUND/i.test(String(ticker))) || 'PIF1';
+            }
+            if (currentAsset === 'currency') return 'USD';
+            if (currentAsset === 'gold') return 'GOLD';
+            return 'BANK';
+        }
+
+        function syncSelectedAssetNames() {
+            const state = readGameState();
+            const selected = state?.selectedTickers || defaultState.selectedTickers;
+            const prices = window.game && typeof window.game.getPrices === 'function' ? window.game.getPrices() : null;
+
+            const bondList = selected.bonds || ['OFZ', 'BONDS', 'VDO'];
+            const stockList = selected.stocks || ['SBER', 'GAZP', 'YNDX'];
+            const otherList = selected.others || ['USD', 'GLDRUB_TOM'];
+
+            if (bondList.length) {
+                currentBond = Math.min(currentBond, bondList.length - 1);
+                const bondTicker = bondList[currentBond] || 'OFZ';
+                assetData.bonds.name = bondTicker;
+                assetData.bonds.price = prices && typeof prices.getPrice === 'function'
+                    ? Number(prices.getPrice(bondTicker, state.currentDay || 1) || 0)
+                    : 800;
+            }
+
+            if (stockList.length) {
+                currentStock = Math.min(currentStock, stockList.length - 1);
+                const stockTicker = stockList[currentStock] || 'SBER';
+                assetData.stocks.name = stockTicker;
+                assetData.stocks.price = prices && typeof prices.getPrice === 'function'
+                    ? Number(prices.getPrice(stockTicker, state.currentDay || 1) || 0)
+                    : 3200;
+            }
+
+            const pifTicker = otherList.find((ticker) => /PIF|FUND/i.test(String(ticker))) || 'PIF1';
+            assetData.pif.name = pifTicker;
+            assetData.pif.price = prices && typeof prices.getPrice === 'function'
+                ? Number(prices.getPrice(pifTicker, state.currentDay || 1) || 0)
+                : 1250;
+
+            assetData.currency.price = prices && typeof prices.getPrice === 'function'
+                ? Number(prices.getPrice('USD', state.currentDay || 1) || 0)
+                : 85.05;
+            assetData.gold.price = prices && typeof prices.getPrice === 'function'
+                ? Number(prices.getPrice('GOLD', state.currentDay || 1) || 0)
+                : 10000;
+        }
+
+        function updateUI() {
+            syncSelectedAssetNames();
+
+            assetCards.forEach((card) => {
+                const asset = card.dataset.asset;
+                if (asset === currentAsset) {
+                    card.classList.add('active');
+                    card.classList.remove('inactive');
+                    card.querySelector('.name').classList.remove('faded');
+                    card.querySelector('.desc').classList.remove('faded');
+                    card.querySelector('.arrow').classList.remove('faded');
+                } else {
+                    card.classList.remove('active');
+                    card.classList.add('inactive');
+                    card.querySelector('.name').classList.add('faded');
+                    card.querySelector('.desc').classList.add('faded');
+                    card.querySelector('.arrow').classList.add('faded');
+                }
+            });
+
+            document.querySelectorAll('.selection-card, .asset-info-card').forEach((el) => {
+                el.classList.remove('visible');
+            });
+
+            const data = assetData[currentAsset];
+            const infoEl = document.getElementById(data.info);
+            if (infoEl) infoEl.classList.add('visible');
+
+            selectedAssetName.textContent = data.name;
+            quantityLabel.textContent = data.label;
+            unitLabel.textContent = data.unit;
+            buyBtn.textContent = currentAction === 'buy' ? 'Купить' : 'Продать';
+            sellBtn.textContent = currentAction === 'buy' ? 'Продать' : 'Купить';
+
+            updateTotal();
+            syncTradePanel();
+        }
+
+        function updateTotal() {
+            const data = assetData[currentAsset];
+            const value = Number(String(quantityInput.value).replace(/\s/g, '')) || 0;
+            const total = value * data.price;
+            totalAmount.textContent = `${total.toLocaleString('ru-RU')} ₽`;
+        }
+
+        function selectAsset(asset) {
+            if (asset === currentAsset) return;
+            currentAsset = asset;
+            updateUI();
+        }
+
+        assetCards.forEach((card) => {
+            card.addEventListener('click', () => {
+                selectAsset(card.dataset.asset);
+            });
+        });
+
+        document.querySelectorAll('#bondsSelection .selection-item').forEach((item) => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('#bondsSelection .selection-item').forEach((el) => {
+                    el.classList.remove('active');
+                    el.classList.add('inactive');
+                });
+
+                item.classList.add('active');
+                item.classList.remove('inactive');
+                currentBond = [...document.querySelectorAll('#bondsSelection .selection-item')].indexOf(item);
+                updateUI();
+            });
+        });
+
+        document.querySelectorAll('#stocksSelection .selection-item').forEach((item) => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('#stocksSelection .selection-item').forEach((el) => {
+                    el.classList.remove('active');
+                    el.classList.add('inactive');
+                });
+
+                item.classList.add('active');
+                item.classList.remove('inactive');
+                currentStock = [...document.querySelectorAll('#stocksSelection .selection-item')].indexOf(item);
+                updateUI();
+            });
+        });
+
+        document.querySelectorAll('#pifSelection .selection-item').forEach((item) => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('#pifSelection .selection-item').forEach((el) => {
+                    el.classList.remove('active');
+                    el.classList.add('inactive');
+                });
+
+                item.classList.add('active');
+                item.classList.remove('inactive');
+                currentPif = [...document.querySelectorAll('#pifSelection .selection-item')].indexOf(item);
+                updateUI();
+            });
+        });
+
+        toggleSwitch.addEventListener('click', (event) => {
+            const option = event.target.closest('.option');
+            if (!option || option.classList.contains('active')) return;
+
+            buyOption.classList.toggle('active');
+            buyOption.classList.toggle('inactive');
+            sellOption.classList.toggle('active');
+            sellOption.classList.toggle('inactive');
+
+            currentAction = option.dataset.value;
+            updateUI();
+        });
+
+        quantityInput.addEventListener('input', () => {
+            updateTotal();
+            syncTradePanel();
+        });
+
+        buyBtn.addEventListener('click', () => {
+            const quantity = Number(String(quantityInput.value).replace(/\s/g, '')) || 0;
+            if (!quantity || quantity <= 0) {
+                alert('Введите корректное количество');
+                return;
+            }
+
+            const engine = window.game && window.game.engine ? window.game.engine : null;
+            const ticker = resolveTickerByAsset();
+            if (!engine) {
+                alert('Игра ещё не инициализирована');
+                return;
+            }
+
+            try {
+                const state = readGameState();
+                const nextState = JSON.parse(JSON.stringify(state));
+                const result = currentAction === 'buy' ? engine.buyAsset(nextState, ticker, quantity) : engine.sellAsset(nextState, ticker, quantity);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(result));
+                if (window.game && typeof window.game.data === 'function') {
+                    window.game.data = () => result;
+                }
+                updateUI();
+            } catch (error) {
+                alert(error.message || 'Не удалось выполнить сделку');
+            }
+        });
+
+        sellBtn.addEventListener('click', () => {
+            const quantity = Number(String(quantityInput.value).replace(/\s/g, '')) || 0;
+            if (!quantity || quantity <= 0) {
+                alert('Введите корректное количество');
+                return;
+            }
+
+            const engine = window.game && window.game.engine ? window.game.engine : null;
+            const ticker = resolveTickerByAsset();
+            if (!engine) {
+                alert('Игра ещё не инициализирована');
+                return;
+            }
+
+            try {
+                const state = readGameState();
+                const nextState = JSON.parse(JSON.stringify(state));
+                const result = currentAction === 'buy' ? engine.buyAsset(nextState, ticker, quantity) : engine.sellAsset(nextState, ticker, quantity);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(result));
+                if (window.game && typeof window.game.data === 'function') {
+                    window.game.data = () => result;
+                }
+                updateUI();
+            } catch (error) {
+                alert(error.message || 'Не удалось выполнить сделку');
+            }
+        });
 
         function syncTradePanel() {
             const state = readGameState();
@@ -1031,24 +1072,17 @@
                 available.textContent = `Доступно: ${formatMoney(cash + bank)}`;
             }
 
-            const input = document.getElementById('quantityInput');
-            const total = document.getElementById('totalAmount');
-            if (!input || !total) return;
-
-            const amount = Number(String(input.value).replace(/\s/g, '')) || 0;
-            const price = Number(assetData?.[currentAsset]?.price || 0);
-            total.textContent = `${(amount * price).toLocaleString('ru-RU')} ₽`;
+            const price = assetData[currentAsset]?.price || 0;
+            const amount = Number(String(quantityInput.value).replace(/\s/g, '')) || 0;
+            totalAmount.textContent = `${(amount * price).toLocaleString('ru-RU')} ₽`;
         }
 
-        const input = document.getElementById('quantityInput');
-        if (input) {
-            input.addEventListener('input', syncTradePanel);
-        }
-
-        syncTradePanel();
+        quantityInput.value = '1000';
+        updateUI();
     })();
 </script>
 
+    <script type="module" src="./script.js"></script>
     <script src="app-shell.js"></script>
 </body>
 </html>
