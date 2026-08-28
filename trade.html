@@ -1000,6 +1000,55 @@
     updateUI();
 </script>
 
+<script>
+    (() => {
+        const STORAGE_KEY = 'game_my_game';
+
+        function readGameState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (error) {
+                console.warn('Не удалось прочитать состояние игры', error);
+                return null;
+            }
+        }
+
+        function safeNumber(value) {
+            return Number(value || 0);
+        }
+
+        function formatMoney(value) {
+            return `${Math.round(safeNumber(value)).toLocaleString('ru-RU')} ₽`;
+        }
+
+        function syncTradePanel() {
+            const state = readGameState();
+            const available = document.querySelector('.deal-available');
+            if (available) {
+                const cash = safeNumber(state?.portfolio?.cash);
+                const bank = safeNumber(state?.portfolio?.bankAccount?.balance);
+                available.textContent = `Доступно: ${formatMoney(cash + bank)}`;
+            }
+
+            const input = document.getElementById('quantityInput');
+            const total = document.getElementById('totalAmount');
+            if (!input || !total) return;
+
+            const amount = Number(String(input.value).replace(/\s/g, '')) || 0;
+            const price = Number(assetData?.[currentAsset]?.price || 0);
+            total.textContent = `${(amount * price).toLocaleString('ru-RU')} ₽`;
+        }
+
+        const input = document.getElementById('quantityInput');
+        if (input) {
+            input.addEventListener('input', syncTradePanel);
+        }
+
+        syncTradePanel();
+    })();
+</script>
+
     <script src="app-shell.js"></script>
 </body>
 </html>

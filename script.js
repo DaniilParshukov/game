@@ -84,7 +84,7 @@ async function initGame() {
                     .map(row => row.Ticker)
                     .filter(Boolean);
 
-                const stockCount = Math.min(4, stockCandidates.length);
+                const stockCount = Math.min(3, stockCandidates.length);
                 const stocks = shuffleArray(stockCandidates).slice(0, stockCount);
 
                 const bondCandidates = rows.slice(0, 5).map(row => row.Ticker).filter(Boolean);
