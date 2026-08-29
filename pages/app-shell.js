@@ -1,26 +1,29 @@
-import { LocalStorageAdapter } from './core/LocalStorageAdapter.js';
-
 (function () {
-  const storage = new LocalStorageAdapter();
+  const storageKey = 'copilka-player-name';
 
   function getPlayerName() {
-    if (!storage || typeof storage.loadPlayerName !== 'function') {
-      return 'Игрок';
+    try {
+      return localStorage.getItem(storageKey) || 'Игрок';
+    } catch (error) {
+      throw new Error('Не удалось загрузить имя игрока из localStorage: ' + error.message);
     }
-    return storage.loadPlayerName();
   }
 
   function setPlayerName(name) {
-    if (!storage || typeof storage.savePlayerName !== 'function') {
-      return;
+    try {
+      localStorage.setItem(storageKey, name);
+    } catch (error) {
+      throw new Error('Не удалось сохранить имя игрока: ' + error.message);
     }
-    storage.savePlayerName(name);
   }
 
   function syncProfileNames() {
     const playerName = getPlayerName();
     document.querySelectorAll('.nav-profile, .profile-btn').forEach((el) => {
       el.textContent = playerName;
+      if (!el.getAttribute('href') && !el.dataset.go) {
+        el.setAttribute('href', 'portfolio.html');
+      }
     });
   }
 
