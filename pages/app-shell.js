@@ -1,5 +1,5 @@
 (function () {
-  const storage = window.getStorage();
+  const storage = window.game.getStorage();
 
   function getPlayerName() {
     if (!storage || typeof storage.loadPlayerName !== 'function') {
