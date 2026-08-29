@@ -1,6 +1,26 @@
-// storage/LocalStorageAdapter.js
+const PLAYER_NAME_KEY = 'copilka-player-name';
 
 export class LocalStorageAdapter {
+    getPlayerGameKey() {
+        const safeName = String(this.loadPlayerName()).trim();
+        return safeName;
+    }
+
+    savePlayerName(name) {
+        const safeName = String(name).trim();
+        localStorage.setItem(PLAYER_NAME_KEY, safeName);
+        return safeName;
+    }
+
+    loadPlayerName() {
+        try {
+            const value = localStorage.getItem(PLAYER_NAME_KEY);
+            return value.trim();
+        } catch (error) {
+            throw new Error('Ошибка при загрузке имени игрока из localStorage: ' + error.message);
+        }
+    }
+
     /**
      * Сохранить игру в localStorage
      */

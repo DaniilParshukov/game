@@ -1,14 +1,62 @@
 import { GameEngine } from './core/GameEngine.js';
-import { LocalStorageAdapter } from './storage/LocalStorageAdapter.js';
+import { LocalStorageAdapter } from './core/LocalStorageAdapter.js';
 import { LocalPrices } from './prices/LocalPrices.js';
 
 const storage = new LocalStorageAdapter();
-const GAME_ID = 'my_game';
+window.CopilkaStorage = LocalStorageAdapter;
 
 let prices = null;
 let gameData = null;
 
+function getCurrentGameId() {
+    return storage.getPlayerGameKey();
+}
+
 const gameEngine = new GameEngine(storage, prices);
+
+function getTickerByName(name) {
+    const selected = gameData?.selectedTickers || {};
+    const bonds = Array.isArray(selected.bonds) ? selected.bonds : [];
+    const stocks = Array.isArray(selected.stocks) ? selected.stocks : [];
+    const others = Array.isArray(selected.others) ? selected.others : [];
+    const fundTickers = others.filter((ticker) => !/USD|GOLD|BANK/i.test(String(ticker)));
+    const goldTicker = others.find((ticker) => /GOLD/i.test(String(ticker)));
+    const usdTicker = others.find((ticker) => /USD/i.test(String(ticker)));
+
+    const normalized = String(name || '').trim().toLowerCase();
+    const directTicker = String(name || '').trim();
+    if (/^[A-Z0-9_./-]+$/.test(directTicker) && directTicker.length > 2) {
+        return directTicker;
+    }
+
+    const lookup = {
+        'ставка': selected.bankTicker,
+        'офз': bonds[0],
+        'корпоративные': bonds[1],
+        'вдо': bonds[2],
+        'пиф1': fundTickers[0],
+        'пиф2': fundTickers[1],
+        'акция1': stocks[0],
+        'акция2': stocks[1],
+        'акция3': stocks[2],
+        'usd': usdTicker,
+        'доллар': usdTicker,
+        '1 грамм': goldTicker,
+        'золото': goldTicker,
+        'gold': goldTicker
+    };
+
+    if (lookup[normalized]) {
+        return lookup[normalized];
+    }
+
+    const displayValue = Object.entries(lookup).find(([key, value]) => key === normalized || String(value) === directTicker);
+    if (displayValue) {
+        return displayValue[1];
+    }
+
+    throw new Error(`Тикер не найден для названия: ${name}`);
+} 
 
 function shuffleArray(items) {
     const copy = [...items];
@@ -97,14 +145,7 @@ async function ensureTickerSelection() {
         const csvMap = await loadTickersCsv();
         const years = Object.keys(csvMap);
         if (!years.length) {
-            gameData.selectedTickers = {
-                bonds: ['OFZ', 'BONDS', 'VDO'],
-                stocks: ['SBER', 'GAZP', 'YNDX'],
-                others: ['USD', 'GLDRUB_TOM'],
-                bankTicker: 'BANK'
-            };
-            gameData.year = '2024';
-            return gameData.selectedTickers;
+            throw new Error('Нет доступных данных в tickers.csv');
         }
 
         const randomYear = years[Math.floor(Math.random() * years.length)];
@@ -119,15 +160,7 @@ async function ensureTickerSelection() {
 
         return selectedTickers;
     } catch (err) {
-        console.warn('Не удалось загрузить tickers.csv', err);
-        gameData.year = gameData.year || '2024';
-        gameData.selectedTickers = {
-            bonds: ['OFZ', 'BONDS', 'VDO'],
-            stocks: ['SBER', 'GAZP', 'YNDX'],
-            others: ['USD', 'GLDRUB_TOM'],
-            bankTicker: 'BANK'
-        };
-        return gameData.selectedTickers;
+        throw new Error(`Не удалось загрузить tickers.csv: ${err}`);
     }
 }
 
@@ -148,7 +181,8 @@ function createNewGame() {
 }
 
 async function loadGame() {
-    const saved = await storage.loadGame(GAME_ID);
+    const playerName = getCurrentGameId();
+    const saved = await storage.loadGame(playerName);
     if (saved) {
         gameData = saved;
         if (saved.year) {
@@ -160,7 +194,7 @@ async function loadGame() {
 
     gameData = createNewGame();
     await ensureTickerSelection();
-    await storage.saveGame(GAME_ID, gameData);
+    await storage.saveGame(playerName, gameData);
     return gameData;
 }
 
@@ -183,9 +217,10 @@ async function initializeGame() {
 }
 
 async function resetGame() {
-    await storage.deleteGame(GAME_ID);
+    const playerName = getCurrentGameId();
+    await storage.deleteGame(playerName);
     gameData = createNewGame();
-    await storage.saveGame(GAME_ID, gameData);
+    await storage.saveGame(playerName, gameData);
     return gameData;
 }
 
@@ -193,6 +228,8 @@ window.game = {
     data: () => gameData,
     engine: gameEngine,
     getPrices: () => prices,
+    getStorage: () => storage,
+    getTickerByName,
     initialize: initializeGame,
     reset: resetGame
 };

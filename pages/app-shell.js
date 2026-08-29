@@ -1,29 +1,24 @@
 (function () {
-  const storageKey = 'copilka-player-name';
+  const storage = window.getStorage();
 
   function getPlayerName() {
-    try {
-      return localStorage.getItem(storageKey) || 'Игрок';
-    } catch (error) {
+    if (!storage || typeof storage.loadPlayerName !== 'function') {
       return 'Игрок';
     }
+    return storage.loadPlayerName();
   }
 
   function setPlayerName(name) {
-    try {
-      localStorage.setItem(storageKey, name);
-    } catch (error) {
-      console.warn('Не удалось сохранить имя игрока', error);
+    if (!storage || typeof storage.savePlayerName !== 'function') {
+      return;
     }
+    storage.savePlayerName(name);
   }
 
   function syncProfileNames() {
     const playerName = getPlayerName();
     document.querySelectorAll('.nav-profile, .profile-btn').forEach((el) => {
       el.textContent = playerName;
-      if (!el.getAttribute('href') && !el.dataset.go) {
-        el.setAttribute('href', 'registration.html');
-      }
     });
   }
 
@@ -88,7 +83,7 @@
 
     const profileLink = document.querySelector('.nav-profile, .profile-btn');
     if (profileLink) {
-      profileLink.setAttribute('href', 'registration.html');
+      profileLink.setAttribute('href', 'portfolio.html');
     }
   }
 
@@ -96,7 +91,7 @@
     const replayBtn = document.querySelector('#playAgainBtn');
     if (replayBtn) {
       replayBtn.addEventListener('click', () => {
-        window.location.href = 'registration.html';
+        window.location.href = 'portfolio.html';
       });
     }
 
@@ -125,7 +120,7 @@
 
     const profileLink = document.querySelector('.nav-profile');
     if (profileLink) {
-      profileLink.setAttribute('href', 'registration.html');
+      profileLink.setAttribute('href', 'portfolio.html');
     }
   }
 

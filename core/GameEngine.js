@@ -51,7 +51,7 @@ export class GameEngine {
         portfolio.bankAccount = account;
         return portfolio;
     }
-
+/* old
 getInstrumentInfo(ticker) {
     switch (ticker) {
         case 'BANK': return {
@@ -133,6 +133,7 @@ getInstrumentInfo(ticker) {
         };
     }
 }
+*/
 
     /**
      * Переоценить активы по текущим ценам
