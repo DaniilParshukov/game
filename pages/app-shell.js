@@ -1,3 +1,5 @@
+import { LocalStorageAdapter } from './core/LocalStorageAdapter.js';
+
 (function () {
   const storage = new LocalStorageAdapter();
 
