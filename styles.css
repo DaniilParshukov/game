@@ -477,11 +477,8 @@ button, input, select {
   user-select: none;
 }
 
-.nav-arrow--left { left: 34px; }
-.nav-arrow--right {
-  right: 34px;
-  transform: rotate(-180deg);
-}
+.nav-arrow--left { left: 58px; }
+.nav-arrow--right {right: 58px;}
 
 .register-card,
 .portfolio-table,
