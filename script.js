@@ -9,7 +9,11 @@ let prices = null;
 let gameData = null;
 
 function getCurrentGameId() {
-    return storage.getPlayerGameKey();
+    try {
+      return localStorage.getItem('copilka-player-name');
+    } catch (error) {
+      throw new Error('Не удалось загрузить имя игрока из localStorage: ' + error.message);
+    }
 }
 
 const gameEngine = new GameEngine(storage, prices);
