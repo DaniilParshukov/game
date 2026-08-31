@@ -272,5 +272,10 @@
     if (quantityInput) {
         quantityInput.value = '1000';
     }
-    updateUI();
+    // If game bootstrap is available, initialize first and then render UI so real state is shown.
+    if (window.game && typeof window.game.initialize === 'function') {
+        void window.game.initialize().then(() => updateUI()).catch(() => updateUI());
+    } else {
+        updateUI();
+    }
 })();

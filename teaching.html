@@ -1,1098 +1,1105 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Копилка — Обучение</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-    <style>
-        /* ── reset & base ── */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Копилка — Обучение</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #F6F8FA;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #F6F8FA;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
 
-        /* ── главный контейнер ── */
-        .page {
-            position: relative;
-            width: 1440px;
-            height: 1024px;
-            background: #F6F8FA;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
+    .page {
+      max-width: 1440px;
+      width: 100%;
+      background: #F6F8FA;
+      border-radius: 40px;
+      padding: 30px 40px 50px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.03);
+      position: relative;
+      transition: all 0.2s;
+    }
 
-        /* ── КОПИЛКА (заголовок) ── */
-        .kopilka-title {
-            position: absolute;
-            width: 260px;
-            height: 50.4px;
-            left: 56px;
-            top: 34px;
-            font-weight: 800;
-            font-size: 36px;
-            line-height: 44px;
-            color: #0D4F35;
-        }
+    /* ── шапка ── */
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px 20px;
+    }
 
-        /* ── иконка Group 6 ── */
-        .icon-decor {
-            position: absolute;
-            width: 69px;
-            height: 63.19px;
-            left: 278px;
-            top: 15px;
-            pointer-events: none;
-        }
-        .icon-decor img {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
+    .header-left {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
 
-        /* ── бейдж "ОБУЧЕНИЕ" ── */
-        .learn-badge {
-            position: absolute;
-            width: 110px;
-            height: 38px;
-            left: 56px;
-            top: 125px;
-            background: #144733;
-            border-radius: 19px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 13px;
-            line-height: 16px;
-            color: #FFFEFA;
-            z-index: 10;
-        }
+    .kopilka-title {
+      font-weight: 800;
+      font-size: 36px;
+      line-height: 1.2;
+      color: #0D4F35;
+      letter-spacing: -0.5px;
+    }
 
-        /* ── профиль ── */
-        .profile-btn {
-            position: absolute;
-            width: 163.03px;
-            height: 59px;
-            left: 1185.87px;
-            top: 44px;
-            background: #144733;
-            border-radius: 29.5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 23.2895px;
-            line-height: 28px;
-            color: #FFFFFF;
-            z-index: 10;
-        }
+    .icon-decor {
+      width: 50px;
+      height: 50px;
+      background: #C7F26B;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 28px;
+      color: #144733;
+      flex-shrink: 0;
+    }
 
-        /* ── кнопка "← Вернуться в портфель" ── */
-        .back-btn {
-            position: absolute;
-            width: 328px;
-            height: 59px;
-            left: 813px;
-            top: 44px;
-            background: #FFFCF7;
-            border-radius: 29.5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 23.29px;
-            line-height: 28px;
-            color: #1A241C;
-            cursor: pointer;
-            transition: background 0.2s;
-            z-index: 10;
-            text-decoration: none;
-        }
-        .back-btn:hover {
-            background: #f0ede6;
-        }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
 
-        /* ── заголовок ── */
-        .main-title {
-            position: absolute;
-            width: 1080px;
-            height: 51px;
-            left: 56px;
-            top: 180px;
-            font-weight: 800;
-            font-size: 42px;
-            line-height: 51px;
-            color: #144733;
-        }
+    .profile-btn {
+      background: #144733;
+      border-radius: 29.5px;
+      padding: 12px 32px;
+      font-weight: 600;
+      font-size: 20px;
+      color: #FFFFFF;
+      text-decoration: none;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .profile-btn:hover {
+      background: #1f5f45;
+    }
 
-        /* ── подзаголовок ── */
-        .sub-title {
-            position: absolute;
-            width: 900px;
-            height: 24px;
-            left: 58px;
-            top: 238px;
-            font-weight: 400;
-            font-size: 20px;
-            line-height: 24px;
-            color: #6E7870;
-        }
+    .back-btn {
+      background: #FFFCF7;
+      border-radius: 29.5px;
+      padding: 12px 28px;
+      font-weight: 600;
+      font-size: 20px;
+      color: #1A241C;
+      text-decoration: none;
+      transition: background 0.2s;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+    .back-btn:hover {
+      background: #f0ede6;
+    }
 
-        /* ── "Тут нужно посмотреть пример" ── */
-        .example-hint {
-            position: absolute;
-            width: 326px;
-            height: 24px;
-            top: 236px;
-            font-weight: 400;
-            font-size: 20px;
-            line-height: 24px;
-            color: #6E7870;
-            z-index: 5;
-            display: none;
-        }
-        .example-hint.visible { display: block; }
+    /* ── заголовок секции ── */
+    .hero-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .hero {
+      margin: 12px 0 28px;
+    }
+    .main-title {
+      font-weight: 800;
+      font-size: 42px;
+      line-height: 1.2;
+      color: #144733;
+      margin-bottom: 6px;
+    }
+    .sub-title {
+      font-weight: 400;
+      font-size: 20px;
+      color: #6E7870;
+    }
 
-        /* ── стрелка ← к примеру ── */
-        .arrow-example {
-            position: absolute;
-            width: 27px;
-            height: 28px;
-            top: 221px;
-            font-weight: 400;
-            font-size: 23.29px;
-            line-height: 28px;
-            color: #6E7870;
-            transform: rotate(45.92deg);
-            z-index: 5;
-            display: none;
-        }
-        .arrow-example.visible { display: block; }
+    /* ── пример (подсказка) ── */
+    .example-trigger {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .example-hint {
+      font-weight: 400;
+      font-size: 20px;
+      color: #6E7870;
+    }
+    .arrow-example {
+      font-weight: 400;
+      font-size: 26px;
+      color: #6E7870;
+      transform: rotate(45deg);
+      display: inline-block;
+      line-height: 1;
+    }
+    .question-circle {
+      width: 58px;
+      height: 58px;
+      background: #C7F26B;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+      font-weight: 800;
+      font-size: 28px;
+      color: #144733;
+      box-shadow: 0 4px 12px rgba(199, 242, 107, 0.3);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 2;
+    }
+    .question-circle:hover {
+      transform: scale(1.05);
+    }
 
-        /* ── круг с ? ── */
-        .question-circle {
-            position: absolute;
-            width: 58px;
-            height: 58px;
-            background: #C7F26B;
-            border-radius: 50%;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 5;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .question-circle.visible {
-            display: flex;
-        }
-        .question-circle:hover {
-            transform: scale(1.05);
-        }
-        .question-circle span {
-            font-weight: 800;
-            font-size: 28px;
-            line-height: 34px;
-            text-align: center;
-            color: #144733;
-        }
+    /* ── ГОРИЗОНТАЛЬНАЯ ПОДСКАЗКА ── */
+    .hint-message {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      position: absolute;
+      left: calc(100% + 16px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: #1a1a2e;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 16px;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      z-index: 2;
+    }
+    .hint-message::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: -8px;
+      transform: translateY(-50%);
+      border: 8px solid transparent;
+      border-right-color: #1a1a2e;
+    }
+    .question-circle:hover + .hint-message,
+    .question-circle:focus + .hint-message,
+    .example-trigger:hover .hint-message {
+      visibility: visible;
+      opacity: 1;
+    }
 
-        /* ── основная карточка ── */
-        .content-card {
-            position: absolute;
-            width: 1328px;
-            height: 600px;
-            left: 56px;
-            top: 300px;
-            background: #FFFEFA;
-            border-radius: 28px;
-            padding: 35px 34px 0 34px;
-        }
+    /* ── ОСНОВНОЙ КОНТЕНТ (обёртка для блюра) ── */
+    .main-content {
+      transition: filter 0.4s ease, opacity 0.4s ease;
+      position: relative;
+      z-index: 1;
+    }
 
-        /* ── контент для каждого актива ── */
-        .asset-content {
-            display: none;
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-        .asset-content.active {
-            display: flex;
-            flex-direction: column;
-            flex-wrap: wrap;
-            align-content: flex-start;
-            gap: 0;
-        }
+    /* ── ОВЕРЛЕЙ (поверх всего с затемнением) ── */
+    .example-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+      pointer-events: none;
+    }
 
-        /* ── уровень риска ── */
-        .risk-badge {
-            width: 603.47px;
-            height: 63px;
-            border-radius: 31.5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 26.5263px;
-            line-height: 32px;
-            color: #1A241C;
-            flex-shrink: 0;
-            margin-bottom: 32px;
-        }
-        .risk-badge--low { background: #C3FFC5; }
-        .risk-badge--medium { background: #FFBF66; }
-        .risk-badge--high { background: #FF9494; }
+    .example-overlay.visible {
+      display: flex;
+    }
 
-        /* ── левая колонка ── */
-        .left-column {
-            display: flex;
-            flex-direction: column;
-            width: 645px;
-            flex-shrink: 0;
-            margin-right: 15px;
-        }
+    .example-overlay .overlay-content {
+      background: #D0E3BE;
+      border-radius: 35px;
+      padding: 40px 50px;
+      max-width: 780px;
+      width: 100%;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+      position: relative;
+      animation: overlaySlideIn 0.4s ease;
+      pointer-events: auto;
+    }
 
-        /* ── секция "Что это?" ── */
-        .what-section {
-            flex-shrink: 0;
-            margin-bottom: 20px;
-        }
-        .what-section .title {
-            font-weight: 800;
-            font-size: 28.2847px;
-            line-height: 34px;
-            color: #144733;
-        }
-        .what-section .sub {
-            font-weight: 600;
-            font-size: 20.365px;
-            line-height: 25px;
-            color: #1A241C;
-            margin-top: 16px;
-        }
-        .what-section .desc {
-            font-weight: 400;
-            font-size: 18.1px;
-            line-height: 22px;
-            color: #1A241C;
-            margin-top: 12px;
-            max-width: 586px;
-        }
+    .example-overlay:not(.visible) {
+      pointer-events: none;
+    }
 
-        /* ── блок "Риск / важный нюанс" ── */
-        .risk-note {
-            width: 645px;
-            background: #FEF6E5;
-            border-radius: 25.5541px;
-            padding: 20px 0 20px 22px;
-            flex-shrink: 0;
-            margin-top: auto;
-        }
-        .risk-note .title {
-            font-weight: 600;
-            font-size: 24.1344px;
-            line-height: 29px;
-            color: #144733;
-        }
-        .risk-note .desc {
-            font-weight: 400;
-            font-size: 18.1px;
-            line-height: 22px;
-            color: #1A241C;
-            margin-top: 8px;
-            max-width: 576px;
-        }
+    @keyframes overlaySlideIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
 
-        /* ── правая колонка ── */
-        .right-column {
-            display: flex;
-            flex-direction: column;
-            width: 586px;
-            flex-shrink: 0;
-            height: 100%;
-        }
+    .example-overlay .close-btn {
+      position: absolute;
+      right: 24px;
+      top: 16px;
+      font-size: 36px;
+      font-weight: 700;
+      color: #144733;
+      cursor: pointer;
+      background: none;
+      border: none;
+      line-height: 1;
+      transition: transform 0.2s;
+      z-index: 10;
+    }
+    .example-overlay .close-btn:hover {
+      transform: rotate(90deg);
+    }
 
-        /* ── секция "Как получить доход" ── */
-        .income-section {
-            width: 586px;
-            background: #F0F6F1;
-            border-radius: 22px;
-            padding: 22px 0 22px 35px;
-            flex-shrink: 0;
-            margin-bottom: 20px;
-            min-height: 180px;
-        }
-        .income-section .title {
-            font-weight: 800;
-            font-size: 29.21px;
-            line-height: 35px;
-            color: #144733;
-        }
-        .income-item {
-            margin-top: 18px;
-        }
-        .income-item .label {
-            font-weight: 600;
-            font-size: 23.9px;
-            line-height: 29px;
-            color: #144733;
-        }
-        .income-item .desc {
-            font-weight: 400;
-            font-size: 18.59px;
-            line-height: 22px;
-            color: #6E7870;
-            margin-top: 2px;
-        }
+    .example-overlay .icon-badge {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    .example-overlay .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      background: #C7F26B;
+      border-radius: 50%;
+      font-weight: 800;
+      font-size: 30px;
+      color: #144733;
+    }
+    .example-overlay .badge {
+      background: #144733;
+      color: #FFFEFA;
+      font-weight: 600;
+      font-size: 22px;
+      padding: 4px 32px;
+      border-radius: 30px;
+    }
+    .example-overlay .title {
+      font-weight: 800;
+      font-size: 38px;
+      color: #144733;
+      margin: 12px 0 8px;
+    }
+    .example-overlay .desc {
+      font-weight: 400;
+      font-size: 20px;
+      line-height: 1.6;
+      color: #1A241C;
+      text-align: justify;
+    }
+    .example-overlay .desc code {
+      background: rgba(0,0,0,0.05);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 18px;
+    }
 
-        /* ── блок "На что смотреть инвестору" ── */
-        .investor-tips {
-            width: 586px;
-            background: #F5FBFF;
-            border-radius: 19px;
-            padding: 20px 0 20px 30px;
-            flex-shrink: 0;
-            margin-top: auto;
-            min-height: 180px;
-        }
-        .investor-tips .title {
-            font-weight: 800;
-            font-size: 25px;
-            line-height: 30px;
-            color: #144733;
-        }
-        .investor-tips .item {
-            margin-top: 12px;
-        }
-        .investor-tips .item .label {
-            font-weight: 600;
-            font-size: 18px;
-            line-height: 22px;
-            color: #144733;
-        }
-        .investor-tips .item .desc {
-            font-weight: 400;
-            font-size: 14px;
-            line-height: 17px;
-            color: #6E7870;
-            margin-top: 2px;
-        }
+    /* ── основная карточка ── */
+    .content-card {
+      background: #FFFEFA;
+      border-radius: 28px;
+      padding: 32px 34px 28px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.02);
+      margin-bottom: 32px;
+      overflow: hidden;
+      transition: height 0.3s ease;
+    }
+    
+    .content-card.blurred {
+      filter: blur(6px) brightness(0.7);
+      opacity: 0.6;
+      pointer-events: none;
+      user-select: none;
+    }
 
-        /* ── пагинация ── */
-        .pagination {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .pagination .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #C7D1C9;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .pagination .dot.active {
-            background: #144733;
-        }
-        .pagination .counter {
-            font-weight: 600;
-            font-size: 13px;
-            line-height: 16px;
-            color: #6E7870;
-            margin-left: 4px;
-        }
+    .asset-content {
+      display: none;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .asset-content.active {
+      display: flex;
+    }
 
-        /* ── стрелки навигации ── */
-        .nav-arrow {
-            position: absolute;
-            bottom: 40px;
-            font-weight: 400;
-            font-size: 80px;
-            line-height: 97px;
-            color: #144733;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            z-index: 10;
-            user-select: none;
-        }
-        .nav-arrow:hover {
-            opacity: 0.7;
-        }
-        .nav-arrow--left {
-            left: 58px;
-        }
-        .nav-arrow--right {
-            right: 58px;
-        }
+    .asset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
 
-        /* ── пример (всплывающий блок) ── */
-        .example-overlay {
-            display: none;
-            position: absolute;
-            left: 76px;
-            top: 380px;
-            width: 1291px;
-            height: 319px;
-            filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
-            z-index: 20;
-            background: #D0E3BE;
-            border-radius: 35.4449px;
-            padding: 30px 50px;
-        }
-        .example-overlay.visible {
-            display: block;
-        }
-        .example-overlay .close-btn {
-            position: absolute;
-            right: 20px;
-            top: 10px;
-            font-size: 30px;
-            font-weight: 700;
-            color: #144733;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-        .example-overlay .icon {
-            display: inline-block;
-            width: 42px;
-            height: 41px;
-            background: #C7F26B;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 41px;
-            font-weight: 800;
-            font-size: 28px;
-            color: #144733;
-            margin-right: 12px;
-        }
-        .example-overlay .badge {
-            display: inline-block;
-            background: #144733;
-            color: #FFFEFA;
-            font-weight: 600;
-            font-size: 24px;
-            line-height: 29px;
-            padding: 6px 32px;
-            border-radius: 30.581px;
-        }
-        .example-overlay .title {
-            font-weight: 800;
-            font-size: 38.7568px;
-            line-height: 47px;
-            color: #144733;
-            margin-top: 20px;
-        }
-        .example-overlay .desc {
-            font-weight: 400;
-            font-size: 25.8378px;
-            line-height: 31px;
-            text-align: justify;
-            color: #1A241C;
-            margin-top: 16px;
-            max-width: 1222px;
-        }
+    @media (max-width: 900px) {
+      .asset-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+    }
 
-        /* ── позиции для элементов примера (для каждого актива) ── */
-        .question-circle--account { left: 860px; top: 170px; }
-        .question-circle--ofz { left: 952px; top: 163px; }
-        .question-circle--corp { left: 641px; top: 167px; }
-        .question-circle--vdo { left: 860px; top: 170px; }
-        .question-circle--stocks { left: 538px; top: 165px; }
-        .question-circle--currency { left: 588px; top: 170px; }
-        .question-circle--pif { left: 860px; top: 170px; }
-        .question-circle--gold { left: 860px; top: 170px; }
+    .left-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
 
-        .example-hint--account { left: 944px; }
-        .example-hint--ofz { left: 1019px; }
-        .example-hint--corp { left: 708px; }
-        .example-hint--vdo { left: 944px; }
-        .example-hint--stocks { left: 605px; }
-        .example-hint--currency { left: 655px; }
-        .example-hint--pif { left: 944px; }
-        .example-hint--gold { left: 944px; }
+    .risk-badge {
+      width: 100%;
+      border-radius: 31.5px;
+      padding: 14px 20px;
+      font-weight: 600;
+      font-size: 26px;
+      line-height: 1.2;
+      color: #1A241C;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .risk-badge--low { background: #C3FFC5; }
+    .risk-badge--medium { background: #FFBF66; }
+    .risk-badge--high { background: #FF9494; }
 
-        .arrow-example--account { left: 918px; }
-        .arrow-example--ofz { left: 993px; }
-        .arrow-example--corp { left: 682px; }
-        .arrow-example--vdo { left: 918px; }
-        .arrow-example--stocks { left: 579px; }
-        .arrow-example--currency { left: 629px; }
-        .arrow-example--pif { left: 918px; }
-        .arrow-example--gold { left: 918px; }
+    .what-section {
+      padding: 20px 24px;
+      border-radius: 25px;
+    }
+    .what-section .title {
+      font-weight: 800;
+      font-size: 28px;
+      color: #144733;
+      margin-bottom: 8px;
+    }
+    .what-section .sub {
+      font-weight: 600;
+      font-size: 20px;
+      color: #1A241C;
+      margin-bottom: 8px;
+    }
+    .what-section .desc {
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 1.5;
+      color: #1A241C;
+    }
 
-        /* ── адаптив ── */
-        @media (max-width: 1440px) {
-            .page {
-                transform: scale(0.8);
-                transform-origin: top left;
-            }
-        }
-        @media (max-width: 1200px) {
-            .page {
-                transform: scale(0.6);
-                transform-origin: top left;
-            }
-        }
-        @media (max-width: 900px) {
-            .page {
-                transform: scale(0.45);
-                transform-origin: top left;
-            }
-        }
-        @media (max-width: 600px) {
-            .page {
-                transform: scale(0.3);
-                transform-origin: top left;
-            }
-        }
-    </style>
+    .risk-note {
+      background: #FEF6E5;
+      border-radius: 25px;
+      padding: 20px 24px;
+    }
+    .risk-note .title {
+      font-weight: 600;
+      font-size: 24px;
+      color: #144733;
+      margin-bottom: 4px;
+    }
+    .risk-note .desc {
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 1.5;
+      color: #1A241C;
+    }
+
+    .income-section {
+      background: #F0F6F1;
+      border-radius: 22px;
+      padding: 22px 28px;
+    }
+    .income-section .title {
+      font-weight: 800;
+      font-size: 29px;
+      color: #144733;
+      margin-bottom: 14px;
+    }
+    .income-item {
+      margin-bottom: 12px;
+    }
+    .income-item:last-child { margin-bottom: 0; }
+    .income-item .label {
+      font-weight: 600;
+      font-size: 24px;
+      color: #144733;
+    }
+    .income-item .desc {
+      font-weight: 400;
+      font-size: 18px;
+      color: #6E7870;
+      line-height: 1.4;
+    }
+
+    .investor-tips {
+      background: #F5FBFF;
+      border-radius: 19px;
+      padding: 20px 28px;
+    }
+    .investor-tips .title {
+      font-weight: 800;
+      font-size: 25px;
+      color: #144733;
+      margin-bottom: 10px;
+    }
+    .investor-tips .item {
+      margin-bottom: 12px;
+    }
+    .investor-tips .item:last-child { margin-bottom: 0; }
+    .investor-tips .item .label {
+      font-weight: 600;
+      font-size: 18px;
+      color: #144733;
+    }
+    .investor-tips .item .desc {
+      font-weight: 400;
+      font-size: 14px;
+      color: #6E7870;
+      line-height: 1.4;
+    }
+
+    /* ── пагинация ── */
+    .pagination-wrap {
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .nav-arrow {
+      font-weight: 400;
+      font-size: 96px;
+      line-height: 1;
+      color: #144733;
+      cursor: pointer;
+      user-select: none;
+      transition: opacity 0.2s;
+      padding: 0 8px;
+      flex-shrink: 0;
+      align-self: center;
+    }
+    .nav-arrow:hover {
+      opacity: 0.6;
+    }
+    .pagination-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .pagination .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #C7D1C9;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .pagination .dot.active {
+      background: #144733;
+    }
+    .pagination .counter {
+      font-weight: 600;
+      font-size: 12px;
+      color: #6E7870;
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    /* ── адаптив ── */
+    @media (max-width: 700px) {
+      .page { padding: 20px; }
+      .header { flex-direction: column; align-items: stretch; }
+      .header-right { justify-content: flex-start; flex-wrap: wrap; }
+      .main-title { font-size: 30px; }
+      .sub-title { font-size: 18px; }
+      .risk-badge { font-size: 20px; padding: 10px; }
+      .content-card { padding: 20px; }
+      .example-overlay .overlay-content { padding: 30px 24px; }
+      .example-overlay .title { font-size: 28px; }
+      .example-overlay .desc { font-size: 18px; }
+      .kopilka-title { font-size: 28px; }
+      .profile-btn, .back-btn { font-size: 16px; padding: 8px 20px; }
+      .question-circle { width: 48px; height: 48px; font-size: 24px; }
+      .nav-arrow { font-size: 36px; }
+
+      .hint-message {
+        left: 50%;
+        top: auto;
+        bottom: calc(100% + 16px);
+        transform: translateX(-50%);
+        white-space: normal;
+        font-size: 14px;
+        text-align: center;
+      }
+      .hint-message::before {
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-right-color: transparent;
+        border-top-color: #1a1a2e;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main-title { font-size: 24px; }
+      .income-section .title { font-size: 22px; }
+      .income-item .label { font-size: 20px; }
+      .what-section .title { font-size: 22px; }
+    }
+  </style>
 </head>
 <body>
 
 <div class="page">
 
-    <!-- заголовок "КОПИЛКА" -->
-    <div class="kopilka-title">КОПИЛКА</div>
-
-    <!-- иконка Group 6 -->
-    <div class="icon-decor">
-        <img src="icon.svg" alt="Иконка" />
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-left">
+      <span class="kopilka-title">КОПИЛКА</span>
+      <img src="icon.svg" alt="Иконка" />
     </div>
+    <div class="header-right">
+      <a href="portfolio.html" class="back-btn">← Вернуться в портфель</a>
+      <a href="portfolio.html" class="profile-btn"></a>
+    </div>
+  </header>
 
-    <!-- бейдж "ОБУЧЕНИЕ" -->
-    <div class="learn-badge">ОБУЧЕНИЕ</div>
+  <!-- ===== HERO + TRIGGER ===== -->
+  <div class="hero-row">
+    <div class="hero">
+      <div class="main-title" id="mainTitle">Накопительный счёт в банке</div>
+      <div class="sub-title" id="subTitle">Разберём инструмент за 60 секунд</div>
+    </div>
+    <div class="example-trigger">
+      <span class="question-circle" id="questionCircle">?</span>
+      <span class="hint-message">👈 Пример</span>
+    </div>
+  </div>
 
-    <!-- профиль -->
-    <a href="portfolio.html" class="profile-btn" data-go="portfolio.html"></a>
+  <!-- ===== ОСНОВНОЙ КОНТЕНТ (обёртка для блюра) ===== -->
+  <div class="main-content" id="mainContent">
 
-    <!-- кнопка "← Вернуться в портфель" -->
-    <a href="portfolio.html" class="back-btn" data-back="portfolio.html">← Вернуться в портфель</a>
-
-    <!-- заголовок (меняется) -->
-    <div class="main-title" id="mainTitle">Накопительный счёт в банке</div>
-
-    <!-- подзаголовок (меняется) -->
-    <div class="sub-title" id="subTitle">Разберём инструмент за 60 секунд</div>
-
-    <!-- стрелки навигации -->
-    <div class="nav-arrow nav-arrow--left" id="prevBtn">←</div>
-    <div class="nav-arrow nav-arrow--right" id="nextBtn">→</div>
-
-    <!-- ====== ОСНОВНАЯ КАРТОЧКА ====== -->
-    <div class="content-card">
-
-        <!-- ====== АКТИВ 1: НАКОПИТЕЛЬНЫЙ СЧЁТ ====== -->
-        <div class="asset-content active" data-asset="account">
+    <!-- ===== CONTENT CARD ===== -->
+    <div class="content-card" id="contentCard">
+      <!-- актив 1: Накопительный счёт -->
+      <div class="asset-content active" data-asset="account">
+        <div class="asset-grid">
+          <div class="left-column">
             <div class="risk-badge risk-badge--low">УРОВЕНЬ РИСКА — НИЗКИЙ</div>
-
-            <div class="left-column">
-                <div class="what-section">
-                    <div class="title">Что это?</div>
-                    <div class="sub">Деньги под рукой + проценты</div>
-                    <div class="desc">Это банковский счёт: его можно пополнять и снимать по правилам банка. В игре — каждый день и на максимально доступные суммы.</div>
-                </div>
-
-                <div class="risk-note">
-                    <div class="title">Риск / важный нюанс</div>
-                    <div class="desc">Ставка зависит от условий банка и экономической ситуации. Высокий процент не всегда означает лучший вариант: сравни условия целиком.</div>
-                </div>
+            <div class="what-section">
+              <div class="title">Что это?</div>
+              <div class="sub">Деньги под рукой + проценты</div>
+              <div class="desc">Это банковский счёт: его можно пополнять и снимать по правилам банка. В игре — каждый день и на максимально доступные суммы.</div>
             </div>
-
-            <div class="right-column">
-                <div class="income-section">
-                    <div class="title">Как получить доход</div>
-                    <div class="income-item">
-                        <div class="label">01 Проценты</div>
-                        <div class="desc">Банк начисляет процент на минимальный остаток за период.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">02 В игре</div>
-                        <div class="desc">Проценты начисляются ежедневно — 10% годовых.</div>
-                    </div>
-                </div>
-
-                <div class="investor-tips">
-                    <div class="title">На что смотреть инвестору</div>
-                    <div class="item">
-                        <div class="label">Надёжность важнее красивой ставки</div>
-                        <div class="desc">Главный риск: банк может не вернуть деньги при банкротстве и отзыве лицензии. В РФ средства в банках-участниках системы страхования вкладов застрахованы до 1,4 млн ₽.</div>
-                    </div>
-                </div>
+            <div class="risk-note">
+              <div class="title">Риск / важный нюанс</div>
+              <div class="desc">Ставка зависит от условий банка и экономической ситуации. Высокий процент не всегда означает лучший вариант: сравни условия целиком.</div>
             </div>
+          </div>
+          <div class="right-column">
+            <div class="income-section">
+              <div class="title">Как получить доход</div>
+              <div class="income-item"><span class="label">01 Проценты</span><div class="desc">Банк начисляет процент на минимальный остаток за период.</div></div>
+              <div class="income-item"><span class="label">02 В игре</span><div class="desc">Проценты начисляются ежедневно — 10% годовых.</div></div>
+            </div>
+            <div class="investor-tips">
+              <div class="title">На что смотреть инвестору</div>
+              <div class="item"><span class="label">Надёжность важнее красивой ставки</span><div class="desc">Главный риск: банк может не вернуть деньги при банкротстве и отзыве лицензии. В РФ средства в банках-участниках системы страхования вкладов застрахованы до 1,4 млн ₽.</div></div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- ====== АКТИВ 2: ОФЗ ====== -->
-        <div class="asset-content" data-asset="ofz">
+      <!-- актив 2: ОФЗ -->
+      <div class="asset-content" data-asset="ofz">
+        <div class="asset-grid">
+          <div class="left-column">
             <div class="risk-badge risk-badge--low">УРОВЕНЬ РИСКА — НИЗКИЙ</div>
-
-            <div class="left-column">
-                <div class="what-section">
-                    <div class="title">Что это?</div>
-                    <div class="sub">Ты даёшь государству деньги в долг</div>
-                    <div class="desc">Облигация — долговая ценная бумага. ОФЗ выпускает Министерство финансов РФ, а инвестор фактически даёт государству деньги на определённый срок.</div>
-                </div>
-
-                <div class="risk-note">
-                    <div class="title">Риск / важный нюанс</div>
-                    <div class="desc">Риск дефолта: эмитент задерживает или не выплачивает долг. ОФЗ считаются самыми надёжными. Цена ОФЗ может меняться даже при высокой надёжности эмитента.</div>
-                </div>
+            <div class="what-section">
+              <div class="title">Что это?</div>
+              <div class="sub">Ты даёшь государству деньги в долг</div>
+              <div class="desc">Облигация — долговая ценная бумага. ОФЗ выпускает Министерство финансов РФ, а инвестор фактически даёт государству деньги на определённый срок.</div>
             </div>
-
-            <div class="right-column">
-                <div class="income-section">
-                    <div class="title">Как получить доход</div>
-                    <div class="income-item">
-                        <div class="label">01 Купон</div>
-                        <div class="desc">Регулярные выплаты: месяц, квартал, полгода или год.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">02 Цена</div>
-                        <div class="desc">Можно заработать на росте рыночной цены.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">03 Погашение</div>
-                        <div class="desc">При удержании до срока возвращается номинал.</div>
-                    </div>
-                </div>
-
-                <div class="investor-tips">
-                    <div class="title">На что смотреть инвестору</div>
-                    <div class="item">
-                        <div class="label">ОФЗ-ПК</div>
-                        <div class="desc">Переменный купон может расти вместе со ставками/показателем.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">ОФЗ-ПД</div>
-                        <div class="desc">Постоянный доход удобнее планировать при стабильных или снижающихся ставках.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Основной фактор</div>
-                        <div class="desc">Ключевая ставка Банка России и спрос/предложение.</div>
-                    </div>
-                </div>
+            <div class="risk-note">
+              <div class="title">Риск / важный нюанс</div>
+              <div class="desc">Риск дефолта: эмитент задерживает или не выплачивает долг. ОФЗ считаются самыми надёжными. Цена ОФЗ может меняться даже при высокой надёжности эмитента.</div>
             </div>
+          </div>
+          <div class="right-column">
+            <div class="income-section">
+              <div class="title">Как получить доход</div>
+              <div class="income-item"><span class="label">01 Купон</span><div class="desc">Регулярные выплаты: месяц, квартал, полгода или год.</div></div>
+              <div class="income-item"><span class="label">02 Цена</span><div class="desc">Можно заработать на росте рыночной цены.</div></div>
+              <div class="income-item"><span class="label">03 Погашение</span><div class="desc">При удержании до срока возвращается номинал.</div></div>
+            </div>
+            <div class="investor-tips">
+              <div class="title">На что смотреть инвестору</div>
+              <div class="item"><span class="label">ОФЗ-ПК</span><div class="desc">Переменный купон может расти вместе со ставками/показателем.</div></div>
+              <div class="item"><span class="label">ОФЗ-ПД</span><div class="desc">Постоянный доход удобнее планировать при стабильных или снижающихся ставках.</div></div>
+              <div class="item"><span class="label">Основной фактор</span><div class="desc">Ключевая ставка Банка России и спрос/предложение.</div></div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- ====== АКТИВ 3: КОРПОРАТИВНЫЕ ОБЛИГАЦИИ ====== -->
-        <div class="asset-content" data-asset="corp">
+      <!-- актив 3: Корпоративные облигации -->
+      <div class="asset-content" data-asset="corp">
+        <div class="asset-grid">
+          <div class="left-column">
             <div class="risk-badge risk-badge--medium">УРОВЕНЬ РИСКА — СРЕДНИЙ</div>
-
-            <div class="left-column">
-                <div class="what-section">
-                    <div class="title">Что это?</div>
-                    <div class="sub">Компания занимает деньги у инвесторов</div>
-                    <div class="desc">Корпоративная облигация — долговая ценная бумага частной или государственной корпорации. Она выпускается на срок и может давать купонный или дисконтный доход.</div>
-                </div>
-
-                <div class="risk-note">
-                    <div class="title">Риск / важный нюанс</div>
-                    <div class="desc">Надёжность эмитента важна не меньше обещанной доходности. Риск дефолта выше, чем у ОФЗ. Рейтинги помогают оценить надёжность. Есть и процентный риск, а у валютных или привязанных к металлу бумаг — дополнительные риски.</div>
-                </div>
+            <div class="what-section">
+              <div class="title">Что это?</div>
+              <div class="sub">Компания занимает деньги у инвесторов</div>
+              <div class="desc">Корпоративная облигация — долговая ценная бумага частной или государственной корпорации. Она выпускается на срок и может давать купонный или дисконтный доход.</div>
             </div>
-
-            <div class="right-column">
-                <div class="income-section">
-                    <div class="title">Как получить доход</div>
-                    <div class="income-item">
-                        <div class="label">01 Купон</div>
-                        <div class="desc">Периодические процентные выплаты.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">02 Цена</div>
-                        <div class="desc">Можно заработать на росте рыночной цены.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">03 Погашение</div>
-                        <div class="desc">Доход часто выше ОФЗ, но надёжность ниже.</div>
-                    </div>
-                </div>
-
-                <div class="investor-tips">
-                    <div class="title">На что смотреть инвестору</div>
-                    <div class="item">
-                        <div class="label">Наличие кредитного рейтинга</div>
-                        <div class="desc">Чем выше рейтинг, тем выше показатель надежности.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Наличие долгов</div>
-                        <div class="desc">Сколько облигаций уже выпущено.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Отчетность</div>
-                        <div class="desc">Финансовое состояние и новости бизнеса.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Основной фактор</div>
-                        <div class="desc">Ставки ЦБ, спрос/предложение и срок до погашения.</div>
-                    </div>
-                </div>
+            <div class="risk-note">
+              <div class="title">Риск / важный нюанс</div>
+              <div class="desc">Надёжность эмитента важна не меньше обещанной доходности. Риск дефолта выше, чем у ОФЗ. Рейтинги помогают оценить надёжность. Есть и процентный риск, а у валютных или привязанных к металлу бумаг — дополнительные риски.</div>
             </div>
+          </div>
+          <div class="right-column">
+            <div class="income-section">
+              <div class="title">Как получить доход</div>
+              <div class="income-item"><span class="label">01 Купон</span><div class="desc">Периодические процентные выплаты.</div></div>
+              <div class="income-item"><span class="label">02 Цена</span><div class="desc">Можно заработать на росте рыночной цены.</div></div>
+              <div class="income-item"><span class="label">03 Погашение</span><div class="desc">Доход часто выше ОФЗ, но надёжность ниже.</div></div>
+            </div>
+            <div class="investor-tips">
+              <div class="title">На что смотреть инвестору</div>
+              <div class="item"><span class="label">Наличие кредитного рейтинга</span><div class="desc">Чем выше рейтинг, тем выше показатель надежности.</div></div>
+              <div class="item"><span class="label">Наличие долгов</span><div class="desc">Сколько облигаций уже выпущено.</div></div>
+              <div class="item"><span class="label">Отчетность</span><div class="desc">Финансовое состояние и новости бизнеса.</div></div>
+              <div class="item"><span class="label">Основной фактор</span><div class="desc">Ставки ЦБ, спрос/предложение и срок до погашения.</div></div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- ====== АКТИВ 4: ВДО ====== -->
-        <div class="asset-content" data-asset="vdo">
+      <!-- актив 4: ВДО -->
+      <div class="asset-content" data-asset="vdo">
+        <div class="asset-grid">
+          <div class="left-column">
             <div class="risk-badge risk-badge--high">УРОВЕНЬ РИСКА — ВЫСОКИЙ</div>
-
-            <div class="left-column">
-                <div class="what-section">
-                    <div class="title">Что это?</div>
-                    <div class="sub">Высокий купон не бывает бесплатным</div>
-                    <div class="desc">ВДО — облигации компаний со спекулятивными рейтингами или высокой долговой нагрузкой. Они предлагают повышенную доходность.</div>
-                </div>
-
-                <div class="risk-note">
-                    <div class="title">Риск / важный нюанс</div>
-                    <div class="desc">Покупка ВДО должна соответствовать твоим возможностям и отношению к риску. При финансовой несостоятельности компания может задержать купон или не вернуть основной долг. При банкротстве возврат средств зависит от процедуры и наличия имущества.</div>
-                </div>
+            <div class="what-section">
+              <div class="title">Что это?</div>
+              <div class="sub">Высокий купон не бывает бесплатным</div>
+              <div class="desc">ВДО — облигации компаний со спекулятивными рейтингами или высокой долговой нагрузкой. Они предлагают повышенную доходность.</div>
             </div>
-
-            <div class="right-column">
-                <div class="income-section">
-                    <div class="title">Как получить доход</div>
-                    <div class="income-item">
-                        <div class="label">01 Купон</div>
-                        <div class="desc">Обычно ставка заметно выше средней по рынку.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">02 Цена</div>
-                        <div class="desc">Можно заработать на росте рыночной цены.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">03 Погашение</div>
-                        <div class="desc">Доход значительно выше, но надёжность ниже.</div>
-                    </div>
-                </div>
-
-                <div class="investor-tips">
-                    <div class="title">Что важно помнить</div>
-                    <div class="item">
-                        <div class="label">Риск</div>
-                        <div class="desc">ВДО заметно рискованнее ОФЗ и облигаций инвестиционного уровня.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Ставки</div>
-                        <div class="desc">Рост ставок обычно снижает текущую цену.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Дефолт</div>
-                        <div class="desc">После дефолта цена может стать бросовой.</div>
-                    </div>
-                </div>
+            <div class="risk-note">
+              <div class="title">Риск / важный нюанс</div>
+              <div class="desc">Покупка ВДО должна соответствовать твоим возможностям и отношению к риску. При финансовой несостоятельности компания может задержать купон или не вернуть основной долг. При банкротстве возврат средств зависит от процедуры и наличия имущества.</div>
             </div>
+          </div>
+          <div class="right-column">
+            <div class="income-section">
+              <div class="title">Как получить доход</div>
+              <div class="income-item"><span class="label">01 Купон</span><div class="desc">Обычно ставка заметно выше средней по рынку.</div></div>
+              <div class="income-item"><span class="label">02 Цена</span><div class="desc">Можно заработать на росте рыночной цены.</div></div>
+              <div class="income-item"><span class="label">03 Погашение</span><div class="desc">Доход значительно выше, но надёжность ниже.</div></div>
+            </div>
+            <div class="investor-tips">
+              <div class="title">Что важно помнить</div>
+              <div class="item"><span class="label">Риск</span><div class="desc">ВДО заметно рискованнее ОФЗ и облигаций инвестиционного уровня.</div></div>
+              <div class="item"><span class="label">Ставки</span><div class="desc">Рост ставок обычно снижает текущую цену.</div></div>
+              <div class="item"><span class="label">Дефолт</span><div class="desc">После дефолта цена может стать бросовой.</div></div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- ====== АКТИВ 5: АКЦИИ ====== -->
-        <div class="asset-content" data-asset="stocks">
+      <!-- актив 5: Акции -->
+      <div class="asset-content" data-asset="stocks">
+        <div class="asset-grid">
+          <div class="left-column">
             <div class="risk-badge risk-badge--high">УРОВЕНЬ РИСКА — ВЫСОКИЙ</div>
-
-            <div class="left-column">
-                <div class="what-section">
-                    <div class="title">Что это?</div>
-                    <div class="sub">Часть компании в твоем портфеле</div>
-                    <div class="desc">Покупая акцию, инвестор становится совладельцем компании. Акция даёт право на часть прибыли и участие в управлении.</div>
-                </div>
-
-                <div class="risk-note">
-                    <div class="title">Риск / важный нюанс</div>
-                    <div class="desc">Негативные события могут одновременно снизить цену акции и капитал инвестора. Риски: рыночный, эмитента, ликвидности, дивидендный и геополитический.</div>
-                </div>
+            <div class="what-section">
+              <div class="title">Что это?</div>
+              <div class="sub">Часть компании в твоем портфеле</div>
+              <div class="desc">Покупая акцию, инвестор становится совладельцем компании. Акция даёт право на часть прибыли и участие в управлении.</div>
             </div>
-
-            <div class="right-column">
-                <div class="income-section">
-                    <div class="title">Как получить доход</div>
-                    <div class="income-item">
-                        <div class="label">01 Дивиденды</div>
-                        <div class="desc">Часть прибыли компании, выплачиваемая акционерам.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">02 Рост цены</div>
-                        <div class="desc">Стоимость акции может вырасти при благоприятном развитии компании.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">03 Важно</div>
-                        <div class="desc">Дивиденды не гарантированы и не всегда регулярны.</div>
-                    </div>
-                </div>
-
-                <div class="investor-tips">
-                    <div class="title">Как выбрать</div>
-                    <div class="item">
-                        <div class="label">Фундаментальный анализ</div>
-                        <div class="desc">Финансовая отчётность, конкуренты, отрасль и экономика.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Технический анализ</div>
-                        <div class="desc">График цены и индикаторы.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Комбинация</div>
-                        <div class="desc">Подходы можно использовать вместе.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Основные факторы</div>
-                        <div class="desc">Всё, что меняет риски и перспективы бизнеса.</div>
-                    </div>
-                </div>
+            <div class="risk-note">
+              <div class="title">Риск / важный нюанс</div>
+              <div class="desc">Негативные события могут одновременно снизить цену акции и капитал инвестора. Риски: рыночный, эмитента, ликвидности, дивидендный и геополитический.</div>
             </div>
+          </div>
+          <div class="right-column">
+            <div class="income-section">
+              <div class="title">Как получить доход</div>
+              <div class="income-item"><span class="label">01 Дивиденды</span><div class="desc">Часть прибыли компании, выплачиваемая акционерам.</div></div>
+              <div class="income-item"><span class="label">02 Рост цены</span><div class="desc">Стоимость акции может вырасти при благоприятном развитии компании.</div></div>
+              <div class="income-item"><span class="label">03 Важно</span><div class="desc">Дивиденды не гарантированы и не всегда регулярны.</div></div>
+            </div>
+            <div class="investor-tips">
+              <div class="title">Как выбрать</div>
+              <div class="item"><span class="label">Фундаментальный анализ</span><div class="desc">Финансовая отчётность, конкуренты, отрасль и экономика.</div></div>
+              <div class="item"><span class="label">Технический анализ</span><div class="desc">График цены и индикаторы.</div></div>
+              <div class="item"><span class="label">Комбинация</span><div class="desc">Подходы можно использовать вместе.</div></div>
+              <div class="item"><span class="label">Основные факторы</span><div class="desc">Всё, что меняет риски и перспективы бизнеса.</div></div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- ====== АКТИВ 6: ИНОСТРАННАЯ ВАЛЮТА ====== -->
-        <div class="asset-content" data-asset="currency">
+      <!-- актив 6: Иностранная валюта -->
+      <div class="asset-content" data-asset="currency">
+        <div class="asset-grid">
+          <div class="left-column">
             <div class="risk-badge risk-badge--high">УРОВЕНЬ РИСКА — ВЫСОКИЙ</div>
-
-            <div class="left-column">
-                <div class="what-section">
-                    <div class="title">Что это?</div>
-                    <div class="sub">Иностранные деньги и инструменты с ними связанные</div>
-                    <div class="desc">Можно покупать наличную валюту, держать валютный счёт или покупать ценные бумаги, номинированные в иностранной валюте.</div>
-                </div>
-
-                <div class="risk-note">
-                    <div class="title">Риск / важный нюанс</div>
-                    <div class="desc">Курс зависит от рисков и экономик обеих стран. Риски: рыночный, эмитента, ликвидности, дивидендный и геополитический.</div>
-                </div>
+            <div class="what-section">
+              <div class="title">Что это?</div>
+              <div class="sub">Иностранные деньги и инструменты с ними связанные</div>
+              <div class="desc">Можно покупать наличную валюту, держать валютный счёт или покупать ценные бумаги, номинированные в иностранной валюте.</div>
             </div>
-
-            <div class="right-column">
-                <div class="income-section">
-                    <div class="title">Как получить доход</div>
-                    <div class="income-item">
-                        <div class="label">01 Переоценка</div>
-                        <div class="desc">В рублях результат зависит от курса покупки и продажи.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">02 Где купить</div>
-                        <div class="desc">На бирже через брокера или в банке.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">03 Форекс</div>
-                        <div class="desc">Это сделки-пари на изменение курса, а не покупка реальной валюты.</div>
-                    </div>
-                </div>
-
-                <div class="investor-tips">
-                    <div class="title">Как выбрать</div>
-                    <div class="item">
-                        <div class="label">Инфляция</div>
-                        <div class="desc">Уровень инфляции в странах.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Ставки</div>
-                        <div class="desc">Процентные ставки и политика центральных банков.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Дополнительно</div>
-                        <div class="desc">Геополитика, внутренние трудности и спрос на валюту.</div>
-                    </div>
-                </div>
+            <div class="risk-note">
+              <div class="title">Риск / важный нюанс</div>
+              <div class="desc">Курс зависит от рисков и экономик обеих стран. Риски: рыночный, эмитента, ликвидности, дивидендный и геополитический.</div>
             </div>
+          </div>
+          <div class="right-column">
+            <div class="income-section">
+              <div class="title">Как получить доход</div>
+              <div class="income-item"><span class="label">01 Переоценка</span><div class="desc">В рублях результат зависит от курса покупки и продажи.</div></div>
+              <div class="income-item"><span class="label">02 Где купить</span><div class="desc">На бирже через брокера или в банке.</div></div>
+              <div class="income-item"><span class="label">03 Форекс</span><div class="desc">Это сделки-пари на изменение курса, а не покупка реальной валюты.</div></div>
+            </div>
+            <div class="investor-tips">
+              <div class="title">Как выбрать</div>
+              <div class="item"><span class="label">Инфляция</span><div class="desc">Уровень инфляции в странах.</div></div>
+              <div class="item"><span class="label">Ставки</span><div class="desc">Процентные ставки и политика центральных банков.</div></div>
+              <div class="item"><span class="label">Дополнительно</span><div class="desc">Геополитика, внутренние трудности и спрос на валюту.</div></div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- ====== АКТИВ 7: ПИФ ====== -->
-        <div class="asset-content" data-asset="pif">
+      <!-- актив 7: ПИФ -->
+      <div class="asset-content" data-asset="pif">
+        <div class="asset-grid">
+          <div class="left-column">
             <div class="risk-badge risk-badge--medium">УРОВЕНЬ РИСКА — СРЕДНИЙ</div>
-
-            <div class="left-column">
-                <div class="what-section">
-                    <div class="title">Что это?</div>
-                    <div class="sub">Много инвесторов — один фонд</div>
-                    <div class="desc">Фонд собирает деньги инвесторов и вкладывает их в разные финансовые инструменты. Фонд может специализироваться на акциях, облигациях, отрасли, гособлигациях, металлах или смешанных инвестициях.</div>
-                </div>
-
-                <div class="risk-note">
-                    <div class="title">Риск / важный нюанс</div>
-                    <div class="desc">Комиссии особенно важны при коротком сроке инвестиций. На пай влияют макроэкономика, расходы УК и стоимость активов внутри фонда.</div>
-                </div>
+            <div class="what-section">
+              <div class="title">Что это?</div>
+              <div class="sub">Много инвесторов — один фонд</div>
+              <div class="desc">Фонд собирает деньги инвесторов и вкладывает их в разные финансовые инструменты. Фонд может специализироваться на акциях, облигациях, отрасли, гособлигациях, металлах или смешанных инвестициях.</div>
             </div>
-
-            <div class="right-column">
-                <div class="income-section">
-                    <div class="title">Как получить доход</div>
-                    <div class="income-item">
-                        <div class="label">01 Пай</div>
-                        <div class="desc">Доход — разница между ценой продажи и покупки пая.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">02 Комиссии</div>
-                        <div class="desc">Важно учитывать управление, ввод и вывод средств.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">03 Форматы</div>
-                        <div class="desc">ОПИФ, ИПИФ, ЗПИФ и БПИФ отличаются доступностью покупки/продажи.</div>
-                    </div>
-                </div>
-
-                <div class="investor-tips">
-                    <div class="title">Как выбрать</div>
-                    <div class="item">
-                        <div class="label">Цель и срок</div>
-                        <div class="desc">До года; 1–3 года; более 3 лет.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Состав</div>
-                        <div class="desc">Какие активы и стратегия внутри фонда.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Комиссии</div>
-                        <div class="desc">Сколько стоит управление и операции.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Уставной капитал</div>
-                        <div class="desc">Надёжность и репутация управляющей компании.</div>
-                    </div>
-                </div>
+            <div class="risk-note">
+              <div class="title">Риск / важный нюанс</div>
+              <div class="desc">Комиссии особенно важны при коротком сроке инвестиций. На пай влияют макроэкономика, расходы УК и стоимость активов внутри фонда.</div>
             </div>
+          </div>
+          <div class="right-column">
+            <div class="income-section">
+              <div class="title">Как получить доход</div>
+              <div class="income-item"><span class="label">01 Пай</span><div class="desc">Доход — разница между ценой продажи и покупки пая.</div></div>
+              <div class="income-item"><span class="label">02 Комиссии</span><div class="desc">Важно учитывать управление, ввод и вывод средств.</div></div>
+              <div class="income-item"><span class="label">03 Форматы</span><div class="desc">ОПИФ, ИПИФ, ЗПИФ и БПИФ отличаются доступностью покупки/продажи.</div></div>
+            </div>
+            <div class="investor-tips">
+              <div class="title">Как выбрать</div>
+              <div class="item"><span class="label">Цель и срок</span><div class="desc">До года; 1–3 года; более 3 лет.</div></div>
+              <div class="item"><span class="label">Состав</span><div class="desc">Какие активы и стратегия внутри фонда.</div></div>
+              <div class="item"><span class="label">Комиссии</span><div class="desc">Сколько стоит управление и операции.</div></div>
+              <div class="item"><span class="label">Уставной капитал</span><div class="desc">Надёжность и репутация управляющей компании.</div></div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- ====== АКТИВ 8: ЗОЛОТО ====== -->
-        <div class="asset-content" data-asset="gold">
+      <!-- актив 8: Золото -->
+      <div class="asset-content" data-asset="gold">
+        <div class="asset-grid">
+          <div class="left-column">
             <div class="risk-badge risk-badge--medium">УРОВЕНЬ РИСКА — СРЕДНИЙ</div>
-
-            <div class="left-column">
-                <div class="what-section">
-                    <div class="title">Что это?</div>
-                    <div class="sub">Золото — инвестиционный товар</div>
-                    <div class="desc">Раньше валюты имели золотое содержание. Сейчас золото не приравнивается к валютам, но остаётся ценным активом для долгосрочных инвестиций.</div>
-                </div>
-
-                <div class="risk-note">
-                    <div class="title">Риск / важный нюанс</div>
-                    <div class="desc">Доход — рост цены золота минус расходы на покупку, продажу, комиссии, хранение и оценку. Высокий рост цены за короткое время не означает, что она продолжится.</div>
-                </div>
+            <div class="what-section">
+              <div class="title">Что это?</div>
+              <div class="sub">Золото — инвестиционный товар</div>
+              <div class="desc">Раньше валюты имели золотое содержание. Сейчас золото не приравнивается к валютам, но остаётся ценным активом для долгосрочных инвестиций.</div>
             </div>
-
-            <div class="right-column">
-                <div class="income-section">
-                    <div class="title">Как инвестировать</div>
-                    <div class="income-item">
-                        <div class="label">01 Физическое золото</div>
-                        <div class="desc">Слитки или монеты.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">02 Безналично</div>
-                        <div class="desc">ОМС, фонды, фьючерсы и другие инструменты.</div>
-                    </div>
-                    <div class="income-item">
-                        <div class="label">03 Биржа</div>
-                        <div class="desc">GLDRUB_TOM: расчёты на следующий день, 1 лот = 1 грамм.</div>
-                    </div>
-                </div>
-
-                <div class="investor-tips">
-                    <div class="title">На что смотреть инвестору</div>
-                    <div class="item">
-                        <div class="label">Предложение</div>
-                        <div class="desc">Объём золотодобычи относительно стабилен.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Спрос</div>
-                        <div class="desc">В кризисы инвесторы чаще ищут способы сохранить деньги.</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Рынок</div>
-                        <div class="desc">Итоговая цена формируется спросом и предложением.</div>
-                    </div>
-                </div>
+            <div class="risk-note">
+              <div class="title">Риск / важный нюанс</div>
+              <div class="desc">Доход — рост цены золота минус расходы на покупку, продажу, комиссии, хранение и оценку. Высокий рост цены за короткое время не означает, что она продолжится.</div>
             </div>
+          </div>
+          <div class="right-column">
+            <div class="income-section">
+              <div class="title">Как инвестировать</div>
+              <div class="income-item"><span class="label">01 Физическое золото</span><div class="desc">Слитки или монеты.</div></div>
+              <div class="income-item"><span class="label">02 Безналично</span><div class="desc">ОМС, фонды, фьючерсы и другие инструменты.</div></div>
+              <div class="income-item"><span class="label">03 Биржа</span><div class="desc">GLDRUB_TOM: расчёты на следующий день, 1 лот = 1 грамм.</div></div>
+            </div>
+            <div class="investor-tips">
+              <div class="title">На что смотреть инвестору</div>
+              <div class="item"><span class="label">Предложение</span><div class="desc">Объём золотодобычи относительно стабилен.</div></div>
+              <div class="item"><span class="label">Спрос</span><div class="desc">В кризисы инвесторы чаще ищут способы сохранить деньги.</div></div>
+              <div class="item"><span class="label">Рынок</span><div class="desc">Итоговая цена формируется спросом и предложением.</div></div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- ====== ПАГИНАЦИЯ ====== -->
-    <div class="pagination" id="pagination">
-        <span class="dot active" data-index="0"></span>
-        <span class="dot" data-index="1"></span>
-        <span class="dot" data-index="2"></span>
-        <span class="dot" data-index="3"></span>
-        <span class="dot" data-index="4"></span>
-        <span class="dot" data-index="5"></span>
-        <span class="dot" data-index="6"></span>
-        <span class="dot" data-index="7"></span>
-        <span class="counter" id="pageCounter">1 / 8</span>
-    </div>
-
-    <!-- ====== ВСПЛЫВАЮЩИЙ ПРИМЕР ====== -->
-    <div class="example-overlay" id="exampleOverlay">
-        <button class="close-btn" id="closeExample">✕</button>
-        <div>
-            <span class="icon">?</span>
-            <span class="badge">ПРИМЕР</span>
+    <!-- ===== PAGINATION & NAV ===== -->
+    <div class="pagination-wrap">
+      <span class="nav-arrow" id="prevBtn">←</span>
+      <div class="pagination-center">
+        <div class="pagination" id="pagination">
+          <span class="dot active" data-index="0"></span>
+          <span class="dot" data-index="1"></span>
+          <span class="dot" data-index="2"></span>
+          <span class="dot" data-index="3"></span>
+          <span class="dot" data-index="4"></span>
+          <span class="dot" data-index="5"></span>
+          <span class="dot" data-index="6"></span>
+          <span class="dot" data-index="7"></span>
+          <span class="counter" id="pageCounter">  1 / 8</span>
         </div>
-        <div class="title">Как считается доход за день</div>
-        <div class="desc">Например, если на начало дня на счете было 10000 рублей, потом на него с кошелька была переведена зарплата 10000 рублей, и в этот же день списаны 17000 рублей на покупку облигаций, то минимальный остаток в этот день на счете – 3000 рублей. За этот день процентный доход будет рассчитан: (3000*1*10)/(365*100)=0,82 рубля.</div>
+      </div>
+      <span class="nav-arrow" id="nextBtn">→</span>
     </div>
+  </div>
 
-    <!-- ====== ЭЛЕМЕНТЫ ПРИМЕРА ДЛЯ КАЖДОГО АКТИВА ====== -->
-    <div class="example-hint example-hint--account visible" id="hint-account">Тут нужно посмотреть пример</div>
-    <div class="arrow-example arrow-example--account visible">←</div>
-    <div class="question-circle question-circle--account visible" data-target="account">
-        <span>?</span>
+  <!-- ===== ОВЕРЛЕЙ (поверх всего) ===== -->
+  <div class="example-overlay" id="exampleOverlay">
+    <div class="overlay-content">
+      <button class="close-btn" id="closeExample">✕</button>
+      <div class="icon-badge">
+        <span class="icon">?</span>
+        <span class="badge">ПРИМЕР</span>
+      </div>
+      <div class="title" id="exampleTitle">Как считается доход за день</div>
+      <div class="desc" id="exampleDesc">
+        Например, если на начало дня на счете было 10000 рублей, потом на него с кошелька была переведена зарплата 10000 рублей, и в этот же день списаны 17000 рублей на покупку облигаций, то минимальный остаток в этот день на счете – 3000 рублей. За этот день процентный доход будет рассчитан: (3000×1×10)/(365×100) = 0,82 рубля.
+      </div>
     </div>
-
-    <div class="example-hint example-hint--ofz" id="hint-ofz">Тут нужно посмотреть пример</div>
-    <div class="arrow-example arrow-example--ofz">←</div>
-    <div class="question-circle question-circle--ofz" data-target="ofz">
-        <span>?</span>
-    </div>
-
-    <div class="example-hint example-hint--corp" id="hint-corp">Тут нужно посмотреть пример</div>
-    <div class="arrow-example arrow-example--corp">←</div>
-    <div class="question-circle question-circle--corp" data-target="corp">
-        <span>?</span>
-    </div>
-
-    <div class="example-hint example-hint--vdo" id="hint-vdo">Тут нужно посмотреть пример</div>
-    <div class="arrow-example arrow-example--vdo">←</div>
-    <div class="question-circle question-circle--vdo" data-target="vdo">
-        <span>?</span>
-    </div>
-
-    <div class="example-hint example-hint--stocks" id="hint-stocks">Тут нужно посмотреть пример</div>
-    <div class="arrow-example arrow-example--stocks">←</div>
-    <div class="question-circle question-circle--stocks" data-target="stocks">
-        <span>?</span>
-    </div>
-
-    <div class="example-hint example-hint--currency" id="hint-currency">Тут нужно посмотреть пример</div>
-    <div class="arrow-example arrow-example--currency">←</div>
-    <div class="question-circle question-circle--currency" data-target="currency">
-        <span>?</span>
-    </div>
-
-    <div class="example-hint example-hint--pif" id="hint-pif">Тут нужно посмотреть пример</div>
-    <div class="arrow-example arrow-example--pif">←</div>
-    <div class="question-circle question-circle--pif" data-target="pif">
-        <span>?</span>
-    </div>
-
-    <div class="example-hint example-hint--gold" id="hint-gold">Тут нужно посмотреть пример</div>
-    <div class="arrow-example arrow-example--gold">←</div>
-    <div class="question-circle question-circle--gold" data-target="gold">
-        <span>?</span>
-    </div>
+  </div>
 
 </div>
 
-<script src="./pages/teaching.js"></script>
-<script src="./pages/app-shell.js"></script>
+<script>
+    (function() {
+      const assets = [
+        'account', 'ofz', 'corp', 'vdo',
+        'stocks', 'currency', 'pif', 'gold'
+      ];
+      let currentIndex = 0;
+
+      const titles = [
+        'Накопительный счёт в банке',
+        'ОФЗ — облигации федерального займа',
+        'Корпоративные облигации',
+        'ВДО — высокодоходные облигации',
+        'Акции',
+        'Иностранная валюта',
+        'ПИФ — паевые инвестиционные фонды',
+        'Золото'
+      ];
+      const subtitles = [
+        'Разберём инструмент за 60 секунд',
+        'Ты даёшь государству деньги в долг',
+        'Компания занимает деньги у инвесторов',
+        'Высокий купон не бывает бесплатным',
+        'Часть компании в твоем портфеле',
+        'Иностранные деньги и инструменты',
+        'Много инвесторов — один фонд',
+        'Золото — инвестиционный товар'
+      ];
+
+      // Примеры для каждого слайда (индекс соответствует assets)
+      const exampleTitles = [
+        'Как считается доход за день',
+        'Доход по ОФЗ за полгода + влияние ставки ЦБ',
+        'Доход по облигации Компании А',
+        'Доход по облигации Компании В',
+        'Финансовый результат по акции Компании С',
+        'Результат по дирхаму и евро',
+        'Пример для ПИФ (скоро)',
+        'Пример для Золота (скоро)'
+      ];
+
+      const exampleDescs = [
+        'Например, если на начало дня на счете было 10000 рублей, потом на него с кошелька была переведена зарплата 10000 рублей, и в этот же день списаны 17000 рублей на покупку облигаций, то минимальный остаток в этот день на счете – 3000 рублей. За этот день процентный доход будет рассчитан: <code>(3000×1×10)/(365×100) = 0,82 рубля.</code>',
+
+        'Время владения ОФЗ номиналом 1000 рублей — полгода (182 дня). Был выплачен купон 7% годовых, бумага выросла с 830 до 850 рублей. Общий доход: <code>(850–830)+(1000×182×7)/(365×100) = 20 + 34,90 = 54,90 ₽</code>.<br><br><strong>Как зависит цена от ставки ЦБ?</strong> После покупки ОФЗ по 900 ₽ рост ключевой ставки может снизить цену до 850 ₽ — потеря 50 ₽ с каждой бумаги. В реальных расчётах учтите налоги и комиссии.',
+
+        'Облигация Компании А номиналом 1000 ₽, купон 12% годовых выплачивается ежемесячно. Владение 8 месяцев (≈9 выплат), цена упала с 930 до 920 ₽. Доход: <code>(920–930)+[(1000×31×12)/(365×100)]×9 = –10 + 91,73 = 81,73 ₽</code>. Налоги и комиссии не учтены.',
+
+        'Облигация Компании В номинал 1000 ₽, купон 25% годовых выплачивается раз в квартал. Владение 3 месяца (91 день), цена выросла с 960 до 975 ₽. Доход: <code>(975–960)+(1000×91×25)/(365×100) = 15 + 62,33 = 77,33 ₽</code>. Налоги и комиссии не учтены.',
+
+        'Акция Компании С номиналом 5000 ₽ куплена за 8200 ₽ 1 декабря. В январе выплачены дивиденды 20% от номинала = 1000 ₽. 1 мая из-за санкций цена упала на 50% от цены покупки: 8200 × 0,5 = 4100 ₽. Продажа: <code>1000 (дивиденды) – 4100 (убыток) = –3100 ₽</code>. Налог на дивиденды и комиссии не учтены (убыток налогом не облагается).',
+
+        '31 января куплено 1000 дирхам по курсу 20,7921 ₽ и 1000 евро по курсу 89,5400 ₽. Продажа: дирхам 30 июня по 21,4225 ₽, евро 31 мая по 82,9705 ₽.<br><br>Дирхам: <code>(21,4225–20,7921)×1000 = +630,40 ₽</code><br>Евро: <code>(82,9705–89,5400)×1000 = –6569,50 ₽</code><br><strong>Итого: –5939,10 ₽</strong>',
+
+        'Пример для ПИФ пока в разработке.',
+
+        'Пример для Золота пока в разработке.'
+      ];
+
+      const contents = document.querySelectorAll('.asset-content');
+      const dots = document.querySelectorAll('.dot');
+      const counter = document.getElementById('pageCounter');
+      const mainTitle = document.getElementById('mainTitle');
+      const subTitle = document.getElementById('subTitle');
+      const overlay = document.getElementById('exampleOverlay');
+      const closeBtn = document.getElementById('closeExample');
+      const questionCircle = document.getElementById('questionCircle');
+      const contentCard = document.getElementById('contentCard');
+      const exampleTitle = document.getElementById('exampleTitle');
+      const exampleDesc = document.getElementById('exampleDesc');
+      
+      let isTransitioning = false;
+
+      function updateView(index) {
+        if (isTransitioning) return;
+        isTransitioning = true;
+
+        // Скрываем все
+        contents.forEach(el => {
+          el.classList.remove('active');
+          el.style.display = 'none';
+        });
+
+        // Показываем нужный
+        const activeContent = contents[index];
+        activeContent.style.display = 'flex';
+        
+        requestAnimationFrame(() => {
+          const height = activeContent.offsetHeight;
+          const padding = 60;
+          const newHeight = Math.max(height + padding, 400);
+          
+          contentCard.style.height = newHeight + 'px';
+          activeContent.classList.add('active');
+          
+          dots.forEach(d => d.classList.remove('active'));
+          dots[index].classList.add('active');
+          counter.textContent = `${index + 1} / ${assets.length}`;
+          mainTitle.textContent = titles[index] || 'Инструмент';
+          subTitle.textContent = subtitles[index] || '';
+          
+          // Обновляем пример
+          exampleTitle.textContent = exampleTitles[index] || 'Пример';
+          exampleDesc.innerHTML = exampleDescs[index] || 'Пример будет добавлен позже.';
+          
+          isTransitioning = false;
+        });
+
+        closeOverlay();
+      }
+
+      function goTo(index) {
+        if (index < 0) index = assets.length - 1;
+        if (index >= assets.length) index = 0;
+        currentIndex = index;
+        updateView(currentIndex);
+      }
+
+      function openOverlay() {
+        overlay.classList.add('visible');
+        contentCard.classList.add('blurred');
+      }
+
+      function closeOverlay() {
+        overlay.classList.remove('visible');
+        contentCard.classList.remove('blurred');
+      }
+
+      document.getElementById('prevBtn').addEventListener('click', () => goTo(currentIndex - 1));
+      document.getElementById('nextBtn').addEventListener('click', () => goTo(currentIndex + 1));
+
+      dots.forEach((dot, i) => {
+        dot.addEventListener('click', () => goTo(i));
+      });
+
+      questionCircle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (overlay.classList.contains('visible')) {
+          closeOverlay();
+        } else {
+          openOverlay();
+        }
+      });
+
+      closeBtn.addEventListener('click', closeOverlay);
+
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+          closeOverlay();
+        }
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.classList.contains('visible')) {
+          closeOverlay();
+        }
+      });
+
+      contentCard.style.overflow = 'hidden';
+      contentCard.style.transition = 'height 0.35s ease';
+      contentCard.style.height = '500px';
+
+      setTimeout(() => {
+        const firstContent = contents[0];
+        firstContent.style.display = 'flex';
+        requestAnimationFrame(() => {
+          const height = firstContent.offsetHeight;
+          const newHeight = Math.max(height + 60, 400);
+          contentCard.style.height = newHeight + 'px';
+          firstContent.classList.add('active');
+        });
+      }, 100);
+
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          updateView(currentIndex);
+        }, 300);
+      });
+    })();
+</script>
 
 </body>
 </html>
