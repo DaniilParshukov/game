@@ -1,12 +1,37 @@
 (() => {
+    const LOCAL_DEFAULT_STATE = {
+        selectedTickers: {
+            bonds: [],
+            stocks: [],
+            fundTickers: [],
+            usdTicker: 'USD',
+            goldTicker: 'GLDRUB_TOM',
+            bankTicker: 'BANK'
+        },
+        portfolio: {
+            cash: 0,
+            bankAccount: { balance: 0 },
+            assets: {},
+            assetValues: {}
+        },
+        currentDay: 1
+    };
+
     function readGameState() {
         try {
             const liveState = window.game && typeof window.game.data === 'function' ? window.game.data() : null;
             if (liveState) return liveState;
-            throw new Error('Не удалось прочитать состояние игры из window.game.data()');
+
+            if (window.game && typeof window.game.initialize === 'function') {
+                void window.game.initialize().then(() => {
+                    try { renderPortfolio(); } catch (e) { /* ignore */ }
+                }).catch(() => {});
+            }
+
+            return LOCAL_DEFAULT_STATE;
         } catch (error) {
             console.error('Не удалось прочитать состояние игры для портфеля: ', error);
-            throw error;
+            return LOCAL_DEFAULT_STATE;
         }
     }
 

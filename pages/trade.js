@@ -18,19 +18,48 @@
     let currentPif = 0;
 
     const assetData = {
-        account: { label: 'Накопительный счет', quantityLabel: 'Сумма к пополнению/снятию', prise: -1, infoId: 'accountInfo' },
-        bonds: { label: 'ОФЗ', quantityLabel: 'Количество', prise: -1, infoId: 'bondsSelection' },
-        pif: { label: 'ПИФ1', quantityLabel: 'Количество', prise: -1, infoId: 'pifSelection' },
-        stocks: { label: 'Акция1', quantityLabel: 'Количество', prise: -1, infoId: 'stocksSelection' },
-        currency: { label: 'USD', quantityLabel: 'Количество', prise: -1, infoId: 'currencyInfo' },
-        gold: { label: 'Золото', quantityLabel: 'Количество', prise: -1, infoId: 'goldInfo' }
+        account: { label: 'Накопительный счет', quantityLabel: 'Сумма к пополнению/снятию', price: -1, infoId: 'accountInfo' },
+        bonds: { label: 'ОФЗ', quantityLabel: 'Количество', price: -1, infoId: 'bondsSelection' },
+        pif: { label: 'ПИФ1', quantityLabel: 'Количество', price: -1, infoId: 'pifSelection' },
+        stocks: { label: 'Акция1', quantityLabel: 'Количество', price: -1, infoId: 'stocksSelection' },
+        currency: { label: 'USD', quantityLabel: 'Количество', price: -1, infoId: 'currencyInfo' },
+        gold: { label: 'Золото', quantityLabel: 'Количество', price: -1, infoId: 'goldInfo' }
+    };
+
+    const LOCAL_DEFAULT_STATE = {
+        selectedTickers: {
+            bonds: [],
+            stocks: [],
+            fundTickers: [],
+            usdTicker: 'USD',
+            goldTicker: 'GLDRUB_TOM',
+            bankTicker: 'BANK'
+        },
+        portfolio: {
+            cash: 0,
+            bankAccount: { balance: 0 },
+            assets: {},
+            assetValues: {}
+        },
+        currentDay: 1
     };
 
     function readGameState() {
-        const liveState = window.game && typeof window.game.data === 'function' ? window.game.data() : null;
-        if (liveState) return liveState;
-        else {
-            throw Error('Не удалось прочитать состояние игры');
+        try {
+            const liveState = window.game && typeof window.game.data === 'function' ? window.game.data() : null;
+            if (liveState) return liveState;
+
+            if (window.game && typeof window.game.initialize === 'function') {
+                // kick off initialize in background, update UI when ready
+                void window.game.initialize().then(() => {
+                    try { updateUI(); } catch (e) { /* ignore */ }
+                }).catch(() => {});
+            }
+
+            return LOCAL_DEFAULT_STATE;
+        } catch (err) {
+            console.warn('Не удалось прочитать состояние игры', err);
+            return LOCAL_DEFAULT_STATE;
         }
     }
 
@@ -44,54 +73,73 @@
 
     function resolveTickerByAsset() {
         const state = readGameState();
-        const selected = state?.selectedTickers || defaultState.selectedTickers;
+        const selected = state?.selectedTickers || LOCAL_DEFAULT_STATE.selectedTickers;
+        const others = Array.isArray(selected.others) ? selected.others : [];
+        const fundTickers = Array.isArray(selected.fundTickers)
+            ? selected.fundTickers
+            : others.filter((t) => !/USD|GOLD|BANK/i.test(String(t))).slice(0, 2);
+        const usdTicker = selected.usdTicker || others.find((t) => /USD/i.test(String(t))) || 'USD';
+        const goldTicker = selected.goldTicker || others.find((t) => /GLD|GOLD|GLDRUB/i.test(String(t))) || 'GLDRUB_TOM';
 
-        if (currentAsset === 'account') return selected.bankTicker;
-        if (currentAsset === 'bonds') return selected.bonds?.[currentBond];
-        if (currentAsset === 'stocks') return selected.stocks?.[currentStock];
-        if (currentAsset === 'pif') return selected.fundTickers?.[currentPif];
-        if (currentAsset === 'currency') return selected.usdTicker;
-        if (currentAsset === 'gold') return selected.goldTicker;
+        if (currentAsset === 'account') return selected.bankTicker || LOCAL_DEFAULT_STATE.selectedTickers.bankTicker;
+        if (currentAsset === 'bonds') return (Array.isArray(selected.bonds) ? selected.bonds[currentBond] : undefined) || null;
+        if (currentAsset === 'stocks') return (Array.isArray(selected.stocks) ? selected.stocks[currentStock] : undefined) || null;
+        if (currentAsset === 'pif') return fundTickers[currentPif] || null;
+        if (currentAsset === 'currency') return usdTicker;
+        if (currentAsset === 'gold') return goldTicker;
         throw new Error("Неизвестный актив: " + currentAsset);
     }
 
     function syncSelectedAssetNames() {
         const state = readGameState();
-        const selected = state?.selectedTickers || defaultState.selectedTickers;
+        const selected = state?.selectedTickers || LOCAL_DEFAULT_STATE.selectedTickers;
         const prices = window.game && typeof window.game.getPrices === 'function' ? window.game.getPrices() : null;
 
-        const bondList = Array.isArray(selected.bonds) ? selected.bonds : defaultState.selectedTickers.bonds;
-        const stockList = Array.isArray(selected.stocks) ? selected.stocks : defaultState.selectedTickers.stocks;
+        const others = Array.isArray(selected.others) ? selected.others : [];
+        const fundTickers = Array.isArray(selected.fundTickers)
+            ? selected.fundTickers
+            : others.filter((t) => !/USD|GOLD|BANK/i.test(String(t))).slice(0, 2);
+        const usdTicker = selected.usdTicker || others.find((t) => /USD/i.test(String(t))) || 'USD';
+        const goldTicker = selected.goldTicker || others.find((t) => /GLD|GOLD|GLDRUB/i.test(String(t))) || 'GLDRUB_TOM';
 
-        if (bondList.length) {
+        const bondList = Array.isArray(selected.bonds) ? selected.bonds : LOCAL_DEFAULT_STATE.selectedTickers.bonds;
+        const stockList = Array.isArray(selected.stocks) ? selected.stocks : LOCAL_DEFAULT_STATE.selectedTickers.stocks;
+
+        if (bondList && bondList.length) {
             currentBond = Math.min(currentBond, bondList.length - 1);
             const bondTicker = bondList[currentBond];
-            assetData.bonds.label = bondTicker;
-            assetData.bonds.price = prices && typeof prices.getPrice === 'function'
-                ? Number(prices.getPrice(bondTicker, state.currentDay))
+            assetData.bonds.label = bondTicker || '—';
+            assetData.bonds.price = (prices && typeof prices.getPrice === 'function' && bondTicker)
+                ? Number(prices.getPrice(bondTicker, state.currentDay) || -1)
                 : -1;
+        } else {
+            assetData.bonds.label = '—';
+            assetData.bonds.price = -1;
         }
 
-        if (stockList.length) {
+        if (stockList && stockList.length) {
             currentStock = Math.min(currentStock, stockList.length - 1);
             const stockTicker = stockList[currentStock];
-            assetData.stocks.label = stockTicker;
-            assetData.stocks.price = prices && typeof prices.getPrice === 'function'
-                ? Number(prices.getPrice(stockTicker, state.currentDay))
+            assetData.stocks.label = stockTicker || '—';
+            assetData.stocks.price = (prices && typeof prices.getPrice === 'function' && stockTicker)
+                ? Number(prices.getPrice(stockTicker, state.currentDay) || -1)
                 : -1;
+        } else {
+            assetData.stocks.label = '—';
+            assetData.stocks.price = -1;
         }
 
-        const pifTicker = selected.fundTickers?.[currentPif];
-        assetData.pif.label = pifTicker;
-        assetData.pif.price = prices && typeof prices.getPrice === 'function'
-            ? Number(prices.getPrice(pifTicker, state.currentDay))
+        const pifTicker = fundTickers && fundTickers[currentPif] ? fundTickers[currentPif] : null;
+        assetData.pif.label = pifTicker || '—';
+        assetData.pif.price = (prices && typeof prices.getPrice === 'function' && pifTicker)
+            ? Number(prices.getPrice(pifTicker, state.currentDay) || -1)
             : -1;
 
-        assetData.currency.price = prices && typeof prices.getPrice === 'function'
-            ? Number(prices.getPrice(selected.usdTicker, state.currentDay))
+        assetData.currency.price = (prices && typeof prices.getPrice === 'function' && usdTicker)
+            ? Number(prices.getPrice(usdTicker, state.currentDay) || -1)
             : -1;
-        assetData.gold.price = prices && typeof prices.getPrice === 'function'
-            ? Number(prices.getPrice(selected.goldTicker, state.currentDay))
+        assetData.gold.price = (prices && typeof prices.getPrice === 'function' && goldTicker)
+            ? Number(prices.getPrice(goldTicker, state.currentDay) || -1)
             : -1;
     }
 
@@ -179,6 +227,11 @@
 
         if (!engine) {
             alert('Игра ещё не инициализирована');
+            return;
+        }
+
+        if (!ticker) {
+            alert('Тикер не выбран для текущего актива');
             return;
         }
 
