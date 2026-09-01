@@ -32,7 +32,7 @@
             stocks: [],
             fundTickers: [],
             usdTicker: 'USD',
-            goldTicker: 'GLDRUB_TOM',
+            goldTicker: 'GOLD',
             bankTicker: 'BANK'
         },
         portfolio: {
@@ -142,6 +142,54 @@
             ? Number(prices.getPrice(goldTicker, state.currentDay) || -1)
             : -1;
     }
+        // --- update DOM price labels in the HTML ---
+        function fmtPrice(value, kind) {
+            if (!Number.isFinite(Number(value)) || Number(value) < 0) return '—';
+            if (kind === 'stock') return `${Math.round(Number(value)).toLocaleString('ru-RU')} ₽ / акция`;
+            if (kind === 'pif') return `${Math.round(Number(value)).toLocaleString('ru-RU')} руб. за пай`;
+            if (kind === 'currency') return `${Number(value).toFixed(2).replace('.', ',')} руб. / 1 USD`;
+            // bond or gold or default
+            return `${Math.round(Number(value)).toLocaleString('ru-RU')} руб.`;
+        }
+
+        // bonds selection items
+        try {
+            const bondElems = Array.from(document.querySelectorAll('#bondsSelection .selection-item'));
+            bondElems.forEach((el, idx) => {
+                const priceSpan = el.querySelector('.price');
+                const priceVal = (Array.isArray(bondList) && bondList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(bondList[idx], state.currentDay) || -1) : -1) : -1;
+                if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'bond');
+            });
+        } catch (e) { /* ignore DOM update errors */ }
+
+        // stocks selection items
+        try {
+            const stockElems = Array.from(document.querySelectorAll('#stocksSelection .selection-item'));
+            stockElems.forEach((el, idx) => {
+                const priceSpan = el.querySelector('.price');
+                const priceVal = (Array.isArray(stockList) && stockList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(stockList[idx], state.currentDay) || -1) : -1) : -1;
+                if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'stock');
+            });
+        } catch (e) { /* ignore */ }
+
+        // pif selection items
+        try {
+            const pifElems = Array.from(document.querySelectorAll('#pifSelection .selection-item'));
+            pifElems.forEach((el, idx) => {
+                const priceSpan = el.querySelector('.price');
+                const pifTickerLocal = fundTickers && fundTickers[idx] ? fundTickers[idx] : null;
+                const priceVal = pifTickerLocal && prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(pifTickerLocal, state.currentDay) || -1) : -1;
+                if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'pif');
+            });
+        } catch (e) { /* ignore */ }
+
+        // currency and gold info cards
+        try {
+            const currencyPriceSpan = document.querySelector('#currencyInfo .price');
+            if (currencyPriceSpan) currencyPriceSpan.textContent = fmtPrice(assetData.currency.price, 'currency');
+            const goldPriceSpan = document.querySelector('#goldInfo .price');
+            if (goldPriceSpan) goldPriceSpan.textContent = fmtPrice(assetData.gold.price, 'gold');
+        } catch (e) { /* ignore */ }
 
     function updateTotal() {
         if (!quantityInput || !totalAmount) return;
@@ -278,6 +326,19 @@
             item.classList.add('active');
             item.classList.remove('inactive');
             currentStock = [...document.querySelectorAll('#stocksSelection .selection-item')].indexOf(item);
+            updateUI();
+        });
+    });
+
+    document.querySelectorAll('#pifSelection .selection-item').forEach((item) => {
+        item.addEventListener('click', () => {
+            document.querySelectorAll('#pifSelection .selection-item').forEach((el) => {
+                el.classList.remove('active');
+                el.classList.add('inactive');
+            });
+            item.classList.add('active');
+            item.classList.remove('inactive');
+            currentStock = [...document.querySelectorAll('#pifSelection .selection-item')].indexOf(item);
             updateUI();
         });
     });
