@@ -141,7 +141,7 @@
         assetData.gold.price = (prices && typeof prices.getPrice === 'function' && goldTicker)
             ? Number(prices.getPrice(goldTicker, state.currentDay) || -1)
             : -1;
-    }
+
         // --- update DOM price labels in the HTML ---
         function fmtPrice(value, kind) {
             if (!Number.isFinite(Number(value)) || Number(value) < 0) return '—';
@@ -156,9 +156,13 @@
         try {
             const bondElems = Array.from(document.querySelectorAll('#bondsSelection .selection-item'));
             bondElems.forEach((el, idx) => {
+                console.log(` --- ${el.data-bond}, ${idx}`)
                 const priceSpan = el.querySelector('.price');
+                console.log(`     ${priceSpan}`)
                 const priceVal = (Array.isArray(bondList) && bondList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(bondList[idx], state.currentDay) || -1) : -1) : -1;
+                console.log(`     ${priceVal}`)
                 if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'bond');
+                console.log(` === ${fmtPrice(priceVal, 'bond')}, ${priceSpan.textContent}`)
             });
         } catch (e) { /* ignore DOM update errors */ }
 
@@ -170,7 +174,7 @@
                 const priceVal = (Array.isArray(stockList) && stockList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(stockList[idx], state.currentDay) || -1) : -1) : -1;
                 if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'stock');
             });
-        } catch (e) { /* ignore */ }
+        } catch (e) { throw e; }
 
         // pif selection items
         try {
@@ -190,6 +194,7 @@
             const goldPriceSpan = document.querySelector('#goldInfo .price');
             if (goldPriceSpan) goldPriceSpan.textContent = fmtPrice(assetData.gold.price, 'gold');
         } catch (e) { /* ignore */ }
+    }
 
     function updateTotal() {
         if (!quantityInput || !totalAmount) return;
