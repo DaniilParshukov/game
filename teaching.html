@@ -619,7 +619,7 @@
     </div>
   </div>
 
-  <!-- ===== ОСНОВНОЙ КОНТЕНТ (обёртка для блюра) ===== -->
+  <!-- ===== ОСНОВНОЙ КОНТЕНТ ===== -->
   <div class="main-content" id="mainContent">
 
     <!-- ===== CONTENT CARD ===== -->
@@ -995,13 +995,11 @@
         if (isTransitioning) return;
         isTransitioning = true;
 
-        // Скрываем все
         contents.forEach(el => {
           el.classList.remove('active');
           el.style.display = 'none';
         });
 
-        // Показываем нужный
         const activeContent = contents[index];
         activeContent.style.display = 'flex';
         
@@ -1016,12 +1014,11 @@
           dots.forEach(d => d.classList.remove('active'));
           dots[index].classList.add('active');
           counter.textContent = `${index + 1} / ${assets.length}`;
-          mainTitle.textContent = titles[index] || 'Инструмент';
-          subTitle.textContent = subtitles[index] || '';
+          mainTitle.textContent = titles[index];
+          subTitle.textContent = subtitles[index];
           
-          // Обновляем пример
-          exampleTitle.textContent = exampleTitles[index] || 'Пример';
-          exampleDesc.innerHTML = exampleDescs[index] || 'Пример будет добавлен позже.';
+          exampleTitle.textContent = exampleTitles[index];
+          exampleDesc.innerHTML = exampleDescs[index];
           
           isTransitioning = false;
         });
