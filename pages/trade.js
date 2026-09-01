@@ -15,6 +15,7 @@
     let currentAction = 'buy';
     let currentBond = 0;
     let currentStock = 0;
+    let currentPif = 0;
 
     const assetData = {
         account: { label: 'Накопительный счет', quantityLabel: 'Сумма к пополнению/снятию', infoId: 'accountInfo' },
@@ -48,12 +49,10 @@
         if (currentAsset === 'account') return selected.bankTicker;
         if (currentAsset === 'bonds') return selected.bonds?.[currentBond];
         if (currentAsset === 'stocks') return selected.stocks?.[currentStock];
-        if (currentAsset === 'pif') {
-            return selected.others?.find((ticker) => /PIF|FUND/i.test(String(ticker)));
-        }
-        if (currentAsset === 'currency') return 'USD';
-        if (currentAsset === 'gold') return 'Gold';
-        return 'BANK';
+        if (currentAsset === 'pif') return selected.fundTickers?.[currentPif];
+        if (currentAsset === 'currency') return selected.usdTicker;
+        if (currentAsset === 'gold') return selected.goldTicker;
+        throw new Error("Неизвестный актив: " + currentAsset);
     }
 
     function syncSelectedAssetNames() {
@@ -63,15 +62,14 @@
 
         const bondList = Array.isArray(selected.bonds) ? selected.bonds : defaultState.selectedTickers.bonds;
         const stockList = Array.isArray(selected.stocks) ? selected.stocks : defaultState.selectedTickers.stocks;
-        const otherList = Array.isArray(selected.others) ? selected.others : defaultState.selectedTickers.others;
 
         if (bondList.length) {
             currentBond = Math.min(currentBond, bondList.length - 1);
             const bondTicker = bondList[currentBond];
             assetData.bonds.label = bondTicker;
             assetData.bonds.price = prices && typeof prices.getPrice === 'function'
-                ? Number(prices.getPrice(bondTicker, state.currentDay || 1) || 0)
-                : 800;
+                ? Number(prices.getPrice(bondTicker, state.currentDay))
+                : -1;
         }
 
         if (stockList.length) {
@@ -79,28 +77,28 @@
             const stockTicker = stockList[currentStock];
             assetData.stocks.label = stockTicker;
             assetData.stocks.price = prices && typeof prices.getPrice === 'function'
-                ? Number(prices.getPrice(stockTicker, state.currentDay || 1) || 0)
-                : 3200;
+                ? Number(prices.getPrice(stockTicker, state.currentDay))
+                : -1;
         }
 
-        const pifTicker = otherList.find((ticker) => /PIF|FUND/i.test(String(ticker))) || 'PIF1';
+        const pifTicker = selected.fundTickers?.[currentPif];
         assetData.pif.label = pifTicker;
         assetData.pif.price = prices && typeof prices.getPrice === 'function'
-            ? Number(prices.getPrice(pifTicker, state.currentDay || 1) || 0)
-            : 1250;
+            ? Number(prices.getPrice(pifTicker, state.currentDay))
+            : -1;
 
         assetData.currency.price = prices && typeof prices.getPrice === 'function'
-            ? Number(prices.getPrice('USD', state.currentDay || 1) || 0)
-            : 85.05;
+            ? Number(prices.getPrice(selected.usdTicker, state.currentDay))
+            : -1;
         assetData.gold.price = prices && typeof prices.getPrice === 'function'
-            ? Number(prices.getPrice('GLDRUB_TOM', state.currentDay || 1) || 0)
-            : 10000;
+            ? Number(prices.getPrice(selected.goldTicker, state.currentDay))
+            : -1;
     }
 
     function updateTotal() {
         if (!quantityInput || !totalAmount) return;
         const data = assetData[currentAsset] || assetData.account;
-        const value = Number(String(quantityInput.value).replace(/\s/g, '')) || 0;
+        const value = Number(String(quantityInput.value).replace(/\s/g, ''));
         const total = value * data.price;
         totalAmount.textContent = `${total.toLocaleString('ru-RU')} ₽`;
     }

@@ -122,16 +122,18 @@ function buildSelectedTickers(rows) {
     const stocks = shuffleArray(stockCandidates).slice(0, stockCount);
 
     const bondCandidates = rows.slice(0, 5).map((row) => row.Ticker).filter(Boolean);
-    const first = bondCandidates[0] || 'OFZ';
-    const secondOrThird = bondCandidates[Math.random() < 0.5 ? 1 : 2] || 'BONDS';
-    const fourthOrFifth = bondCandidates[Math.random() < 0.5 ? 3 : 4] || 'VDO';
+    const first = bondCandidates[0];
+    const secondOrThird = bondCandidates[Math.random() < 0.5 ? 1 : 2];
+    const fourthOrFifth = bondCandidates[Math.random() < 0.5 ? 3 : 4];
 
-    const goldTicker = trailingSpecialRows.find((row) => /GLDRUB|GOLD/i.test(row.Ticker) || /GLDRUB|GOLD/i.test(row.Name))?.Ticker || 'GLDRUB_TOM';
+    const goldTicker = trailingSpecialRows.find((row) => /GLDRUB|GOLD/i.test(row.Ticker) || /GLDRUB|GOLD/i.test(row.Name))?.Ticker;
 
     return {
         bonds: [first, secondOrThird, fourthOrFifth].filter(Boolean),
         stocks,
-        others: [usdTicker, ...fundTickers, goldTicker].filter(Boolean).slice(0, 4),
+        usdTicker,
+        goldTicker,
+        fundTickers,
         bankTicker
     };
 }
