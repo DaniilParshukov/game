@@ -18,12 +18,12 @@
     let currentPif = 0;
 
     const assetData = {
-        account: { label: 'Накопительный счет', quantityLabel: 'Сумма к пополнению/снятию', infoId: 'accountInfo' },
-        bonds: { label: 'ОФЗ', quantityLabel: 'Количество', infoId: 'bondsSelection' },
-        pif: { label: 'ПИФ1', quantityLabel: 'Количество', infoId: 'pifSelection' },
-        stocks: { label: 'Акция1', quantityLabel: 'Количество', infoId: 'stocksSelection' },
-        currency: { label: 'USD', quantityLabel: 'Количество', infoId: 'currencyInfo' },
-        gold: { label: 'Золото', quantityLabel: 'Количество', infoId: 'goldInfo' }
+        account: { label: 'Накопительный счет', quantityLabel: 'Сумма к пополнению/снятию', prise: -1, infoId: 'accountInfo' },
+        bonds: { label: 'ОФЗ', quantityLabel: 'Количество', prise: -1, infoId: 'bondsSelection' },
+        pif: { label: 'ПИФ1', quantityLabel: 'Количество', prise: -1, infoId: 'pifSelection' },
+        stocks: { label: 'Акция1', quantityLabel: 'Количество', prise: -1, infoId: 'stocksSelection' },
+        currency: { label: 'USD', quantityLabel: 'Количество', prise: -1, infoId: 'currencyInfo' },
+        gold: { label: 'Золото', quantityLabel: 'Количество', prise: -1, infoId: 'goldInfo' }
     };
 
     function readGameState() {
