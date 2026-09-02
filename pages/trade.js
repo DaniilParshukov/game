@@ -158,11 +158,8 @@
         const bondElems = Array.from(document.querySelectorAll('#bondsSelection .selection-item'));
         bondElems.forEach((el, idx) => {
             const priceSpan = el.querySelector('.price');
-            //console.log(`     ${priceSpan}`)
             const priceVal = (Array.isArray(bondList) && bondList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(bondList[idx], state.currentDay) || -1) : -1) : -1;
-            //console.log(`     ${priceVal}`)
             if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'bond');
-            //console.log(` === ${fmtPrice(priceVal, 'bond')}, ${priceSpan.textContent}`)
         });
 
         // stocks selection items
@@ -177,8 +174,7 @@
         const pifElems = Array.from(document.querySelectorAll('#pifSelection .selection-item'));
         pifElems.forEach((el, idx) => {
             const priceSpan = el.querySelector('.price');
-            const pifTickerLocal = fundTickers && fundTickers[idx] ? fundTickers[idx] : null;
-            const priceVal = pifTickerLocal && prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(pifTickerLocal, state.currentDay) || -1) : -1;
+            const priceVal = (Array.isArray(fundList) && fundList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(fundList[idx], state.currentDay) || -1) : -1) : -1;
             if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'pif');
         });
 
