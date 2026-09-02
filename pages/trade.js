@@ -154,7 +154,7 @@
             // bond or gold or default
             return `${Math.round(Number(value)).toLocaleString('ru-RU')} руб.`;
         }
-
+        console.log(`debag`)
         // bonds selection items
         try {
             const bondElems = Array.from(document.querySelectorAll('#bondsSelection .selection-item'));
