@@ -84,7 +84,7 @@
         if (currentAsset === 'account') return selected.bankTicker || LOCAL_DEFAULT_STATE.selectedTickers.bankTicker;
         if (currentAsset === 'bonds') return (Array.isArray(selected.bonds) ? selected.bonds[currentBond] : undefined) || null;
         if (currentAsset === 'stocks') return (Array.isArray(selected.stocks) ? selected.stocks[currentStock] : undefined) || null;
-        if (currentAsset === 'pif') return fundTickers[currentPif] || null;
+        if (currentAsset === 'pif') return (Array.isArray(selected.fundTickers) ? selected.fundTickers[currentPif] : undefined) || null;
         if (currentAsset === 'currency') return usdTicker;
         if (currentAsset === 'gold') return goldTicker;
         throw new Error("Неизвестный актив: " + currentAsset);
@@ -95,13 +95,10 @@
         const selected = state?.selectedTickers || LOCAL_DEFAULT_STATE.selectedTickers;
         const prices = window.game && typeof window.game.getPrices === 'function' ? window.game.getPrices() : null;
 
-        const others = Array.isArray(selected.others) ? selected.others : [];
-        const fundTickers = Array.isArray(selected.fundTickers)
-            ? selected.fundTickers
-            : others.filter((t) => !/USD|GOLD|BANK/i.test(String(t))).slice(0, 2);
-        const usdTicker = selected.usdTicker || others.find((t) => /USD/i.test(String(t))) || 'USD';
-        const goldTicker = selected.goldTicker || others.find((t) => /GLD|GOLD|GLDRUB/i.test(String(t))) || 'GLDRUB_TOM';
+        const usdTicker = selected.usdTicker;
+        const goldTicker = selected.goldTicker;
 
+        const fundList = Array.isArray(selected.fundTickers) ? selected.fundTickers : LOCAL_DEFAULT_STATE.selectedTickers.fundTickers;
         const bondList = Array.isArray(selected.bonds) ? selected.bonds : LOCAL_DEFAULT_STATE.selectedTickers.bonds;
         const stockList = Array.isArray(selected.stocks) ? selected.stocks : LOCAL_DEFAULT_STATE.selectedTickers.stocks;
 
@@ -129,11 +126,17 @@
             assetData.stocks.price = -1;
         }
 
-        const pifTicker = fundTickers && fundTickers[currentPif] ? fundTickers[currentPif] : null;
-        assetData.pif.label = pifTicker || '—';
-        assetData.pif.price = (prices && typeof prices.getPrice === 'function' && pifTicker)
-            ? Number(prices.getPrice(pifTicker, state.currentDay) || -1)
-            : -1;
+        if (fundList && fundList.length) {
+            currentPif = Math.min(currentPif, fundList.length - 1);
+            const pifTicker = fundList[currentPif];
+            assetData.pif.label = pifTicker || '—';
+            assetData.pif.price = (prices && typeof prices.getPrice === 'function' && pifTicker)
+                ? Number(prices.getPrice(pifTicker, state.currentDay) || -1)
+                : -1;
+        } else {
+            assetData.pif.label = '—';
+            assetData.pif.price = -1;
+        }
 
         assetData.currency.price = (prices && typeof prices.getPrice === 'function' && usdTicker)
             ? Number(prices.getPrice(usdTicker, state.currentDay) || -1)
@@ -164,7 +167,7 @@
                 if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'bond');
                 console.log(` === ${fmtPrice(priceVal, 'bond')}, ${priceSpan.textContent}`)
             });
-        } catch (e) { /* ignore DOM update errors */ }
+        } catch (e) { throw e; }
 
         // stocks selection items
         try {
@@ -343,7 +346,7 @@
             });
             item.classList.add('active');
             item.classList.remove('inactive');
-            currentStock = [...document.querySelectorAll('#pifSelection .selection-item')].indexOf(item);
+            currentPif = [...document.querySelectorAll('#pifSelection .selection-item')].indexOf(item);
             updateUI();
         });
     });
