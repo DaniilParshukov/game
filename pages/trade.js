@@ -155,46 +155,38 @@
             return `${Math.round(Number(value)).toLocaleString('ru-RU')} руб.`;
         }
         // bonds selection items
-        try {
-            const bondElems = Array.from(document.querySelectorAll('#bondsSelection .selection-item'));
-            bondElems.forEach((el, idx) => {
-                const priceSpan = el.querySelector('.price');
-                //console.log(`     ${priceSpan}`)
-                const priceVal = (Array.isArray(bondList) && bondList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(bondList[idx], state.currentDay) || -1) : -1) : -1;
-                //console.log(`     ${priceVal}`)
-                if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'bond');
-                //console.log(` === ${fmtPrice(priceVal, 'bond')}, ${priceSpan.textContent}`)
-            });
-        } catch (e) { throw e; }
+        const bondElems = Array.from(document.querySelectorAll('#bondsSelection .selection-item'));
+        bondElems.forEach((el, idx) => {
+            const priceSpan = el.querySelector('.price');
+            //console.log(`     ${priceSpan}`)
+            const priceVal = (Array.isArray(bondList) && bondList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(bondList[idx], state.currentDay) || -1) : -1) : -1;
+            //console.log(`     ${priceVal}`)
+            if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'bond');
+            //console.log(` === ${fmtPrice(priceVal, 'bond')}, ${priceSpan.textContent}`)
+        });
 
         // stocks selection items
-        try {
-            const stockElems = Array.from(document.querySelectorAll('#stocksSelection .selection-item'));
-            stockElems.forEach((el, idx) => {
-                const priceSpan = el.querySelector('.price');
-                const priceVal = (Array.isArray(stockList) && stockList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(stockList[idx], state.currentDay) || -1) : -1) : -1;
-                if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'stock');
-            });
-        } catch (e) { throw e; }
+        const stockElems = Array.from(document.querySelectorAll('#stocksSelection .selection-item'));
+        stockElems.forEach((el, idx) => {
+            const priceSpan = el.querySelector('.price');
+            const priceVal = (Array.isArray(stockList) && stockList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(stockList[idx], state.currentDay) || -1) : -1) : -1;
+            if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'stock');
+        });
 
         // pif selection items
-        try {
-            const pifElems = Array.from(document.querySelectorAll('#pifSelection .selection-item'));
-            pifElems.forEach((el, idx) => {
-                const priceSpan = el.querySelector('.price');
-                const pifTickerLocal = fundTickers && fundTickers[idx] ? fundTickers[idx] : null;
-                const priceVal = pifTickerLocal && prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(pifTickerLocal, state.currentDay) || -1) : -1;
-                if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'pif');
-            });
-        } catch (e) { /* ignore */ }
+        const pifElems = Array.from(document.querySelectorAll('#pifSelection .selection-item'));
+        pifElems.forEach((el, idx) => {
+            const priceSpan = el.querySelector('.price');
+            const pifTickerLocal = fundTickers && fundTickers[idx] ? fundTickers[idx] : null;
+            const priceVal = pifTickerLocal && prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(pifTickerLocal, state.currentDay) || -1) : -1;
+            if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'pif');
+        });
 
         // currency and gold info cards
-        try {
-            const currencyPriceSpan = document.querySelector('#currencyInfo .price');
-            if (currencyPriceSpan) currencyPriceSpan.textContent = fmtPrice(assetData.currency.price, 'currency');
-            const goldPriceSpan = document.querySelector('#goldInfo .price');
-            if (goldPriceSpan) goldPriceSpan.textContent = fmtPrice(assetData.gold.price, 'gold');
-        } catch (e) { /* ignore */ }
+        const currencyPriceSpan = document.querySelector('#currencyInfo .price');
+        if (currencyPriceSpan) currencyPriceSpan.textContent = fmtPrice(assetData.currency.price, 'currency');
+        const goldPriceSpan = document.querySelector('#goldInfo .price');
+        if (goldPriceSpan) goldPriceSpan.textContent = fmtPrice(assetData.gold.price, 'gold');
     }
 
     function updateTotal() {
@@ -397,20 +389,3 @@
         updateUI();
     }
 })();
-
-
-trade.js:157 debag
-trade.js:162 Uncaught ReferenceError: bond is not defined
-    at trade.js:162:45
-    at Array.forEach (<anonymous>)
-    at syncSelectedAssetNames (trade.js:161:23)
-    at updateUI (trade.js:211:9)
-    at trade.js:399:9
-    at trade.js:401:3
-(анонимная) @ trade.js:162
-syncSelectedAssetNames @ trade.js:161
-updateUI @ trade.js:211
-(анонимная) @ trade.js:399
-(анонимная) @ trade.js:401
-LocalStorageAdapter.js:27 ✅ Игра 123 загружена
-LocalPrices.js:16 Загрузка данных для диапазона: 2008-08-01_2009-08-31
