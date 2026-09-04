@@ -10,22 +10,21 @@
         },
         portfolio: {
             cash: 0,
-            bankAccount: { balance: -1000 },
+            bankAccount: { balance: 0 },
             assets: {},
             assetValues: {}
         },
         currentDay: 1
     };
 
-    function readGameState() {
+    async function readGameState() {
         try {
             const liveState = window.game && typeof window.game.data === 'function' ? window.game.data() : null;
             if (liveState) return liveState;
 
             if (window.game && typeof window.game.initialize === 'function') {
-                void window.game.initialize().then(() => {
-                    try { renderPortfolio(); } catch (e) { console.error('Ошибка при рендеринге портфеля: ', e); }
-                }).catch(() => {});
+                const initialized = await window.game.initialize();
+                if (initialized) return initialized;
             }
 
             return LOCAL_DEFAULT_STATE;
@@ -48,11 +47,11 @@
         return total;
     }
 
-    function renderPortfolio() {
-        const gameData = readGameState();
-        const portfolio = gameData.portfolio;
-        const bankBalance = Number(portfolio.bankAccount?.balance || -1);
-        const cash = Number(portfolio.cash || -1);
+    async function renderPortfolio() {
+        const gameData = await readGameState();
+        const portfolio = gameData.portfolio || LOCAL_DEFAULT_STATE.portfolio;
+        const bankBalance = Number(portfolio.bankAccount?.balance || 0);
+        const cash = Number(portfolio.cash || 0);
         const total = cash + bankBalance + Object.values(portfolio.assetValues || {}).reduce((sum, asset) => sum + Number(asset.value || 0), 0) + Object.values(portfolio.deposits || {}).reduce((sum, positions) => {
             if (!Array.isArray(positions)) return sum;
             return sum + positions.reduce((inner, item) => inner + Number(item?.amount || 0), 0);
@@ -100,5 +99,11 @@
         });
     }
 
-    renderPortfolio();
+    (async () => {
+        try {
+            await renderPortfolio();
+        } catch (error) {
+            console.error('Ошибка при рендеринге портфеля: ', error);
+        }
+    })();
 })();
