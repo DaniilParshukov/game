@@ -9,7 +9,7 @@
             bankTicker: 'BANK'
         },
         portfolio: {
-            cash: 0,
+            cash: -24,
             bankAccount: { balance: 0 },
             assets: {},
             assetValues: {}
@@ -17,19 +17,27 @@
         currentDay: 1
     };
 
+    const debugPortfolio = (...args) => console.info('[portfolio]', ...args);
+
     async function readGameState() {
         try {
             const liveState = window.game && typeof window.game.data === 'function' ? window.game.data() : null;
-            if (liveState) return liveState;
+            if (liveState) {
+                debugPortfolio('liveState found', liveState);
+                return liveState;
+            }
 
-            console.log('Нет liveState');
+            debugPortfolio('Нет liveState, пытаемся инициализировать игру');
 
             if (window.game && typeof window.game.initialize === 'function') {
                 const initialized = await window.game.initialize();
-                if (initialized) return initialized;
+                if (initialized) {
+                    debugPortfolio('game initialized', initialized);
+                    return initialized;
+                }
             }
 
-            console.log('Нет window.game.initialize:', window.game);
+            debugPortfolio('Нет window.game.initialize', !!window.game, window.game);
 
             return LOCAL_DEFAULT_STATE;
         } catch (error) {
@@ -52,6 +60,7 @@
     }
 
     async function renderPortfolio() {
+        debugPortfolio('Начало рендера портфеля');
         const gameData = await readGameState();
         const portfolio = gameData.portfolio || LOCAL_DEFAULT_STATE.portfolio;
         const bankBalance = Number(portfolio.bankAccount?.balance || 0);
@@ -60,6 +69,8 @@
             if (!Array.isArray(positions)) return sum;
             return sum + positions.reduce((inner, item) => inner + Number(item?.amount || 0), 0);
         }, 0);
+
+        debugPortfolio('render data', { cash, bankBalance, total, currentDay: gameData.currentDay, selectedTickers: gameData.selectedTickers });
 
         const monthIndex = Math.max(1, Math.min(12, Math.ceil((Number(gameData.currentDay || 1) / 30) || 1)));
         const badge = document.querySelector('.month-badge');
@@ -102,12 +113,22 @@
             }
         });
     }
-    console.log('Рендерим порофиль');
-    (async () => {
-        try {
-            await renderPortfolio();
-        } catch (error) {
-            console.error('Ошибка при рендеринге портфеля: ', error);
-        }
-    })();
+
+    function bootstrapPortfolio() {
+        debugPortfolio('portfolio bootstrap start', { readyState: document.readyState, hasWindowGame: !!window.game });
+
+        (async () => {
+            try {
+                await renderPortfolio();
+            } catch (error) {
+                console.error('Ошибка при рендеринге портфеля: ', error);
+            }
+        })();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootstrapPortfolio, { once: true });
+    } else {
+        bootstrapPortfolio();
+    }
 })();
