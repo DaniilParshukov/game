@@ -22,10 +22,6 @@ function getTickerByName(name) {
     const selected = gameData?.selectedTickers || {};
     const bonds = Array.isArray(selected.bonds) ? selected.bonds : [];
     const stocks = Array.isArray(selected.stocks) ? selected.stocks : [];
-    const others = Array.isArray(selected.others) ? selected.others : [];
-    const fundTickers = others.filter((ticker) => !/USD|GOLD|BANK/i.test(String(ticker)));
-    const goldTicker = others.find((ticker) => /GOLD/i.test(String(ticker)));
-    const usdTicker = others.find((ticker) => /USD/i.test(String(ticker)));
 
     const normalized = String(name || '').trim().toLowerCase();
     const directTicker = String(name || '').trim();

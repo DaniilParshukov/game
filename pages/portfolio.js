@@ -5,12 +5,12 @@
             stocks: [],
             fundTickers: [],
             usdTicker: 'USD',
-            goldTicker: 'GLDRUB_TOM',
+            goldTicker: 'GOLD',
             bankTicker: 'BANK'
         },
         portfolio: {
             cash: 0,
-            bankAccount: { balance: 0 },
+            bankAccount: { balance: -1000 },
             assets: {},
             assetValues: {}
         },
@@ -24,7 +24,7 @@
 
             if (window.game && typeof window.game.initialize === 'function') {
                 void window.game.initialize().then(() => {
-                    try { renderPortfolio(); } catch (e) { /* ignore */ }
+                    try { renderPortfolio(); } catch (e) { console.error('Ошибка при рендеринге портфеля: ', e); }
                 }).catch(() => {});
             }
 
@@ -51,8 +51,8 @@
     function renderPortfolio() {
         const gameData = readGameState();
         const portfolio = gameData.portfolio;
-        const bankBalance = Number(portfolio.bankAccount?.balance || 0);
-        const cash = Number(portfolio.cash || 0);
+        const bankBalance = Number(portfolio.bankAccount?.balance || -1);
+        const cash = Number(portfolio.cash || -1);
         const total = cash + bankBalance + Object.values(portfolio.assetValues || {}).reduce((sum, asset) => sum + Number(asset.value || 0), 0) + Object.values(portfolio.deposits || {}).reduce((sum, positions) => {
             if (!Array.isArray(positions)) return sum;
             return sum + positions.reduce((inner, item) => inner + Number(item?.amount || 0), 0);
@@ -70,13 +70,13 @@
         const rows = Array.from(document.querySelectorAll('.asset-row'));
         const values = [
             { label: 'Накопительный счёт', value: bankBalance, color: 'fill-green' },
-            { label: 'ОФЗ', value: collectAssetValue(portfolio, ['OFZ']), color: 'fill-dark' },
-            { label: 'Корп. облигации', value: collectAssetValue(portfolio, ['BONDS']), color: 'fill-mint' },
-            { label: 'ВДО', value: collectAssetValue(portfolio, ['VDO']), color: 'fill-gold' },
-            { label: 'ПИФ', value: collectAssetValue(portfolio, ['PIF1', 'PIF2']), color: 'fill-sand' },
-            { label: 'Акции', value: collectAssetValue(portfolio, Object.keys(portfolio.assets || {}).filter((ticker) => !['BANK', 'OFZ', 'BONDS', 'VDO', 'PIF1', 'PIF2', 'USD', 'GOLD'].includes(ticker))), color: 'fill-blue' },
-            { label: 'Иностранная валюта', value: collectAssetValue(portfolio, ['USD']), color: 'fill-purple' },
-            { label: 'Золото', value: collectAssetValue(portfolio, ['GOLD']), color: 'fill-teal' }
+            { label: 'ОФЗ', value: collectAssetValue(portfolio, [gameData.selectedTickers.bonds[0]]), color: 'fill-dark' },
+            { label: 'Корп. облигации', value: collectAssetValue(portfolio, [gameData.selectedTickers.bonds[1]]), color: 'fill-mint' },
+            { label: 'ВДО', value: collectAssetValue(portfolio, [gameData.selectedTickers.bonds[2]]), color: 'fill-gold' },
+            { label: 'ПИФ', value: collectAssetValue(portfolio, gameData.selectedTickers.fundTickers), color: 'fill-sand' },
+            { label: 'Акции', value: collectAssetValue(portfolio, gameData.selectedTickers.stocks), color: 'fill-blue' },
+            { label: 'Иностранная валюта', value: collectAssetValue(portfolio, [gameData.selectedTickers.usdTicker]), color: 'fill-purple' },
+            { label: 'Золото', value: collectAssetValue(portfolio, [gameData.selectedTickers.goldTicker]), color: 'fill-teal' }
         ];
 
         rows.forEach((row, index) => {
