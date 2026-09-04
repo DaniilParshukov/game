@@ -102,7 +102,7 @@
             }
         });
     }
-
+    console.log('Рендерим порофиль');
     (async () => {
         try {
             await renderPortfolio();
