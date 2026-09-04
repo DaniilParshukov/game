@@ -22,10 +22,14 @@
             const liveState = window.game && typeof window.game.data === 'function' ? window.game.data() : null;
             if (liveState) return liveState;
 
+            console.log('Нет liveState');
+
             if (window.game && typeof window.game.initialize === 'function') {
                 const initialized = await window.game.initialize();
                 if (initialized) return initialized;
             }
+
+            console.log('Нет window.game.initialize:', window.game);
 
             return LOCAL_DEFAULT_STATE;
         } catch (error) {

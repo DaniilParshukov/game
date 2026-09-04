@@ -52,7 +52,7 @@
             if (window.game && typeof window.game.initialize === 'function') {
                 // kick off initialize in background, update UI when ready
                 void window.game.initialize().then(() => {
-                    try { updateUI(); } catch (e) { /* ignore */ }
+                    try { updateUI(); } catch (e) { console.log(e) }
                 }).catch(() => {});
             }
 
