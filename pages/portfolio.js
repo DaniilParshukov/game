@@ -5,7 +5,7 @@
             stocks: [],
             fundTickers: [],
             usdTicker: 'USD',
-            goldTicker: 'GOLD',
+            goldTicker: 'GLDRUB',
             bankTicker: 'BANK'
         },
         portfolio: {

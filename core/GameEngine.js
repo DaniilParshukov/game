@@ -261,7 +261,10 @@ getInstrumentInfo(ticker) {
         });
         
         gameData.portfolio = this.revaluateAssets(gameData.portfolio, day);
-        
+
+        console.log(`Куплено ${amount} акций ${ticker} по цене ${price} за день ${day}. Стоимость: ${cost}. Остаток наличных: ${gameData.portfolio.cash}`);
+        console.log(`${gameData.history}`);
+
         return gameData;
     }
 

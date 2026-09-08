@@ -106,8 +106,8 @@ function buildSelectedTickers(rows) {
         .filter((row) => {
             const ticker = row.Ticker || '';
             const name = row.Name || '';
-            return !/BANK|USD|GLDRUB|GOLD/i.test(ticker)
-                && !/BANK|USD|GLDRUB|GOLD/i.test(name)
+            return !/BANK|USD|GLDRUB/i.test(ticker)
+                && !/BANK|USD|GLDRUB/i.test(name)
                 && (ticker.length > 8 || /FUND|ФОНД|EQ|JR|RU000/i.test(name) || /FUND|ФОНД|EQ|JR|RU000/i.test(ticker));
         })
         .map((row) => row.Ticker)
@@ -122,7 +122,7 @@ function buildSelectedTickers(rows) {
     const secondOrThird = bondCandidates[Math.random() < 0.5 ? 1 : 2];
     const fourthOrFifth = bondCandidates[Math.random() < 0.5 ? 3 : 4];
 
-    const goldTicker = trailingSpecialRows.find((row) => /GLDRUB|GOLD/i.test(row.Ticker) || /GLDRUB|GOLD/i.test(row.Name))?.Ticker;
+    const goldTicker = trailingSpecialRows.find((row) => /GLDRUB/i.test(row.Ticker) || /GLDRUB/i.test(row.Name))?.Ticker;
 
     return {
         bonds: [first, secondOrThird, fourthOrFifth].filter(Boolean),
@@ -210,7 +210,7 @@ async function initializeGame() {
     }
 
     if (!prices) {
-        const year = gameData?.year || '2024';
+        const year = gameData?.year;
         prices = await LocalPrices.create(year);
         gameEngine.prices = prices;
     }

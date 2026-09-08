@@ -32,7 +32,7 @@
             stocks: [],
             fundTickers: [],
             usdTicker: 'USD',
-            goldTicker: 'GOLD',
+            goldTicker: 'GLDRUB',
             bankTicker: 'BANK'
         },
         portfolio: {
@@ -75,11 +75,9 @@
         const state = readGameState();
         const selected = state?.selectedTickers || LOCAL_DEFAULT_STATE.selectedTickers;
         const others = Array.isArray(selected.others) ? selected.others : [];
-        const fundTickers = Array.isArray(selected.fundTickers)
-            ? selected.fundTickers
-            : others.filter((t) => !/USD|GOLD|BANK/i.test(String(t))).slice(0, 2);
+        const fundTickers = selected.fundTickers;
         const usdTicker = selected.usdTicker || others.find((t) => /USD/i.test(String(t))) || 'USD';
-        const goldTicker = selected.goldTicker || others.find((t) => /GLD|GOLD|GLDRUB/i.test(String(t))) || 'GLDRUB_TOM';
+        const goldTicker = selected.goldTicker || others.find((t) => /GLDRUB/i.test(String(t))) || 'GLDRUB';
 
         if (currentAsset === 'account') return selected.bankTicker || LOCAL_DEFAULT_STATE.selectedTickers.bankTicker;
         if (currentAsset === 'bonds') return (Array.isArray(selected.bonds) ? selected.bonds[currentBond] : undefined) || null;
