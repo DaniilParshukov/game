@@ -27,16 +27,6 @@
     });
   }
 
-  function bindNavigation() {
-    document.querySelectorAll('[data-go]').forEach((element) => {
-      element.addEventListener('click', (event) => {
-        const target = element.getAttribute('data-go');
-        if (!target) return;
-        event.preventDefault();
-        window.location.href = target;
-      });
-    });
-
     document.querySelectorAll('[data-back]').forEach((element) => {
       element.addEventListener('click', (event) => {
         const target = element.getAttribute('data-back');
@@ -76,15 +66,6 @@
         window.location.href = 'results.html';
       });
     }
-
-    document.querySelectorAll('.action-item[data-go]').forEach((item) => {
-      item.addEventListener('click', () => {
-        const target = item.getAttribute('data-go');
-        if (target) {
-          window.location.href = target;
-        }
-      });
-    });
 
     const profileLink = document.querySelector('.nav-profile, .profile-btn');
     if (profileLink) {
