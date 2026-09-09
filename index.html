@@ -3203,10 +3203,17 @@
       // 2. Показываем нужную
       document.getElementById(pageId).classList.add('active');
 
+      if (pageId === 'portfolio' && globalThis.refreshPortfolio) {
+        Promise.resolve(globalThis.refreshPortfolio()).catch((error) => {
+          console.error('Ошибка обновления портфеля при открытии страницы:', error);
+        });
+      }
+
       // 3. Обновляем активный таб
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active-tab'));
       document.getElementById("btn-" + pageId).classList.add('active-tab');
     }
   </script>
+  <script type="module" src="./script.js"></script>
 </body>
 </html>
