@@ -222,7 +222,7 @@
       margin-top: clamp(16px, 2vh, 32px);
     }
 
-    .btn-start {
+    .kopilka-btn {
       background: #144733;
       border-radius: 22.6px;
       padding: clamp(12px, 1.5vh, 20px) clamp(28px, 3vw, 44px);
@@ -234,8 +234,11 @@
       transition: background 0.2s;
       white-space: nowrap;
     }
-    .btn-start:hover {
+    .kopilka-btn:hover {
       background: #1a5a47;
+    }
+    .kopilka-btn[aria-pressed="true"] {
+      background: #0d2e20; /* темнее */
     }
 
     .info-badge {
@@ -627,7 +630,7 @@
       min-width: 200px;
     }
 
-    .month-badge {
+    .day-badge {
       background: #C7F26B;
       border-radius: 28px;
       padding: clamp(4px, 0.6vh, 10px) clamp(16px, 2vw, 28px);
@@ -1477,6 +1480,7 @@
       margin: clamp(4px, 0.8vh, 12px) 0 clamp(8px, 1.5vh, 28px);
     }
 
+    /* TODO hero */
     .hero {}
 
     .main-title {
@@ -2328,7 +2332,7 @@
               <div class="main-headline">Построй своё финансовое будущее</div>
               <div class="subhead">Принимай решения, переживай неожиданные события, инвестируй и смотри, к чему приведут твои решения.</div>
               <div class="hero-actions">
-                  <button class="btn-start" onclick="showPage('registration')">Начать игру →</button>
+                  <button class="kopilka-btn" onclick="showPage('registration')">Начать игру →</button>
                   <span class="info-badge">20-30 минут</span>
                   <span class="info-badge">12 игровых месяцев</span>
               </div>
@@ -2394,7 +2398,7 @@
           <div class="register-card">
             <div class="input-label">Введи свое имя</div>
             <input class="input-field" type="text" placeholder="" />
-            <button class="btn-continue" onclick="showPage('portfolio')">Продолжить →</button>
+            <button class="btn-continue" type="button">Продолжить →</button>
             <div class="input-hint">Можно использовать настоящее имя или никнейм.</div>
           </div>
         </div>
@@ -2415,8 +2419,9 @@
         <!-- HERO -->
         <div class="hero-row">
           <div class="hero-left">
-            <span class="month-badge">МЕСЯЦ 1 ИЗ 12</span>
+            <span class="day-badge">День 0</span>
             <span class="portfolio-title">Твой портфель</span>
+            <button class="kopilka-btn" data-game-pause-toggle aria-pressed="false">Пауза</button>
           </div>
         </div>
 

@@ -1,5 +1,3 @@
-// core/types.js
-
 /**
  * @typedef {Object} Asset
  * @property {string} ticker - Тикер актива (например, 'SBER')
@@ -15,11 +13,9 @@
 /**
  * @typedef {Object} GameData
  * @property {Portfolio} portfolio
- * @property {number} currentDay - Текущий день (1-365)
+ * @property {number} year - Выбранный год (2007-2024)
+ * @property {Date} date - Текущяя дата (1-365:0-23:2007-2024)
  * @property {Array} history - История транзакций
+ * @property {Object} MonthlyEvents - События по месяцам
+ * @property {Object|null} pendingEvent - Текущее ожидающее событие
  */
-
-// Экспортируем для других файлов
-export const TYPES = {
-    // Просто заглушка для документации
-};

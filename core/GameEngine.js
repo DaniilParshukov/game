@@ -20,37 +20,62 @@ export class GameEngine {
     /**
      * Начислить проценты по депозитам
      */
-    applyDepositInterest(portfolio, day) {
-        const deposits = portfolio.deposits || {};
-        for (const [productKey, positions] of Object.entries(deposits)) {
-            if (!Array.isArray(positions)) continue;
-            for (const deposit of positions) {
-                if (!deposit || !deposit.amount) continue;
-                const dailyRate = (deposit.rate || 0) / 365;
-                deposit.amount += deposit.amount * dailyRate;
-                deposit.termDays = Math.max(0, (deposit.termDays ?? 180) - 1);
-                deposit.lastProcessedDay = day;
-            }
+    applyBankInterest(portfolio, date) {
+        if (!portfolio || !this.prices || typeof this.prices.getPrice !== 'function') {
+            return;
         }
 
-        const bankAccount = this.getBankAccount(portfolio);
-        const bankRate = bankAccount.balance < 0 ? 0.12 : 0.06;
+        const safeDate = date instanceof Date ? new Date(date) : new Date(String(date));
+        if (Number.isNaN(safeDate.getTime())) {
+            return;
+        }
+
+        const currentBalance = Number(portfolio.bankBalance) || 0;
+        const rawRate = Number(this.prices.getPrice('BANK', safeDate));
+        if (!Number.isFinite(rawRate) || rawRate <= 0) {
+            return;
+        }
+
+        const bankRate = currentBalance < 0 ? rawRate * 2 : rawRate;
         const dailyRate = bankRate / 365;
-        bankAccount.balance += bankAccount.balance * dailyRate;
-        this.setBankAccount(portfolio, bankAccount);
-
-        portfolio.deposits = deposits;
-        return portfolio;
+        portfolio.bankBalance = currentBalance + (currentBalance * dailyRate);
     }
 
-    getBankAccount(portfolio) {
-        return portfolio.bankAccount || { balance: 0, rate: 0.06 };
+    applyAssetDatePayments(gameData) {
+        const portfolio = gameData?.portfolio;
+        const date = gameData?.date;
+
+        if (!portfolio || !portfolio.assets || !date || !this.prices || typeof this.prices.getValueByDate !== 'function') {
+            return;
+        }
+
+        for (const [ticker, quantity] of Object.entries(portfolio.assets)) {
+            let payoutValue = 0;
+
+            payoutValue = Number(this.prices.getValueByDate(ticker, date));
+
+            if (!Number.isFinite(payoutValue) || payoutValue <= 0) {
+                console.warn(`Неверное значение выплаты для тикера ${ticker} на дату ${date.toISOString()}: ${payoutValue}`);
+                continue;
+            }
+
+            const amount = payoutValue * Number(quantity);
+            if (amount <= 0) {
+                continue;
+            }
+
+            portfolio.cash += amount;
+            gameData.history.push({
+                type: 'ASSET_PAYOUT',
+                ticker,
+                quantity,
+                payoutValue,
+                amount,
+                date: new Date(date)
+            });
+        }
     }
 
-    setBankAccount(portfolio, account) {
-        portfolio.bankAccount = account;
-        return portfolio;
-    }
 /* old
 getInstrumentInfo(ticker) {
     switch (ticker) {
@@ -138,150 +163,158 @@ getInstrumentInfo(ticker) {
     /**
      * Переоценить активы по текущим ценам
      */
-    revaluateAssets(portfolio, day) {
-        const updatedAssets = {};
-        for (const [ticker, quantity] of Object.entries(portfolio.assets)) {
-            const price = this.prices.getPrice(ticker, day);
-            updatedAssets[ticker] = {
-                quantity,
+    revaluateAssets(portfolio, date) {
+        const safeDate = date instanceof Date ? new Date(date) : new Date(String(date));
+        if (Number.isNaN(safeDate.getTime())) {
+            return;
+        }
+
+        for (const [ticker, quantity] of Object.entries(portfolio.assets || {})) {
+            const price = Number(this.prices.getPrice(ticker, safeDate));
+            portfolio.assetValues = portfolio.assetValues || {};
+            portfolio.assetValues[ticker] = {
+                quantity: Number(quantity) || 0,
                 price,
-                value: quantity * price
+                value: (Number(quantity) || 0) * price
             };
         }
-        portfolio.assetValues = updatedAssets;
-        return portfolio;
     }
 
     /**
      * Рассчитать общую стоимость портфеля
      */
     getTotalValue(portfolio) {
-        let total = portfolio.cash || 0;
-        const bankAccount = this.getBankAccount(portfolio);
-        total += bankAccount.balance || 0;
+        if (!portfolio) return 0;
+
+        let total = Number(portfolio.cash) || 0;
+        total += Number(portfolio.bankBalance) || 0;
         for (const [ticker, data] of Object.entries(portfolio.assetValues || {})) {
-            total += data.value || 0;
-        }
-        for (const positions of Object.values(portfolio.deposits || {})) {
-            if (!Array.isArray(positions)) continue;
-            for (const deposit of positions) {
-                total += deposit.amount || 0;
-            }
+            total += Number(data?.value) || 0;
         }
         return total;
     }
 
-    nextDay(gameData) {
-        const newDay = gameData.currentDay + 1;
-        
-        let portfolio = this.applyDepositInterest(gameData.portfolio, newDay);
 
-        portfolio = this.revaluateAssets(portfolio, newDay);
-        
-        const monthlyEvents = { ...(gameData.monthlyEvents || {}) };
-        this.checkSalary(newDay, gameData)
-        const event = this.checkLifeEvents(newDay, { ...gameData, monthlyEvents });
-        
-        const newGameData = {
-            ...gameData,
-            portfolio,
-            currentDay: newDay,
-            monthlyEvents,
-            pendingEvent: event
-        };
-        
-        return newGameData;
+    nextDay(gameData) {
+        const safeDate = gameData.date instanceof Date ? new Date(gameData.date) : new Date(String(gameData.date));
+        if (Number.isNaN(safeDate.getTime())) {
+            throw new Error('Некорректная дата игры для перехода на следующий день');
+        }
+        safeDate.setDate(safeDate.getDate() + 1);
+        gameData.date = safeDate;
+
+        this.applyBankInterest(gameData.portfolio, gameData.date);
+        this.revaluateAssets(gameData.portfolio, gameData.date);
+        this.applyAssetDatePayments(gameData);
+
+        if (!gameData.monthlyEvents) {
+            gameData.monthlyEvents = {};
+        }
+
+        this.checkSalary(gameData);
+        gameData.pendingEvent = this.checkLifeEvents(gameData);
+        return gameData;
     }
 
-    openDeposit(gameData, amount) {
-        if (gameData.portfolio.cash < amount) {
-            throw new Error(`Недостаточно средств. Нужно: ${amount}, есть: ${gameData.portfolio.cash}`);
+    openBank(gameData, amount) {
+        const numericAmount = Number(amount) || 0;
+        if (numericAmount <= 0) {
+            throw new Error('Сумма пополнения должна быть положительной');
         }
-        gameData.portfolio.cash -= amount;
-        const bankAccount = this.getBankAccount(gameData.portfolio);
-        bankAccount.balance += amount;
-        this.setBankAccount(gameData.portfolio, bankAccount);
+        if ((Number(gameData.portfolio.cash) || 0) < numericAmount) {
+            throw new Error(`Недостаточно средств. Нужно: ${numericAmount}, есть: ${Number(gameData.portfolio.cash) || 0}`);
+        }
+        gameData.portfolio.cash -= numericAmount;
+        gameData.portfolio.bankBalance = (Number(gameData.portfolio.bankBalance) || 0) + numericAmount;
 
         gameData.history.push({
-            type: 'DEPOSIT_OPEN',
-            amount,
-            rate: config.rate,
-            day: gameData.currentDay
+            type: 'BANK_OPEN',
+            amount: numericAmount,
+            date: new Date(gameData.date)
         });
         return gameData;
     }
 
-    withdrawDeposit(gameData, index, amount = null) {
-        const bankAccount = this.getBankAccount(gameData.portfolio);
-        const transferAmount = amount ?? bankAccount.balance;
-        if (transferAmount <= 0) {
+    withdrawBank(gameData, amount) {
+        const numericAmount = Number(amount) || 0;
+        if (numericAmount <= 0) {
             throw new Error('Сумма снятия должна быть положительной');
         }
-        if (bankAccount.balance < transferAmount) {
-            throw new Error(`Недостаточно средств на счёте. Есть: ${bankAccount.balance}`);
+        if ((Number(gameData.portfolio.bankBalance) || 0) < numericAmount) {
+            throw new Error(`Недостаточно средств на счёте. Есть: ${Number(gameData.portfolio.bankBalance) || 0}`);
         }
-        bankAccount.balance -= transferAmount;
-        this.setBankAccount(gameData.portfolio, bankAccount);
-        gameData.portfolio.cash += transferAmount;
+        gameData.portfolio.bankBalance -= numericAmount;
+        gameData.portfolio.cash += numericAmount;
         gameData.history.push({
             type: 'BANK_WITHDRAW',
-            productKey,
-            amount: transferAmount,
-            day: gameData.currentDay
+            amount: numericAmount,
+            date: new Date(gameData.date)
         });
         return gameData;
     }
 
     buyAsset(gameData, ticker, amount) {
-        const day = gameData.currentDay;
-        const price = this.prices.getPrice(ticker, day);
-        const cost = price * amount;
+        const safeAmount = Number(amount) || 0;
+        if (safeAmount <= 0) {
+            throw new Error('Количество должно быть положительным');
+        }
+
+        const date = gameData.date instanceof Date ? new Date(gameData.date) : new Date(String(gameData.date));
+        if (Number.isNaN(date.getTime())) {
+            throw new Error('Некорректная дата игры');
+        }
+
+        const price = Number(this.prices.getPrice(ticker, date));
+        const cost = price * safeAmount;
         
-        if (gameData.portfolio.cash < cost) {
-            throw new Error(`Недостаточно средств. Нужно: ${cost}, есть: ${gameData.portfolio.cash}`);
+        if ((Number(gameData.portfolio.cash) || 0) < cost) {
+            throw new Error(`Недостаточно средств. Нужно: ${cost}, есть: ${Number(gameData.portfolio.cash) || 0}`);
         }
         
-        // Списываем деньги
         gameData.portfolio.cash -= cost;
         
-        // Добавляем актив
         if (!gameData.portfolio.assets[ticker]) {
             gameData.portfolio.assets[ticker] = 0;
         }
-        gameData.portfolio.assets[ticker] += amount;
+        gameData.portfolio.assets[ticker] += safeAmount;
         
-        // Записываем транзакцию
         gameData.history.push({
             type: 'BUY',
             ticker,
-            amount,
+            amount: safeAmount,
             price,
             total: cost,
-            day
+            date: new Date(date)
         });
         
-        gameData.portfolio = this.revaluateAssets(gameData.portfolio, day);
-
-        console.log(`Куплено ${amount} акций ${ticker} по цене ${price} за день ${day}. Стоимость: ${cost}. Остаток наличных: ${gameData.portfolio.cash}`);
-        console.log(`${gameData.history}`);
+        this.revaluateAssets(gameData.portfolio, date);
 
         return gameData;
     }
 
     sellAsset(gameData, ticker, amount) {
-        const day = gameData.currentDay;
-        const price = this.prices.getPrice(ticker, day);
-        const revenue = price * amount;
+        const safeAmount = Number(amount) || 0;
+        if (safeAmount <= 0) {
+            throw new Error('Количество должно быть положительным');
+        }
+
+        const date = gameData.date instanceof Date ? new Date(gameData.date) : new Date(String(gameData.date));
+        if (Number.isNaN(date.getTime())) {
+            throw new Error('Некорректная дата игры');
+        }
+
+        const price = Number(this.prices.getPrice(ticker, date));
+        const revenue = price * safeAmount;
         
         if (!gameData.portfolio.assets[ticker]) {
             throw new Error(`У вас нет актива ${ticker}`);
         }
         
-        if (gameData.portfolio.assets[ticker] < amount) {
-            throw new Error(`У вас только ${gameData.portfolio.assets[ticker]} акций ${ticker}`);
+        if ((Number(gameData.portfolio.assets[ticker]) || 0) < safeAmount) {
+            throw new Error(`У вас только ${Number(gameData.portfolio.assets[ticker]) || 0} акций ${ticker}`);
         }
         
-        gameData.portfolio.assets[ticker] -= amount;
+        gameData.portfolio.assets[ticker] -= safeAmount;
         
         if (gameData.portfolio.assets[ticker] === 0) {
             delete gameData.portfolio.assets[ticker];
@@ -292,28 +325,22 @@ getInstrumentInfo(ticker) {
         gameData.history.push({
             type: 'SELL',
             ticker,
-            amount,
+            amount: safeAmount,
             price,
             total: revenue,
-            day
+            date: new Date(date)
         });
         
-        gameData.portfolio = this.revaluateAssets(gameData.portfolio, day);
+        this.revaluateAssets(gameData.portfolio, date);
         
         return gameData;
     }
 
-    checkSalary(day, gameData) {
-        const { monthIndex, dayOfMonth } = this.getMonthInfo(day);
-        if (dayOfMonth === 10 || dayOfMonth === 25) {
-            gameData.portfolio.cash += 100000;
+    checkSalary(gameData) {
+        const day = gameData.date.getDate();
+        if (day === 10 || day === 25) {
+            gameData.portfolio.cash += 10000;
         }
-    }
-
-    getMonthInfo(day) {
-        const monthIndex = Math.floor((day - 1) / 30);
-        const dayOfMonth = ((day - 1) % 30) + 1;
-        return { monthIndex, dayOfMonth };
     }
 
     getRandomEventDay() {
@@ -327,56 +354,39 @@ getInstrumentInfo(ticker) {
     /**
      * Проверить жизненные ситуации
      */
-    checkLifeEvents(day, gameData) {
-        const { monthIndex, dayOfMonth } = this.getMonthInfo(day);
+    checkLifeEvents(gameData) {
         const monthlyEvents = gameData?.monthlyEvents || {};
 
-        // 4 квартала
-        const quarters = [
-            { start: 0, end: 2 },   // 1-й квартал
-            { start: 3, end: 5 },   // 2-й квартал
-            { start: 6, end: 8 },   // 3-й квартал
-            { start: 9, end: 11 }   // 4-й квартал
-        ];
+        let current = (gameData.date.getMonth() + 4) % 12 - 6; // magic
 
-        // Определяем текущий квартал
-        let currentQuarter = -1;
-        for (let q = 0; q < quarters.length; q++) {
-            if (monthIndex >= quarters[q].start && monthIndex <= quarters[q].end) {
-                currentQuarter = q;
-                break;
-            }
-        }
-
-        if (currentQuarter === -1) return null;
+        if (current < 0) return null;
 
         if (!gameData._quarterEventsInit) {
             gameData._quarterEventsInit = true;
             gameData._quarterEvents = {};
             gameData._quarterTypes = {};
 
-            const types = ['good', 'good', 'bad', 'bad'];
+            const types = ['good', 'good', 'good', 'bad', 'bad', 'bad'];
             
             for (let i = types.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [types[i], types[j]] = [types[j], types[i]];
             }
 
+            const quarters = [2, 3, 4, 5, 6, 7]; // март, апрель, май, июнь, июль, август
             for (let q = 0; q < quarters.length; q++) {
-                const quarterStart = quarters[q].start;
-                const quarterEnd = quarters[q].end;
-                const eventMonth = quarterStart + Math.floor(Math.random() * (quarterEnd - quarterStart + 1));
+                const eventMonth = quarters[q];
                 const eventDay = this.getRandomEventDay();
                 
-                gameData._quarterEvents[q] = { month: eventMonth, day: eventDay };
+                gameData._quarterEvents[q] = { date: new Date(gameData.date.getFullYear(), eventMonth, eventDay) };
                 gameData._quarterTypes[q] = types[q]; // good или bad
             }
         }
 
-        const eventInfo = gameData._quarterEvents[currentQuarter];
+        const eventInfo = gameData._quarterEvents[current];
         
-        if (monthIndex === eventInfo.month && dayOfMonth === eventInfo.day) {
-            const isGood = gameData._quarterTypes[currentQuarter] === 'good';
+        if (eventInfo && gameData.date.getDate() === eventInfo.date.getDate() && gameData.date.getMonth() === eventInfo.date.getMonth()) {
+            const isGood = gameData._quarterTypes[current] === 'good';
             
             const goodEvents = [
                 {

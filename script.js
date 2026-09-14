@@ -5,8 +5,128 @@ import { LocalPrices } from './prices/LocalPrices.js';
 const storage = new LocalStorageAdapter();
 globalThis.CopilkaStorage = LocalStorageAdapter;
 
+let gameEngine = null;
 let prices = null;
-let gameData = null;
+let gameInitializationPromise = null;
+
+let gameData = {
+        portfolio: {
+            cash: 10000,
+            assets: {},
+            assetValues: {},
+            bankBalance: 0
+        },
+        date: getGameStartDate(2007),
+        history: [],
+        monthlyEvents: {},
+        pendingEvent: null
+    };
+
+const gameClock = {
+    intervalMs: 3000,
+    timerId: null,
+    isPaused: true
+};
+
+
+
+function getGameStartDate(year) {
+    const safeYear = Number(year) || 2007;
+    return new Date(safeYear, 8, 1);
+}
+
+async function ensureGameReady() {
+    if (!gameInitializationPromise) {
+        gameInitializationPromise = initializeGame();
+    }
+    return gameInitializationPromise;
+}
+
+function resumeGameAfterContinue() {
+    return ensureGameReady()
+        .then(() => {
+            setPauseState(false);
+            if (typeof window.showPage === 'function') {
+                window.showPage('portfolio');
+            }
+        })
+        .catch((error) => {
+            console.error('Не удалось инициализировать игру после продолжения:', error);
+            setPauseState(true);
+            if (typeof window.showPage === 'function') {
+                window.showPage('portfolio');
+            }
+        });
+}
+
+function updateDayBadge() {
+    const badge = document.querySelector('.day-badge');
+    if (!badge || !gameData) return;
+    const safeDate = normalizeDateValue(gameData.date || getGameStartDate(Number(gameData.year) || 2007), Number(gameData.year) || 2007);
+    const year = Number(safeDate.getFullYear());
+    const month = String(safeDate.getMonth() + 1).padStart(2, '0');
+    const day = String(safeDate.getDate()).padStart(2, '0');
+    const startDate = getGameStartDate(Number(gameData.year) || year);
+    const dayIndex = Math.max(0, Math.round((safeDate - startDate) / 86400000));
+    badge.textContent = `${year}-${month}-${day} [${dayIndex}]`;
+}
+
+function refreshVisiblePage() {
+    try {
+        updateDayBadge();
+
+        if (document.querySelector('.portfolio-table') && typeof globalThis.refreshPortfolio === 'function') {
+            void globalThis.refreshPortfolio();
+        }
+
+        if (document.querySelector('.deal-panel') && typeof globalThis.refreshTradeView === 'function') {
+            globalThis.refreshTradeView();
+        }
+    } catch (error) {
+        console.error('Ошибка обновления страницы после изменения дня:', error);
+    }
+}
+
+function setPauseState(isPaused) {
+    gameClock.isPaused = Boolean(isPaused);
+    const pauseButtons = document.querySelectorAll('[data-game-pause-toggle]');
+    pauseButtons.forEach((button) => {
+        button.textContent = gameClock.isPaused ? 'Продолжить' : 'Пауза';
+        button.setAttribute('aria-pressed', String(gameClock.isPaused));
+    });
+}
+
+function togglePauseState() {
+    setPauseState(!gameClock.isPaused);
+}
+
+async function advanceGameDay() {
+    if (!gameData || gameClock.isPaused) return;
+
+    const playerName = getCurrentGameId();
+    gameData.date = normalizeDateValue(gameData.date, Number(gameData.year) || 2007);
+    gameEngine.nextDay(gameData);
+
+    await storage.saveGame(playerName, gameData);
+    refreshVisiblePage();
+}
+
+function startGameClock() {
+    if (gameClock.timerId) return;
+
+    gameClock.timerId = globalThis.setInterval(() => {
+        if (!gameClock.isPaused) {
+            void advanceGameDay();
+        }
+    }, gameClock.intervalMs);
+}
+
+function stopGameClock() {
+    if (gameClock.timerId) {
+        globalThis.clearInterval(gameClock.timerId);
+        gameClock.timerId = null;
+    }
+}
 
 function createDefaultSelectedTickers() {
     return {
@@ -19,22 +139,6 @@ function createDefaultSelectedTickers() {
     };
 }
 
-function createDefaultGameState() {
-    return {
-        portfolio: {
-            cash: 10000,
-            assets: {},
-            assetValues: {},
-            deposits: {},
-            bankAccount: { balance: 0, rate: 0.06 }
-        },
-        currentDay: 1,
-        history: [],
-        monthlyEvents: {},
-        pendingEvent: null
-    };
-}
-
 function getCurrentGameId() {
     try {
       return localStorage.getItem('copilka-player-name');
@@ -43,50 +147,109 @@ function getCurrentGameId() {
     }
 }
 
-const gameEngine = new GameEngine(storage, prices);
-
-function getTickerByName(name) {
-    const selected = gameData?.selectedTickers || createDefaultSelectedTickers();
-    const bonds = Array.isArray(selected.bonds) ? selected.bonds : [];
-    const stocks = Array.isArray(selected.stocks) ? selected.stocks : [];
-    const fundTickers = Array.isArray(selected.fundTickers) ? selected.fundTickers : [];
-    const usdTicker = selected.usdTicker || 'USD';
-    const goldTicker = selected.goldTicker || 'GLDRUB';
-
-    const normalized = String(name || '').trim().toLowerCase();
-    const directTicker = String(name || '').trim();
-    if (/^[A-Z0-9_./-]+$/.test(directTicker) && directTicker.length > 2) {
-        return directTicker;
+function normalizeDateValue(value, fallbackYear = 2007) {
+    const temp = value instanceof Date ? new Date(value) : new Date(String(value));
+    if (Number.isNaN(temp.getTime())) {
+        return getGameStartDate(Number(fallbackYear) || 2007);
     }
+    return temp;
+}
 
-    const lookup = {
-        'ставка': selected.bankTicker || 'BANK',
-        'офз': bonds[0],
-        'корпоративные': bonds[1],
-        'вдо': bonds[2],
-        'пиф1': fundTickers[0],
-        'пиф2': fundTickers[1],
-        'акция1': stocks[0],
-        'акция2': stocks[1],
-        'акция3': stocks[2],
-        'usd': usdTicker,
-        'доллар': usdTicker,
-        '1 грамм': goldTicker,
-        'золото': goldTicker,
-        'gold': goldTicker
+function cloneGameData(data) {
+    if (data === null || data === undefined) return data;
+    if (data instanceof Date) return new Date(data.getTime());
+    if (Array.isArray(data)) return data.map((item) => cloneGameData(item));
+    if (typeof data !== 'object') return data;
+
+    const seen = new WeakMap();
+    const walk = (value) => {
+        if (value === null || value === undefined) return value;
+        if (value instanceof Date) return new Date(value.getTime());
+        if (Array.isArray(value)) {
+            const list = value.map((item) => walk(item));
+            seen.set(value, list);
+            return list;
+        }
+        if (typeof value === 'object') {
+            if (seen.has(value)) return seen.get(value);
+            const copy = {};
+            seen.set(value, copy);
+            Object.entries(value).forEach(([key, item]) => {
+                copy[key] = walk(item);
+            });
+            return copy;
+        }
+        return value;
     };
 
-    if (lookup[normalized]) {
-        return lookup[normalized];
-    }
-
-    const directMatch = Object.values(lookup).find((value) => String(value) === directTicker);
-    if (directMatch) {
-        return directMatch;
-    }
-
-    throw new Error(`Тикер не найден для названия: ${name}`);
+    return walk(data);
 }
+
+function normalizeLoadedGameState(data) {
+    const fallbackYear = Number((data && data.year) || 2007);
+    const baseState = {
+        portfolio: {
+            cash: 10000,
+            assets: {},
+            assetValues: {},
+            bankBalance: 0
+        },
+        date: getGameStartDate(fallbackYear),
+        history: [],
+        monthlyEvents: {},
+        pendingEvent: null,
+        year: String(fallbackYear)
+    };
+
+    const source = data && typeof data === 'object' ? data : {};
+    const portfolio = {
+        ...baseState.portfolio,
+        ...(source.portfolio || {})
+    };
+
+    portfolio.cash = Number(portfolio.cash) || 0;
+    portfolio.bankBalance = Number(portfolio.bankBalance) || 0;
+    portfolio.assets = {};
+    for (const [ticker, quantity] of Object.entries(source.portfolio?.assets || {})) {
+        const amount = Number(quantity) || 0;
+        if (Number.isFinite(amount) && amount > 0) {
+            portfolio.assets[ticker] = amount;
+        }
+    }
+
+    portfolio.assetValues = {};
+    for (const [ticker, value] of Object.entries(source.portfolio?.assetValues || {})) {
+        const quantity = Number(value?.quantity) || 0;
+        const price = Number(value?.price) || 0;
+        const total = Number(value?.value) || 0;
+        portfolio.assetValues[ticker] = {
+            quantity: Number.isFinite(quantity) ? quantity : 0,
+            price: Number.isFinite(price) ? price : 0,
+            value: Number.isFinite(total) ? total : 0
+        };
+    }
+
+    const safeDate = normalizeDateValue(source.date || baseState.date, fallbackYear);
+    const normalized = {
+        ...baseState,
+        ...source,
+        portfolio,
+        date: safeDate,
+        year: String(Number(source.year) || safeDate.getFullYear() || fallbackYear)
+    };
+
+    if (normalized.histories && Array.isArray(normalized.histories)) {
+        normalized.history = normalized.histories;
+    }
+
+    normalized.portfolio.cash = Number(normalized.portfolio.cash) || 0;
+    normalized.portfolio.bankBalance = Number(normalized.portfolio.bankBalance) || 0;
+    normalized.date = normalizeDateValue(normalized.date, Number(normalized.year) || fallbackYear);
+
+    return normalized;
+}
+
+gameEngine = new GameEngine(storage, prices);
 
 function shuffleArray(items) {
     const copy = [...items];
@@ -165,14 +328,6 @@ function buildSelectedTickers(rows) {
 }
 
 async function ensureTickerSelection() {
-    if (!gameData) {
-        await loadGame();
-    }
-
-    if (gameData.selectedTickers && gameData.year) {
-        return gameData.selectedTickers;
-    }
-
     try {
         const csvMap = await loadTickersCsv();
         const years = Object.keys(csvMap);
@@ -196,50 +351,60 @@ async function ensureTickerSelection() {
     }
 }
 
-function createNewGame() {
-    return createDefaultGameState();
-}
-
 async function loadGame() {
     const playerName = getCurrentGameId();
     const saved = await storage.loadGame(playerName);
     if (saved) {
-        gameData = saved;
-        if (saved.year) {
-            prices = await LocalPrices.create(saved.year);
+        gameData = normalizeLoadedGameState(saved);
+        if (gameData.year) {
+            prices = await LocalPrices.create(String(gameData.year));
             gameEngine.prices = prices;
         }
-        return gameData;
     }
-
-    gameData = createNewGame();
-    await ensureTickerSelection();
-    await storage.saveGame(playerName, gameData);
-    return gameData;
 }
 
 async function initializeGame() {
-    if (!gameData) {
-        await loadGame();
-    }
+    // Пытаемся загрузить сохранённую игру
+    await loadGame();
 
-    if (!gameData.selectedTickers) {
+    if (!gameData.selectedTickers || !gameData.year) {
         await ensureTickerSelection();
     }
 
     if (!prices) {
         const year = gameData?.year;
-        prices = await LocalPrices.create(year);
+        prices = await LocalPrices.create(String(year || 2007));
         gameEngine.prices = prices;
     }
 
-    return gameData;
+    const safeYear = Number(gameData.year) || 2007;
+    const startDate = getGameStartDate(safeYear);
+    const normalizedDate = normalizeDateValue(gameData.date || startDate, safeYear);
+    gameData.date = normalizedDate;
+    gameData.year = String(safeYear);
+
+    if (gameData.date.getFullYear() !== safeYear || gameData.date.getMonth() !== 7 || gameData.date.getDate() !== 1) {
+        gameData.date = startDate;
+    }
+
+    startGameClock();
 }
 
 async function resetGame() {
     const playerName = getCurrentGameId();
     await storage.deleteGame(playerName);
-    gameData = createNewGame();
+    gameData = {
+        portfolio: {
+            cash: 10000,
+            assets: {},
+            assetValues: {},
+            bankBalance: 0
+        },
+        date: getGameStartDate(2007),
+        history: [],
+        monthlyEvents: {},
+        pendingEvent: null
+    };
     await storage.saveGame(playerName, gameData);
     return gameData;
 }
@@ -249,13 +414,17 @@ globalThis.game = {
     engine: gameEngine,
     getPrices: () => prices,
     getStorage: () => storage,
-    getTickerByName,
     initialize: initializeGame,
     reset: resetGame
 };
 
 async function bootstrapAppShell() {
     try {
+        const pauseButtons = document.querySelectorAll('[data-game-pause-toggle]');
+        pauseButtons.forEach((button) => {
+            button.addEventListener('click', () => togglePauseState());
+        });
+
         // Lightweight app-shell logic (safely runs on any page)
         const storageKey = 'copilka-player-name';
 
@@ -294,13 +463,16 @@ async function bootstrapAppShell() {
                 const value = input.value.trim() || 'Игрок';
                 setPlayerName(value);
                 syncProfileNames();
+                void resumeGameAfterContinue();
             };
 
-            button.addEventListener('click', submit);
+            button.addEventListener('click', () => {
+                void submit();
+            });
             input.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
                     event.preventDefault();
-                    submit();
+                    void submit();
                 }
             });
         }
@@ -319,7 +491,6 @@ function bootstrapTrade() {
         if (!document.querySelectorAll || !document.querySelector('.asset-card')) return;
 
         (function () {
-            // original trade.js code adapted to local scope
             const assetCards = document.querySelectorAll('.asset-card');
             const toggleSwitch = document.getElementById('toggleSwitch');
             const buyOption = toggleSwitch ? toggleSwitch.querySelector('.option[data-value="buy"]') : null;
@@ -347,33 +518,6 @@ function bootstrapTrade() {
                 gold: { label: 'Золото', quantityLabel: 'Количество', price: -1, infoId: 'goldInfo' }
             };
 
-            function readGameState() {
-                try {
-                    const gameApi = globalThis.game;
-                    const liveState = gameApi && typeof gameApi.data === 'function' ? gameApi.data() : null;
-                    if (liveState) return liveState;
-
-                    if (gameApi && typeof gameApi.initialize === 'function') {
-                        void gameApi.initialize().then(() => {
-                            try { updateUI(); } catch (error) { console.log(error); }
-                        }).catch(() => {});
-                    }
-
-                    return {
-                        selectedTickers: createDefaultSelectedTickers(),
-                        portfolio: createDefaultGameState().portfolio,
-                        currentDay: 1
-                    };
-                } catch (err) {
-                    console.warn('Не удалось прочитать состояние игры', err);
-                    return {
-                        selectedTickers: createDefaultSelectedTickers(),
-                        portfolio: createDefaultGameState().portfolio,
-                        currentDay: 1
-                    };
-                }
-            }
-
             function safeNumber(value) {
                 return Number.isFinite(Number(value)) ? Number(value) : 0;
             }
@@ -383,8 +527,7 @@ function bootstrapTrade() {
             }
 
             function resolveTickerByAsset() {
-                const state = readGameState();
-                const selected = state?.selectedTickers || createDefaultSelectedTickers();
+                const selected = gameData?.selectedTickers || createDefaultSelectedTickers();
                 const others = Array.isArray(selected.others) ? selected.others : [];
                 const fundTickers = Array.isArray(selected.fundTickers) ? selected.fundTickers : [];
                 const usdTicker = selected.usdTicker || others.find((t) => /USD/i.test(String(t))) || 'USD';
@@ -400,8 +543,7 @@ function bootstrapTrade() {
             }
 
             function syncSelectedAssetNames() {
-                const state = readGameState();
-                const selected = state?.selectedTickers || createDefaultSelectedTickers();
+                const selected = gameData?.selectedTickers || createDefaultSelectedTickers();
                 const prices = globalThis.game && typeof globalThis.game.getPrices === 'function' ? globalThis.game.getPrices() : null;
 
                 const usdTicker = selected.usdTicker;
@@ -416,7 +558,7 @@ function bootstrapTrade() {
                     const bondTicker = bondList[currentBond];
                     assetData.bonds.label = bondTicker || '—';
                     assetData.bonds.price = (prices && typeof prices.getPrice === 'function' && bondTicker)
-                        ? Number(prices.getPrice(bondTicker, state.currentDay) || -1)
+                        ? Number(prices.getPrice(bondTicker, gameData.data))
                         : -1;
                 } else {
                     assetData.bonds.label = '—';
@@ -428,7 +570,7 @@ function bootstrapTrade() {
                     const stockTicker = stockList[currentStock];
                     assetData.stocks.label = stockTicker || '—';
                     assetData.stocks.price = (prices && typeof prices.getPrice === 'function' && stockTicker)
-                        ? Number(prices.getPrice(stockTicker, state.currentDay) || -1)
+                        ? Number(prices.getPrice(stockTicker, gameData.date) || -1)
                         : -1;
                 } else {
                     assetData.stocks.label = '—';
@@ -440,7 +582,7 @@ function bootstrapTrade() {
                     const pifTicker = fundList[currentPif];
                     assetData.pif.label = pifTicker || '—';
                     assetData.pif.price = (prices && typeof prices.getPrice === 'function' && pifTicker)
-                        ? Number(prices.getPrice(pifTicker, state.currentDay) || -1)
+                        ? Number(prices.getPrice(pifTicker, gameData.date))
                         : -1;
                 } else {
                     assetData.pif.label = '—';
@@ -448,10 +590,10 @@ function bootstrapTrade() {
                 }
 
                 assetData.currency.price = (prices && typeof prices.getPrice === 'function' && usdTicker)
-                    ? Number(prices.getPrice(usdTicker, state.currentDay) || -1)
+                    ? Number(prices.getPrice(usdTicker, gameData.date) || -1)
                     : -1;
                 assetData.gold.price = (prices && typeof prices.getPrice === 'function' && goldTicker)
-                    ? Number(prices.getPrice(goldTicker, state.currentDay) || -1)
+                    ? Number(prices.getPrice(goldTicker, gameData.date) || -1)
                     : -1;
 
                 // --- update DOM price labels in the HTML ---
@@ -466,21 +608,21 @@ function bootstrapTrade() {
                 const bondElems = Array.from(document.querySelectorAll('#bondsSelection .selection-item'));
                 bondElems.forEach((el, idx) => {
                     const priceSpan = el.querySelector('.price');
-                    const priceVal = (Array.isArray(bondList) && bondList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(bondList[idx], state.currentDay) || -1) : -1) : -1;
+                    const priceVal = (Array.isArray(bondList) && bondList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(bondList[idx], gameData.date) || -1) : -1) : -1;
                     if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'bond');
                 });
 
                 const stockElems = Array.from(document.querySelectorAll('#stocksSelection .selection-item'));
                 stockElems.forEach((el, idx) => {
                     const priceSpan = el.querySelector('.price');
-                    const priceVal = (Array.isArray(stockList) && stockList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(stockList[idx], state.currentDay) || -1) : -1) : -1;
+                    const priceVal = (Array.isArray(stockList) && stockList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(stockList[idx], gameData.date) || -1) : -1) : -1;
                     if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'stock');
                 });
 
                 const pifElems = Array.from(document.querySelectorAll('#pifSelection .selection-item'));
                 pifElems.forEach((el, idx) => {
                     const priceSpan = el.querySelector('.price');
-                    const priceVal = (Array.isArray(fundList) && fundList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(fundList[idx], state.currentDay) || -1) : -1) : -1;
+                    const priceVal = (Array.isArray(fundList) && fundList[idx]) ? (prices && typeof prices.getPrice === 'function' ? Number(prices.getPrice(fundList[idx], gameData.date) || -1) : -1) : -1;
                     if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'pif');
                 });
 
@@ -548,11 +690,10 @@ function bootstrapTrade() {
             }
 
             function syncTradePanel() {
-                const state = readGameState();
                 const available = document.querySelector('.deal-available');
                 if (available) {
-                    const cash = safeNumber(state?.portfolio?.cash);
-                    const bank = safeNumber(state?.portfolio?.bankAccount?.balance);
+                    const cash = safeNumber(gameData?.portfolio?.cash);
+                    const bank = safeNumber(gameData?.portfolio?.bankAccount?.balance);
                     available.textContent = `Доступно: ${formatMoney(cash + bank)}`;
                 }
 
@@ -561,7 +702,8 @@ function bootstrapTrade() {
                 if (totalAmount) totalAmount.textContent = `${(amount * price).toLocaleString('ru-RU')} ₽`;
             }
 
-            function tryTrade(action) {
+            async function tryTrade(action) {
+                console.log('Попытка сделки:', action, 'для актива', currentAsset);
                 const quantity = Number(String(quantityInput.value).replace(/\s/g, '')) || 0;
                 if (!quantity || quantity <= 0) {
                     alert('Введите корректное количество');
@@ -576,26 +718,29 @@ function bootstrapTrade() {
                 }
 
                 try {
-                    const state = readGameState();
-                    const nextState = JSON.parse(JSON.stringify(state));
+                    const nextState = cloneGameData(gameData);
 
                     let result;
                     if (currentAsset === 'account') {
                         result = action === 'buy'
-                            ? engine.openDeposit(nextState, quantity)
-                            : engine.withdrawDeposit(nextState, 0, quantity);
+                            ? engine.openBank(nextState, quantity)
+                            : engine.withdrawBank(nextState, quantity);
                     } else {
                         const ticker = resolveTickerByAsset();
                         if (!ticker) {
                             alert('Тикер не выбран для текущего актива');
                             return;
                         }
+                        console.log('Выполняем сделку для тикера:', ticker, 'количество:', quantity, 'действие:', action);
                         result = action === 'buy' ? engine.buyAsset(nextState, ticker, quantity) : engine.sellAsset(nextState, ticker, quantity);
                     }
 
-                    if (globalThis.game && typeof globalThis.game.data === 'function') {
-                        globalThis.game.data = () => result;
-                    }
+                    gameData = result;
+                    globalThis.game.data = () => gameData;
+
+                    const playerName = getCurrentGameId();
+                    await storage.saveGame(playerName, gameData);
+                    refreshVisiblePage();
                     updateUI();
                 } catch (error) {
                     alert(error.message || 'Не удалось выполнить сделку');
@@ -677,24 +822,30 @@ function bootstrapTrade() {
 
             if (buyBtn) {
                 buyBtn.addEventListener('click', () => {
-                    tryTrade(currentAction === 'buy' ? 'buy' : 'sell');
+                    void tryTrade(currentAction === 'buy' ? 'buy' : 'sell');
                 });
             }
 
             if (sellBtn) {
                 sellBtn.addEventListener('click', () => {
-                    tryTrade(currentAction === 'buy' ? 'sell' : 'buy');
+                    void tryTrade(currentAction === 'buy' ? 'sell' : 'buy');
                 });
             }
 
             if (quantityInput) {
                 quantityInput.value = '1000';
             }
-            if (globalThis.game && typeof globalThis.game.initialize === 'function') {
-                void globalThis.game.initialize().then(() => updateUI()).catch(() => updateUI());
-            } else {
-                updateUI();
-            }
+
+            globalThis.refreshTradeView = function refreshTradeView() {
+                try {
+                    syncSelectedAssetNames();
+                    updateUI();
+                } catch (error) {
+                    console.error('Ошибка обновления торговли:', error);
+                }
+            };
+
+            updateUI();
         })();
     } catch (e) {
         console.error('bootstrapTrade error', e);
@@ -707,42 +858,6 @@ function bootstrapPortfolio() {
 
         (function () {
             const debugPortfolio = (...args) => console.info('[portfolio]', ...args);
-
-            async function readGameState() {
-                try {
-                    const gameApi = globalThis.game;
-                    const liveState = gameApi && typeof gameApi.data === 'function' ? gameApi.data() : null;
-                    if (liveState) {
-                        debugPortfolio('liveState found', liveState);
-                        return liveState;
-                    }
-
-                    debugPortfolio('Нет liveState, пытаемся инициализировать игру');
-
-                    if (gameApi && typeof gameApi.initialize === 'function') {
-                        const initialized = await gameApi.initialize();
-                        if (initialized) {
-                            debugPortfolio('game initialized', initialized);
-                            return initialized;
-                        }
-                    }
-
-                    debugPortfolio('Нет globalThis.game.initialize', !!gameApi, gameApi);
-
-                    return {
-                        selectedTickers: createDefaultSelectedTickers(),
-                        portfolio: createDefaultGameState().portfolio,
-                        currentDay: 1
-                    };
-                } catch (error) {
-                    console.error('Не удалось прочитать состояние игры для портфеля: ', error);
-                    return {
-                        selectedTickers: createDefaultSelectedTickers(),
-                        portfolio: createDefaultGameState().portfolio,
-                        currentDay: 1
-                    };
-                }
-            }
 
             function formatMoney(value) {
                 return `${Math.round(Number(value || 0)).toLocaleString('ru-RU')} ₽`;
@@ -758,21 +873,14 @@ function bootstrapPortfolio() {
             }
 
             async function renderPortfolio() {
-                debugPortfolio('Начало рендера портфеля');
-                const gameData = await readGameState();
-                const portfolio = gameData.portfolio || createDefaultGameState().portfolio;
-                const bankBalance = Number(portfolio.bankAccount?.balance || 0);
-                const cash = Number(portfolio.cash || 0);
-                const total = cash + bankBalance + Object.values(portfolio.assetValues || {}).reduce((sum, asset) => sum + Number(asset.value || 0), 0) + Object.values(portfolio.deposits || {}).reduce((sum, positions) => {
-                    if (!Array.isArray(positions)) return sum;
-                    return sum + positions.reduce((inner, item) => inner + Number(item?.amount || 0), 0);
-                }, 0);
+                const portfolio = gameData.portfolio;
+                const bankBalance = Number(portfolio.bankBalance);
+                const cash = Number(portfolio.cash);
+                const total = gameEngine.getTotalValue(portfolio);
 
-                debugPortfolio('render data', { cash, bankBalance, total, currentDay: gameData.currentDay, selectedTickers: gameData.selectedTickers });
+                debugPortfolio('render data', { portfolio, cash, bankBalance, total, date: gameData.date, selectedTickers: gameData.selectedTickers });
 
-                const monthIndex = Math.max(1, Math.min(12, Math.ceil((Number(gameData.currentDay || 1) / 30) || 1)));
-                const badge = document.querySelector('.month-badge');
-                if (badge) badge.textContent = `МЕСЯЦ ${monthIndex} ИЗ 12`;
+                updateDayBadge();
 
                 const summaryValues = document.querySelectorAll('.stats-row .stat-card .value');
                 if (summaryValues.length >= 2) {
@@ -781,16 +889,31 @@ function bootstrapPortfolio() {
                 }
 
                 const rows = Array.from(document.querySelectorAll('.asset-row'));
-                const values = [
-                    { label: 'Накопительный счёт', value: bankBalance, color: 'fill-green' },
-                    { label: 'ОФЗ', value: collectAssetValue(portfolio, [gameData.selectedTickers.bonds[0]]), color: 'fill-dark' },
-                    { label: 'Корп. облигации', value: collectAssetValue(portfolio, [gameData.selectedTickers.bonds[1]]), color: 'fill-mint' },
-                    { label: 'ВДО', value: collectAssetValue(portfolio, [gameData.selectedTickers.bonds[2]]), color: 'fill-gold' },
-                    { label: 'ПИФ', value: collectAssetValue(portfolio, gameData.selectedTickers.fundTickers), color: 'fill-sand' },
-                    { label: 'Акции', value: collectAssetValue(portfolio, gameData.selectedTickers.stocks), color: 'fill-blue' },
-                    { label: 'Иностранная валюта', value: collectAssetValue(portfolio, [gameData.selectedTickers.usdTicker]), color: 'fill-purple' },
-                    { label: 'Золото', value: collectAssetValue(portfolio, [gameData.selectedTickers.goldTicker]), color: 'fill-teal' }
-                ];
+                let values = [];
+                if (gameData.selectedTickers) {
+                    values = [
+                        { label: 'Накопительный счёт', value: bankBalance, color: 'fill-green' },
+                        { label: 'ОФЗ', value: collectAssetValue(portfolio, [gameData.selectedTickers.bonds[0]]) || 0, color: 'fill-dark' },
+                        { label: 'Корп. облигации', value: collectAssetValue(portfolio, [gameData.selectedTickers.bonds[1]]) || 0, color: 'fill-mint' },
+                        { label: 'ВДО', value: collectAssetValue(portfolio, [gameData.selectedTickers.bonds[2]]) || 0, color: 'fill-gold' },
+                        { label: 'ПИФ', value: collectAssetValue(portfolio, gameData.selectedTickers.fundTickers) || 0, color: 'fill-sand' },
+                        { label: 'Акции', value: collectAssetValue(portfolio, gameData.selectedTickers.stocks) || 0, color: 'fill-blue' },
+                        { label: 'Иностранная валюта', value: collectAssetValue(portfolio, [gameData.selectedTickers.usdTicker]) || 0, color: 'fill-purple' },
+                        { label: 'Золото', value: collectAssetValue(portfolio, [gameData.selectedTickers.goldTicker]) || 0, color: 'fill-teal' }
+                    ];
+                } else {
+                    values = [
+                        { label: 'Накопительный счёт', value: bankBalance, color: 'fill-green' },
+                        { label: 'ОФЗ', value: 0, color: 'fill-dark' },
+                        { label: 'Корп. облигации', value: 0, color: 'fill-mint' },
+                        { label: 'ВДО', value: 0, color: 'fill-gold' },
+                        { label: 'ПИФ', value: 0, color: 'fill-sand' },
+                        { label: 'Акции', value: 0, color: 'fill-blue' },
+                        { label: 'Иностранная валюта', value: 0, color: 'fill-purple' },
+                        { label: 'Золото', value: 0, color: 'fill-teal' }
+                    ];
+                }
+                
 
                 rows.forEach((row, index) => {
                     const item = values[index];
@@ -834,6 +957,11 @@ function bootstrapPortfolio() {
             } else {
                 bootstrapPortfolioInner();
             }
+
+            globalThis.refreshPortfolio = async function refreshPortfolioPage() {
+                if (!document.querySelector('.portfolio-table')) return;
+                await renderPortfolio();
+            };
         })();
     } catch (e) {
         console.error('bootstrapPortfolio error', e);
@@ -1018,6 +1146,18 @@ const bootstrapPageModules = () => {
         bootstrapTrade();
         bootstrapPortfolio();
         bootstrapTeaching();
+        updateDayBadge();
+        setPauseState(true);
+        document.addEventListener('keydown', (event) => {
+            if ((event.code === 'Space' || event.key === ' ') && document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                return;
+            }
+
+            if (event.code === 'Space' || event.key === ' ') {
+                event.preventDefault();
+                togglePauseState();
+            }
+        }, { passive: false });
     } catch (error) {
         console.error('page bootstraps failed', error);
     }
@@ -1025,18 +1165,8 @@ const bootstrapPageModules = () => {
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        void initializeGame()
-            .then(() => bootstrapPageModules())
-            .catch((error) => {
-                console.error('Failed to initialize game', error);
-                bootstrapPageModules();
-            });
+        bootstrapPageModules();
     }, { once: true });
 } else {
-    void initializeGame()
-        .then(() => bootstrapPageModules())
-        .catch((error) => {
-            console.error('Failed to initialize game', error);
-            bootstrapPageModules();
-        });
+    bootstrapPageModules();
 }

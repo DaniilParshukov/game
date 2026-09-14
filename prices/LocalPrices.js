@@ -1,6 +1,6 @@
 export class LocalPrices {
-    constructor(yearRange = null, dataUrl = './prices/data.json') {
-        this.yearRange = yearRange;
+    constructor(year, dataUrl = './prices/data.json') {
+        this.year = year;
         this.prices = {};
         this.dateValuePairs = {};
         this.dataUrl = dataUrl;
@@ -41,10 +41,18 @@ export class LocalPrices {
         }
     }
 
+    getDay(date) {
+        const normalizedDate = date instanceof Date ? new Date(date) : new Date(String(date));
+        if (Number.isNaN(normalizedDate.getTime())) {
+            throw new Error(`Некорректная дата для тикера: ${date}`);
+        }
+        return Math.round((normalizedDate - new Date(this.year, 8, 1)) / 86400000);
+    }
+
     // Статический фабричный метод
-    static async create(yearRange = null, dataUrl = './prices/data.json') {
-        const instance = new LocalPrices(yearRange, dataUrl);
-        await instance.#init(yearRange);
+    static async create(year, dataUrl = './prices/data.json') {
+        const instance = new LocalPrices(year, dataUrl);
+        await instance.#init(year);
         return instance;
     }
 
@@ -58,12 +66,24 @@ export class LocalPrices {
             }
             
             if (tickerData.date_value_pairs && Array.isArray(tickerData.date_value_pairs)) {
-                this.dateValuePairs[ticker] = tickerData.date_value_pairs;
+                const map = new Map();
+                for (const pair of tickerData.date_value_pairs) {
+                    if (pair && pair.date) {
+                        map.set(pair.date, pair.value);
+                    }
+                }
+                this.dateValuePairs[ticker] = map;
             }
         }
     }
 
-    getPrice(ticker, day) {
+    getPrice(ticker, date) {
+        const normalizedDate = date instanceof Date ? new Date(date) : new Date(String(date));
+        if (Number.isNaN(normalizedDate.getTime())) {
+            throw new Error(`Некорректная дата для тикера: ${ticker}: ${date}`);
+        }
+
+        const day = this.getDay(normalizedDate);
         if (!this.isLoaded) {
             throw new Error('Данные еще не загружены. Дождитесь загрузки.');
         }
@@ -83,11 +103,25 @@ export class LocalPrices {
         return this.prices[ticker] || [];
     }
 
-    getDateValuePairs(ticker) {
+    getValueByDate(ticker, date) {
         if (!this.isLoaded) {
             throw new Error('Данные еще не загружены. Дождитесь загрузки.');
         }
-        return this.dateValuePairs[ticker] || [];
+
+        const map = this.dateValuePairs[ticker];
+        if (!map) throw Error("Неверный тикер: " + ticker);
+
+        const safeDate = date instanceof Date ? new Date(date) : new Date(String(date));
+        if (Number.isNaN(safeDate.getTime())) {
+            return 0;
+        }
+
+        const key = this.formatDate(safeDate);
+        return map.has(key) ? map.get(key) : 0;
+    }
+
+    formatDate(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     }
 
     getAvailableYearRanges() {
