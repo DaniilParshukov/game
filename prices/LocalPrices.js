@@ -42,11 +42,11 @@ export class LocalPrices {
     }
 
     getDay(date) {
-        const normalizedDate = date instanceof Date ? new Date(date) : new Date(String(date));
-        if (Number.isNaN(normalizedDate.getTime())) {
+        const safeDate = date instanceof Date ? new Date(date) : (date ? new Date(String(date)) : new Date(this.year, 8, 1));
+        if (Number.isNaN(safeDate.getTime())) {
             throw new Error(`Некорректная дата для тикера: ${date}`);
         }
-        return Math.round((normalizedDate - new Date(this.year, 8, 1)) / 86400000);
+        return Math.round((safeDate - new Date(this.year, 8, 1)) / 86400000);
     }
 
     // Статический фабричный метод
@@ -73,12 +73,14 @@ export class LocalPrices {
                     }
                 }
                 this.dateValuePairs[ticker] = map;
+            } else {
+                this.dateValuePairs[ticker] = new Map();
             }
         }
     }
 
     getPrice(ticker, date) {
-        const normalizedDate = date instanceof Date ? new Date(date) : new Date(String(date));
+        const normalizedDate = date instanceof Date ? new Date(date) : (date ? new Date(String(date)) : new Date(this.year, 8, 1));
         if (Number.isNaN(normalizedDate.getTime())) {
             throw new Error(`Некорректная дата для тикера: ${ticker}: ${date}`);
         }
@@ -109,7 +111,7 @@ export class LocalPrices {
         }
 
         const map = this.dateValuePairs[ticker];
-        if (!map) throw Error("Неверный тикер: " + ticker);
+        if (!map) throw new Error(`Неизвестный тикер: ${ticker}, доступные тикеры: ${Object.keys(this.dateValuePairs).join(', ')}`);
 
         const safeDate = date instanceof Date ? new Date(date) : new Date(String(date));
         if (Number.isNaN(safeDate.getTime())) {

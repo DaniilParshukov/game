@@ -556,9 +556,10 @@ function bootstrapTrade() {
                 if (bondList && bondList.length) {
                     currentBond = Math.min(currentBond, bondList.length - 1);
                     const bondTicker = bondList[currentBond];
+                    const currentDate = gameData && gameData.date ? gameData.date : new Date(Number(gameData?.year || 2007), 8, 1);
                     assetData.bonds.label = bondTicker || '—';
                     assetData.bonds.price = (prices && typeof prices.getPrice === 'function' && bondTicker)
-                        ? Number(prices.getPrice(bondTicker, gameData.data))
+                        ? Number(prices.getPrice(bondTicker, currentDate))
                         : -1;
                 } else {
                     assetData.bonds.label = '—';
@@ -568,9 +569,10 @@ function bootstrapTrade() {
                 if (stockList && stockList.length) {
                     currentStock = Math.min(currentStock, stockList.length - 1);
                     const stockTicker = stockList[currentStock];
+                    const currentDate = gameData && gameData.date ? gameData.date : new Date(Number(gameData?.year || 2007), 8, 1);
                     assetData.stocks.label = stockTicker || '—';
                     assetData.stocks.price = (prices && typeof prices.getPrice === 'function' && stockTicker)
-                        ? Number(prices.getPrice(stockTicker, gameData.date) || -1)
+                        ? Number(prices.getPrice(stockTicker, currentDate) || -1)
                         : -1;
                 } else {
                     assetData.stocks.label = '—';
@@ -580,21 +582,32 @@ function bootstrapTrade() {
                 if (fundList && fundList.length) {
                     currentPif = Math.min(currentPif, fundList.length - 1);
                     const pifTicker = fundList[currentPif];
+                    const currentDate = gameData && gameData.date ? gameData.date : new Date(Number(gameData?.year || 2007), 8, 1);
                     assetData.pif.label = pifTicker || '—';
                     assetData.pif.price = (prices && typeof prices.getPrice === 'function' && pifTicker)
-                        ? Number(prices.getPrice(pifTicker, gameData.date))
+                        ? Number(prices.getPrice(pifTicker, currentDate))
                         : -1;
                 } else {
                     assetData.pif.label = '—';
                     assetData.pif.price = -1;
                 }
 
+                const currentDate = gameData && gameData.date ? gameData.date : new Date(Number(gameData?.year || 2007), 8, 1);
+                const bankRateValue = (prices && typeof prices.getPrice === 'function') ? Number(prices.getPrice('BANK', currentDate) || 0) : 0;
+
                 assetData.currency.price = (prices && typeof prices.getPrice === 'function' && usdTicker)
-                    ? Number(prices.getPrice(usdTicker, gameData.date) || -1)
+                    ? Number(prices.getPrice(usdTicker, currentDate) || -1)
                     : -1;
                 assetData.gold.price = (prices && typeof prices.getPrice === 'function' && goldTicker)
-                    ? Number(prices.getPrice(goldTicker, gameData.date) || -1)
+                    ? Number(prices.getPrice(goldTicker, currentDate) || -1)
                     : -1;
+
+                const accountInfoValue = document.querySelector('#accountInfo .value');
+                if (accountInfoValue) {
+                    accountInfoValue.textContent = Number.isFinite(bankRateValue) && bankRateValue > 0
+                        ? `${(bankRateValue).toFixed(1).replace('.', ',')}% годовых`
+                        : '10% годовых';
+                }
 
                 // --- update DOM price labels in the HTML ---
                 function fmtPrice(value, kind) {
@@ -626,9 +639,9 @@ function bootstrapTrade() {
                     if (priceSpan) priceSpan.textContent = fmtPrice(priceVal, 'pif');
                 });
 
-                const currencyPriceSpan = document.querySelector('#currencyInfo .price');
+                const currencyPriceSpan = document.querySelector('#currencyInfo .value');
                 if (currencyPriceSpan) currencyPriceSpan.textContent = fmtPrice(assetData.currency.price, 'currency');
-                const goldPriceSpan = document.querySelector('#goldInfo .price');
+                const goldPriceSpan = document.querySelector('#goldInfo .value');
                 if (goldPriceSpan) goldPriceSpan.textContent = fmtPrice(assetData.gold.price, 'gold');
             }
 

@@ -54,7 +54,9 @@ export class GameEngine {
 
             payoutValue = Number(this.prices.getValueByDate(ticker, date));
 
-            if (!Number.isFinite(payoutValue) || payoutValue <= 0) {
+            if (payoutValue == 0) continue;
+
+            if (!Number.isFinite(payoutValue) || payoutValue < 0) {
                 console.warn(`Неверное значение выплаты для тикера ${ticker} на дату ${date.toISOString()}: ${payoutValue}`);
                 continue;
             }
