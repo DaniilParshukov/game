@@ -185,18 +185,7 @@
 
     .hero-left {
       flex: 1;
-      min-width: 280px;
-    }
-
-    .game-badge {
-      display: inline-block;
-      background: #C7F26B;
-      border-radius: 33px;
-      padding: clamp(4px, 0.6vh, 10px) clamp(16px, 2vw, 28px);
-      font-weight: 600;
-      font-size: 87.5%;
-      color: #144733;
-      margin-bottom: clamp(8px, 1vh, 16px);
+      min-width: 200px;
     }
 
     .main-headline {
@@ -425,32 +414,6 @@
       background: #f0ede6;
     }
 
-    /* ── герой ── */
-    .hero-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      gap: clamp(10px, 2vw, 20px);
-      flex-shrink: 0;
-      margin: clamp(4px, 0.8vh, 12px) 0 clamp(8px, 1.5vh, 28px);
-    }
-
-    .hero-left {
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .game-badge {
-      display: inline-block;
-      background: #C7F26B;
-      border-radius: 33px;
-      padding: clamp(4px, 0.6vh, 10px) clamp(16px, 2vw, 28px);
-      font-weight: 600;
-      font-size: 87.5%;
-      color: #144733;
-      margin-bottom: clamp(8px, 1vh, 16px);
-    }
-
     .register-title {
       font-weight: 700;
       font-size: 175%;
@@ -611,24 +574,6 @@
       background: #f0ede6;
     }
 
-    /* ── герой ── */
-    .hero-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: clamp(10px, 2vw, 20px);
-      flex-shrink: 0;
-      margin: clamp(4px, 0.8vh, 12px) 0 clamp(8px, 1.5vh, 28px);
-    }
-
-    .hero-left {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: clamp(10px, 1.5vw, 20px);
-      flex: 1;
-      min-width: 200px;
-    }
 
     .day-badge {
       background: #C7F26B;
@@ -954,21 +899,6 @@
       background: #f0ede6;
     }
 
-    /* ── герой + бейдж ── */
-    .hero-row {
-      display: flex;
-      align-items: center;
-      gap: clamp(10px, 2vw, 20px);
-      flex-shrink: 0;
-      margin: clamp(4px, 0.8vh, 12px) 0 clamp(8px, 1.5vh, 28px);
-      flex-wrap: wrap;
-    }
-
-    .hero {
-      flex: 1;
-      min-width: 180px;
-    }
-
     .main-title {
       font-weight: 800;
       font-size: 137.5%;
@@ -980,17 +910,6 @@
       font-weight: 400;
       font-size: 87.5%;
       color: #6E7870;
-    }
-
-    .trade-badge {
-      background: #0D4F35;
-      border-radius: 19px;
-      padding: clamp(4px, 0.6vh, 10px) clamp(14px, 2vw, 28px);
-      font-weight: 600;
-      font-size: 75%;
-      color: #FFFFFF;
-      white-space: nowrap;
-      flex-shrink: 0;
     }
 
     /* ── основной контент (сетка) ── */
@@ -1470,18 +1389,6 @@
     .back-btn:hover {
       background: #f0ede6;
     }
-
-    /* ── герой + триггер ── */
-    .hero-row {
-      display: flex;
-      align-items: center;
-      gap: clamp(10px, 2vw, 20px);
-      flex-shrink: 0;
-      margin: clamp(4px, 0.8vh, 12px) 0 clamp(8px, 1.5vh, 28px);
-    }
-
-    /* TODO hero */
-    .hero {}
 
     .main-title {
       font-weight: 800;
@@ -1973,32 +1880,6 @@
       background: #f0ede6;
     }
 
-    /* ── герой ── */
-    .hero-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      gap: clamp(10px, 2vw, 20px);
-      flex-shrink: 0;
-      margin: clamp(4px, 0.8vh, 12px) 0 clamp(8px, 1.5vh, 28px);
-    }
-
-    .hero-left {
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .final-badge {
-      display: inline-block;
-      background: #0D4F35;
-      border-radius: 19px;
-      padding: clamp(4px, 0.5vh, 8px) clamp(14px, 1.5vw, 20px);
-      font-weight: 600;
-      font-size: 75%;
-      color: #FFFFFF;
-      margin-bottom: clamp(6px, 0.8vh, 12px);
-    }
-
     .main-title {
       font-weight: 800;
       font-size: 175%;
@@ -2160,7 +2041,12 @@
       height: 100%;
       border-radius: 0;
       flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
     }
+
+    /* Ensure bars respect explicit widths instead of flex-growing equally */
+    .bars .bar { flex: 0 0 auto; }
     .bar:first-child { border-radius: 4px 0 0 4px; }
     .bar:last-child { border-radius: 0 4px 4px 0; }
 
@@ -2172,6 +2058,19 @@
     .bar--6 { width: 6%; background: #5C8F66; }
     .bar--7 { width: 5%; background: #ABDBA1; }
     .bar--8 { width: 5%; background: #40734F; }
+
+    .bar .bar-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+      pointer-events: none;
+    }
 
     .structure-legend {
       display: grid;
@@ -2328,7 +2227,6 @@
           <div>
             <div class="hero-row">
               <div class="hero-left">
-              <div class="game-badge">ФИНАНСОВАЯ ИГРА</div>
               <div class="main-headline">Построй своё финансовое будущее</div>
               <div class="subhead">Принимай решения, переживай неожиданные события, инвестируй и смотри, к чему приведут твои решения.</div>
               <div class="hero-actions">
@@ -2387,7 +2285,6 @@
         <!-- HERO -->
         <div class="hero-row">
           <div class="hero-left">
-            <div class="game-badge">ФИНАНСОВАЯ ИГРА</div>
             <div class="register-title">Как тебя зовут?</div>
             <div class="register-subtitle">Имя будет отображаться в игре и в твоём прогрессе.</div>
           </div>
@@ -2539,7 +2436,6 @@
             <div class="main-title">Что хочешь сделать?</div>
             <div class="sub-title">Выбери действие и финансовый инструмент.</div>
           </div>
-          <span class="trade-badge">ПОКУПКА И ПРОДАЖА</span>
         </div>
 
         <!-- MAIN CONTENT -->
@@ -3041,10 +2937,8 @@
         <!-- HERO -->
         <div class="hero-row">
           <div class="hero-left">
-            <div class="final-badge">ФИНАЛ ИГРЫ</div>
             <div class="main-title">Год завершён!</div>
             <div class="sub-title">Посмотри, к чему привели твои финансовые решения.</div>
-            <div class="months-badge">12 месяцев пройдено</div>
           </div>
         </div>
 

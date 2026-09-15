@@ -45,7 +45,7 @@ async function ensureGameReady() {
 function resumeGameAfterContinue() {
     return ensureGameReady()
         .then(() => {
-            setPauseState(false);
+            setPauseState(true);
             if (typeof window.showPage === 'function') {
                 window.showPage('portfolio');
             }
@@ -109,6 +109,22 @@ async function advanceGameDay() {
 
     await storage.saveGame(playerName, gameData);
     refreshVisiblePage();
+
+    try {
+        // если наступил первый день следующего года — показываем экран результатов
+        const safeDate = normalizeDateValue(gameData.date, Number(gameData.year));
+        const startYear = Number(gameData.year);
+        if (safeDate.getFullYear() === startYear && safeDate.getMonth() === 8 && safeDate.getDate() === 5) {
+            try {
+                showYearResults();
+                setPauseState(true);
+            } catch (e) {
+                console.error('Ошибка при показе годовых результатов:', e);
+            }
+        }
+    } catch (e) {
+        console.error('advanceGameDay: проверка окончания года не удалась', e);
+    }
 }
 
 function startGameClock() {
@@ -247,6 +263,277 @@ function normalizeLoadedGameState(data) {
     normalized.date = normalizeDateValue(normalized.date, Number(normalized.year) || fallbackYear);
 
     return normalized;
+}
+
+// Compute portfolio snapshot at given date (using current prices when available)
+function computePortfolioSnapshot(date) {
+    const safeDate = normalizeDateValue(date || gameData.date, Number(gameData.year) || 2007);
+    const portfolio = cloneGameData(gameData.portfolio || {});
+    const cash = Number(portfolio.cash) || 0;
+    const bank = Number(portfolio.bankBalance) || 0;
+    const assets = {};
+    let assetsTotal = 0;
+
+    const tickers = Object.keys(portfolio.assets || {});
+    for (const ticker of tickers) {
+        const quantity = Number(portfolio.assets[ticker] || 0) || 0;
+        let price = 0;
+        try {
+            price = (prices && typeof prices.getPrice === 'function') ? Number(prices.getPrice(ticker, safeDate) || 0) : 0;
+        } catch (e) {
+            price = Number(portfolio.assetValues?.[ticker]?.price || 0);
+        }
+        const value = Number(quantity * price) || 0;
+        assets[ticker] = { quantity, price, value };
+        assetsTotal += value;
+    }
+
+    const total = cash + bank + assetsTotal;
+    return { date: safeDate, cash, bank, assets, assetsTotal, total };
+}
+
+function showYearResults() {
+    // compute initial and final snapshots
+    const finalSnapshot = computePortfolioSnapshot(gameData.date);
+    const initialSnapshot = gameData._initialSnapshot || computePortfolioSnapshot(getGameStartDate(Number(gameData.year) || 2007));
+
+    const selected = gameData.selectedTickers || createDefaultSelectedTickers();
+    const categories = {
+        account: finalSnapshot.cash + finalSnapshot.bank,
+        bonds: 0,
+        corporate: 0,
+        vdo: 0,
+        stocks: 0,
+        currency: 0,
+        pif: 0,
+        gold: 0,
+        other: 0
+    };
+
+    const usdTicker = selected.usdTicker || 'USD';
+    const goldTicker = selected.goldTicker || 'GLDRUB';
+    const bondTickers = Array.isArray(selected.bonds) ? selected.bonds : [];
+    const stockTickers = Array.isArray(selected.stocks) ? selected.stocks : [];
+    const fundTickers = Array.isArray(selected.fundTickers) ? selected.fundTickers : [];
+
+    for (const [ticker, info] of Object.entries(finalSnapshot.assets || {})) {
+        const value = Number(info.value) || 0;
+        if (bondTickers.includes(ticker)) {
+            categories.bonds += value;
+        } else if (stockTickers.includes(ticker)) {
+            categories.stocks += value;
+        } else if (fundTickers.includes(ticker)) {
+            categories.pif += value;
+        } else if (ticker === usdTicker) {
+            categories.currency += value;
+        } else if (ticker === goldTicker) {
+            categories.gold += value;
+        } else {
+            categories.other += value;
+        }
+    }
+
+    const total = Number(finalSnapshot.total) || 0;
+    const startTotal = Number(initialSnapshot.total) || 0;
+    const growth = total - startTotal;
+    const growthPct = startTotal > 0 ? (growth / startTotal) * 100 : 0;
+
+    // render capital card
+    const resultsRoot = document.getElementById('results');
+    if (!resultsRoot) return;
+
+    const amt = resultsRoot.querySelector('.results-capital-card .amount');
+    const growthEl = resultsRoot.querySelector('.results-capital-card .growth');
+    const pctEl = resultsRoot.querySelector('.results-capital-card .percent');
+    const startEl = resultsRoot.querySelector('.results-capital-card .start');
+    const growthAmountEl = resultsRoot.querySelector('.results-capital-card .growth-amount');
+
+    const fmt = (v) => `${Math.round(Number(v || 0)).toLocaleString('ru-RU')} ₽`;
+    const fmtPct = (v) => `${v >= 0 ? '+' : ''}${v.toFixed(1).replace('.', ',')}%`;
+
+    if (amt) amt.textContent = fmt(total);
+    if (growthEl) growthEl.textContent = `${growth >= 0 ? '+' : ''}${Math.round(growth).toLocaleString('ru-RU')} ₽`;
+    if (pctEl) pctEl.textContent = fmtPct(growthPct);
+    if (startEl) startEl.textContent = `Ты начал(а) с ${fmt(startTotal)}`;
+    if (growthAmountEl) growthAmountEl.textContent = `${Math.round(growth).toLocaleString('ru-RU')} ₽`;
+
+    // stats-grid values
+    const statValues = resultsRoot.querySelectorAll('.stats-grid .stat-card .value');
+    if (statValues && statValues.length >= 4) {
+        statValues[0].textContent = fmt(startTotal);
+        statValues[1].textContent = fmt(total);
+        statValues[2].textContent = `${growth >= 0 ? '+' : ''}${Math.round(growth).toLocaleString('ru-RU')} ₽`;
+        statValues[3].textContent = fmtPct(growthPct).replace('+', '+');
+    }
+
+    // structure legend — find legend items and populate by order
+    const legendItems = resultsRoot.querySelectorAll('.structure-legend .legend-item');
+    const order = ['account', 'bonds', 'corporate', 'vdo', 'stocks', 'currency', 'pif', 'gold'];
+    order.forEach((key, idx) => {
+        const node = legendItems[idx];
+        if (!node) return;
+        const valueNode = node.querySelector('.value');
+        const nameNode = node.querySelector('.name');
+        const val = Number(categories[key] || 0);
+        const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+        if (valueNode) valueNode.textContent = `${pct}%`;
+        if (nameNode) {
+            // leave existing name
+        }
+    });
+
+    // update bar chart visualization to reflect real portfolio structure (widths that sum to 100%)
+    try {
+        const bars = Array.from(resultsRoot.querySelectorAll('.bars .bar'));
+        // compute raw percentages
+        const raw = order.map((key) => (total > 0 ? (Number(categories[key] || 0) / total) * 100 : 0));
+        // rounded percentages and adjust rounding error by adding remainder to the largest slice
+        const rounded = raw.map((r) => Math.round(r));
+        const sumRounded = rounded.reduce((s, v) => s + v, 0);
+        const diff = 100 - sumRounded;
+        if (diff !== 0) {
+            // find index of max raw value
+            let maxIdx = 0;
+            for (let i = 1; i < raw.length; i++) {
+                if ((raw[i] || 0) > (raw[maxIdx] || 0)) maxIdx = i;
+            }
+            rounded[maxIdx] = (rounded[maxIdx] || 0) + diff;
+        }
+
+        const barInfos = [];
+        order.forEach((key, idx) => {
+            const pct = Math.max(0, rounded[idx] || 0);
+            const bar = bars[idx];
+            if (!bar) return;
+            // Ensure inline width is honored (disable flex growth)
+            bar.style.flex = '0 0 auto';
+            // Set width so bars grow horizontally and collectively occupy 100%
+            bar.style.width = `${pct}%`;
+            bar.style.minWidth = '0';
+            bar.style.height = '';
+            bar.style.transition = 'width 0.3s';
+            // Provide accessible label and tooltip
+            bar.setAttribute('role', 'img');
+            bar.setAttribute('aria-label', `${pct}% — ${Math.round(Number(categories[key] || 0)).toLocaleString('ru-RU')} ₽`);
+            bar.title = `${pct}% — ${Math.round(Number(categories[key] || 0)).toLocaleString('ru-RU')} ₽`;
+
+            // label inside bar if wide enough
+            let label = bar.querySelector('.bar-label');
+            if (pct >= 6) {
+                if (!label) {
+                    label = document.createElement('span');
+                    label.className = 'bar-label';
+                    bar.appendChild(label);
+                }
+                label.textContent = `${pct}%`;
+                label.style.display = '';
+            } else if (label) {
+                label.style.display = 'none';
+            }
+
+            // reset radius — we'll apply correct rounding after loop
+            bar.style.borderRadius = '0';
+
+            barInfos.push({ node: bar, key, pct, value: Number(categories[key] || 0) });
+        });
+
+        // apply rounded corners: first visible bar gets left rounding, last visible — right rounding
+        try {
+            const visible = barInfos.filter((b) => (b.pct || 0) > 0);
+            if (visible.length === 1) {
+                const only = visible[0].node;
+                only.style.borderRadius = '8px';
+            } else if (visible.length > 1) {
+                const first = visible[0].node;
+                const last = visible[visible.length - 1].node;
+                if (first) first.style.borderRadius = '4px 0 0 4px';
+                if (last) last.style.borderRadius = '0 4px 4px 0';
+            } else {
+                // no visible bars: restore default first/last child rounding
+                const first = bars[0];
+                const last = bars[bars.length - 1];
+                if (first) first.style.borderRadius = '4px 0 0 4px';
+                if (last) last.style.borderRadius = '0 4px 4px 0';
+            }
+        } catch (e) {
+            // non-fatal
+        }
+
+        // sort legend items by pct descending so legend order matches visual importance
+        try {
+            const legend = resultsRoot.querySelector('.structure-legend');
+            if (legend) {
+                const items = Array.from(legend.querySelectorAll('.legend-item'));
+                const itemInfos = items.map((node, idx) => ({ node, key: order[idx], pct: Math.max(0, rounded[idx] || 0) }));
+                itemInfos.sort((a, b) => b.pct - a.pct);
+                // re-append in sorted order
+                itemInfos.forEach((it) => legend.appendChild(it.node));
+            }
+        } catch (e) {
+            // non-fatal
+        }
+    } catch (e) {
+        console.warn('Не удалось обновить бар-чарт структуры активов:', e);
+    }
+
+    // earnings — show profit per category
+    const earningRows = resultsRoot.querySelectorAll('.earning-grid .earning-row');
+    earningRows.forEach((row) => {
+        const name = row.querySelector('.name')?.textContent?.trim();
+        const amountNode = row.querySelector('.amount');
+        if (!name || !amountNode) return;
+        let profit = 0;
+        // map name to category key
+        const map = {
+            'Накопительный счёт': 'account',
+            'ОФЗ': 'bonds',
+            'Корп. облигации': 'corporate',
+            'ВДО': 'vdo',
+            'Акции': 'stocks',
+            'Иностранная валюта': 'currency',
+            'ПИФ': 'pif',
+            'Золото': 'gold'
+        };
+        const key = map[name] || null;
+        if (key) {
+            // compute initial and final for that category
+            const initialVal = computeCategoryValue(initialSnapshot, key, selected);
+            const finalVal = computeCategoryValue(finalSnapshot, key, selected);
+            profit = finalVal - initialVal;
+        }
+        amountNode.textContent = `${profit >= 0 ? '+' : ''}${Math.round(profit).toLocaleString('ru-RU')} ₽`;
+        amountNode.classList.toggle('positive', profit >= 0);
+        amountNode.classList.toggle('negative', profit < 0);
+    });
+
+    // finally, open results page
+    try {
+        if (typeof window.showPage === 'function') window.showPage('results');
+    } catch (e) {
+        console.error('Не удалось открыть страницу результатов', e);
+    }
+}
+
+function computeCategoryValue(snapshot, key, selected) {
+    if (!snapshot) return 0;
+    if (key === 'account') return Number(snapshot.cash || 0) + Number(snapshot.bank || 0);
+    const usdTicker = selected?.usdTicker || 'USD';
+    const goldTicker = selected?.goldTicker || 'GLDRUB';
+    const bondTickers = Array.isArray(selected?.bonds) ? selected.bonds : [];
+    const stockTickers = Array.isArray(selected?.stocks) ? selected.stocks : [];
+    const fundTickers = Array.isArray(selected?.fundTickers) ? selected.fundTickers : [];
+
+    let sum = 0;
+    for (const [ticker, info] of Object.entries(snapshot.assets || {})) {
+        const val = Number(info.value) || 0;
+        if (key === 'bonds' && bondTickers.includes(ticker)) sum += val;
+        else if (key === 'stocks' && stockTickers.includes(ticker)) sum += val;
+        else if (key === 'pif' && fundTickers.includes(ticker)) sum += val;
+        else if (key === 'currency' && ticker === usdTicker) sum += val;
+        else if (key === 'gold' && ticker === goldTicker) sum += val;
+        else if (key === 'other') sum += val;
+    }
+    return sum;
 }
 
 gameEngine = new GameEngine(storage, prices);
@@ -389,6 +676,16 @@ async function initializeGame() {
 
     startGameClock();
 }
+    // Ensure we have a snapshot of the starting portfolio to calculate yearly profit
+    try {
+        const safeYear = Number(gameData.year) || 2007;
+        const startDate = getGameStartDate(safeYear);
+        if (!gameData._initialSnapshot) {
+            gameData._initialSnapshot = computePortfolioSnapshot(startDate);
+        }
+    } catch (e) {
+        console.warn('Не удалось создать начальный снимок портфеля:', e);
+    }
 
 async function resetGame() {
     const playerName = getCurrentGameId();
