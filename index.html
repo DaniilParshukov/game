@@ -2196,6 +2196,111 @@
     .btn-primary:hover {
       background: #1a5a47;
     }
+
+    /* ── СОБЫТИЯ ── */
+    .event-screen {
+      position: relative;
+      width: 100%;
+      min-height: 100%;
+      background: #144733;
+      border-radius: 3vh;
+      padding: clamp(20px, 3vh, 40px) clamp(24px, 3vw, 48px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* карточка события */
+    .event-card {
+      position: relative;
+      width: 100%;
+      max-width: 1025px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      border-radius: clamp(20px, 2.8vh, 38px);
+      padding: clamp(30px, 4vh, 60px) clamp(24px, 3vw, 50px) clamp(30px, 4vh, 50px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(12px, 1.6vh, 22px);
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    /* иконка в круге */
+    .event-icon {
+      width: clamp(48px, 5.2vw, 75px);
+      height: clamp(48px, 5.2vw, 75px);
+      border-radius: 50%;
+      background: #E8F8EA;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(24px, 3vw, 43px);
+      flex-shrink: 0;
+      margin-top: clamp(4px, 0.5vh, 8px);
+    }
+
+    /* заголовок события */
+    .event-title {
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: clamp(18px, 2.6vw, 38px);
+      line-height: 1.2;
+      text-align: center;
+      color: #0D2412;
+      max-width: 828px;
+      flex-shrink: 0;
+    }
+
+    /* сумма */
+    .event-amount {
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: clamp(36px, 4.5vw, 64px);
+      line-height: 1.1;
+      text-align: center;
+      color: #2BAE59;
+      flex-shrink: 0;
+    }
+
+    /* подпись */
+    .event-desc {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: clamp(14px, 1.8vw, 25px);
+      line-height: 1.2;
+      text-align: center;
+      color: #1D3F17;
+      max-width: 662px;
+      flex-shrink: 0;
+    }
+
+    /* кнопка «ОТЛИЧНО!» */
+    .event-accept {
+      background: #2BAE59;
+      border-radius: 17px;
+      border: none;
+      padding: clamp(14px, 1.8vh, 22px) clamp(40px, 5vw, 60px);
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: clamp(18px, 2vw, 30px);
+      line-height: 1.2;
+      color: #FFFFFF;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: clamp(8px, 1.2vh, 18px);
+      flex-shrink: 0;
+    }
+
+    .event-accept:hover {
+      background: #249b4e;
+    }
+
+    .event-accept:active {
+      transform: scale(0.98);
+    }
   </style>
 </head>
 <body>
@@ -2396,6 +2501,9 @@
                 <div class="action-item" onclick="showPage('teaching')">
                   <div class="title">Обучение</div>
                   <div class="desc">Разберись, как работает инструмент</div>
+                </div>
+                <div class="action-item" onclick="if(window.triggerTestEvent){window.triggerTestEvent();} else { showPage('event'); }">
+                  <div class="title">Хочу ивент!</div>
                 </div>
               </div>
             </div>
@@ -3077,6 +3185,24 @@
               <!-- КНОПКИ ДЕЙСТВИЙ -->
               <button class="btn-primary" onclick="(function(){ if(window.startNewGame) { window.startNewGame(); } else { showPage('registration'); } })()">Играть ещё</button>
             </div>
+          </div>
+        </div>
+      </div>
+      <div id="event" class="page-section">
+        <div class="event-screen">
+          <!-- КАРТОЧКА СОБЫТИЯ -->
+          <div class="event-card">
+            <div class="event-icon">🎁</div>
+
+            <div class="event-title">
+              Случилась какоето событие, но я не знаю какое.
+            </div>
+
+            <div class="event-amount">+0 ₽</div>
+
+            <div class="event-desc">Уже думаем что можно сделать</div>
+
+            <button class="event-accept" id="eventAccept">КРУТО!</button>
           </div>
         </div>
       </div>

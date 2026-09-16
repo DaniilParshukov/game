@@ -125,6 +125,15 @@ async function advanceGameDay() {
     } catch (e) {
         console.error('advanceGameDay: проверка окончания года не удалась', e);
     }
+
+    // Если появилось ожидающее событие — покажем экран события
+    try {
+        if (gameData && gameData.pendingEvent) {
+            showPendingEvent();
+        }
+    } catch (e) {
+        console.error('Не удалось показать событие после хода:', e);
+    }
 }
 
 function startGameClock() {
@@ -1472,6 +1481,7 @@ const bootstrapPageModules = () => {
         bootstrapTrade();
         bootstrapPortfolio();
         bootstrapTeaching();
+        bootstrapEventUI();
         updateDayBadge();
         setPauseState(true);
         document.addEventListener('keydown', (event) => {
@@ -1536,3 +1546,133 @@ async function endGameNow() {
 // expose for HTML onclick handlers
 globalThis.startNewGame = startNewGame;
 globalThis.endGameNow = endGameNow;
+
+// --- Event UI integration ---
+let _eventPrevPage = null;
+let _eventPrevPaused = null;
+
+function bootstrapEventUI() {
+    try {
+        const acceptBtn = document.getElementById('eventAccept');
+        if (acceptBtn) {
+            acceptBtn.addEventListener('click', async () => {
+                try {
+                    const eventObj = gameData && gameData.pendingEvent;
+                    if (!eventObj) {
+                        closeEventScreen();
+                        return;
+                    }
+
+                    // apply decision via engine
+                    try {
+                        gameEngine.changeCash(gameData, eventObj.amount);
+                    } catch (e) {
+                        console.error('Ошибка при применении решения события:', e);
+                        alert(e.message || 'Ошибка при обработке события');
+                        return;
+                    }
+
+                    // persist and refresh
+                    try {
+                        const playerName = getCurrentGameId();
+                        await storage.saveGame(playerName, gameData);
+                    } catch (e) {
+                        console.warn('Не удалось сохранить после события:', e);
+                    }
+                    gameData.pendingEvent = null;
+                    refreshVisiblePage();
+                    closeEventScreen();
+                } catch (e) {
+                    console.error('event accept handler failed', e);
+                }
+            });
+        }
+    } catch (e) {
+        console.error('bootstrapEventUI error', e);
+    }
+}
+
+function triggerTestEvent() {
+    try {
+        if (gameData && gameData.pendingEvent) {
+            showPendingEvent();
+            return;
+        }
+
+        const eventObj = gameEngine && typeof gameEngine.createRandomEvent === 'function'
+            ? gameEngine.createRandomEvent()
+            : null;
+
+        if (!eventObj) {
+            console.warn('Невозможно создать тестовый ивент: gameEngine.createRandomEvent недоступен');
+            return;
+        }
+
+        gameData.pendingEvent = eventObj;
+        showPendingEvent();
+    } catch (e) {
+        console.error('triggerTestEvent error', e);
+    }
+}
+
+globalThis.triggerTestEvent = triggerTestEvent;
+
+function showPendingEvent() {
+    try {
+        const ev = gameData && gameData.pendingEvent;
+        if (!ev) return;
+        const prev = document.querySelector('.page-section.active');
+        _eventPrevPage = prev ? prev.id : null;
+        _eventPrevPaused = gameClock.isPaused;
+
+        // populate UI
+        const root = document.getElementById('event');
+        if (!root) return;
+        const icon = root.querySelector('.event-icon');
+        const title = root.querySelector('.event-title');
+        const amount = root.querySelector('.event-amount');
+        const desc = root.querySelector('.event-desc');
+        const accept = root.querySelector('#eventAccept');
+        const isGood = ev.amount > 0;
+
+        if (icon) {
+            icon.textContent = ev.icon || '';
+            icon.style.background = isGood ? '#E8F8EA' : '#FDECEC';
+        }
+        if (title) title.textContent = ev.title || '';
+        if (amount) {
+            amount.textContent = ev.amount;
+            amount.style.color = isGood ? '#2BAE59' : '#D94A4A';
+        }
+        if (desc) desc.textContent = ev.text || '';
+        if (accept) {
+            accept.textContent = ev.buttonText;
+            accept.style.background = isGood ? '#2BAE59' : '#D94A4A';
+        }
+        setPauseState(true);
+        if (typeof window.showPage === 'function') window.showPage('event');
+    } catch (e) {
+        console.error('showPendingEvent error', e);
+    }
+}
+
+function closeEventScreen() {
+    try {
+        // hide event page and return to previous
+        if (_eventPrevPage && typeof window.showPage === 'function') {
+            window.showPage(_eventPrevPage);
+        } else if (typeof window.showPage === 'function') {
+            window.showPage('portfolio');
+        }
+
+        // restore pause state
+        if (!_eventPrevPaused) {
+            setPauseState(false);
+            startGameClock();
+        } else {
+            setPauseState(true);
+        }
+    } catch (e) {
+        console.error('closeEventScreen error', e);
+    }
+}
