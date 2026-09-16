@@ -114,7 +114,7 @@ async function advanceGameDay() {
         // если наступил первый день следующего года — показываем экран результатов
         const safeDate = normalizeDateValue(gameData.date, Number(gameData.year));
         const startYear = Number(gameData.year);
-        if (safeDate.getFullYear() === startYear && safeDate.getMonth() === 8 && safeDate.getDate() === 5) {
+        if (safeDate.getFullYear() === startYear + 1 && safeDate.getMonth() === 8 && safeDate.getDate() === 1) {
             try {
                 showYearResults();
                 setPauseState(true);
@@ -689,7 +689,6 @@ async function initializeGame() {
 
 async function resetGame() {
     const playerName = getCurrentGameId();
-    await storage.deleteGame(playerName);
     gameData = {
         portfolio: {
             cash: 10000,
@@ -704,6 +703,28 @@ async function resetGame() {
     };
     await storage.saveGame(playerName, gameData);
     return gameData;
+}
+
+// Start a fresh game flow triggered by "Играть ещё" button.
+async function startNewGame() {
+    try {
+        setPauseState(true);
+        stopGameClock();
+        const playerName = getCurrentGameId();
+
+        // Reset in-memory state and persist without explicitly deleting previous storage key.
+        await resetGame();
+
+        // Clear any computed snapshots
+        delete gameData._initialSnapshot;
+
+        // Navigate to registration so player can enter a name (or re-use existing)
+        if (typeof window.showPage === 'function') {
+            window.showPage('registration');
+        }
+    } catch (e) {
+        console.error('Не удалось корректно начать новую игру:', e);
+    }
 }
 
 globalThis.game = {
@@ -1257,11 +1278,6 @@ function bootstrapPortfolio() {
                 })();
             }
 
-            globalThis.refreshPortfolio = async function refreshPortfolioPage() {
-                if (!document.querySelector('.portfolio-table')) return;
-                await renderPortfolio();
-            };
-
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', bootstrapPortfolioInner, { once: true });
             } else {
@@ -1480,3 +1496,43 @@ if (document.readyState === 'loading') {
 } else {
     bootstrapPageModules();
 }
+
+// End game immediately and show results (even if year not finished)
+async function endGameNow() {
+    try {
+        setPauseState(true);
+        stopGameClock();
+
+        // persist current state before showing results
+        try {
+            const playerName = getCurrentGameId();
+            await storage.saveGame(playerName, gameData);
+        } catch (e) {
+            console.warn('Не удалось сохранить игру перед показом результатов:', e);
+        }
+
+        // ensure initial snapshot exists
+        try {
+            if (!gameData._initialSnapshot) {
+                const safeYear = Number(gameData.year) || 2007;
+                gameData._initialSnapshot = computePortfolioSnapshot(getGameStartDate(safeYear));
+            }
+        } catch (e) {
+            console.warn('Ошибка при создании начального снимка перед завершением:', e);
+        }
+
+        // show results
+        try {
+            showYearResults();
+        } catch (e) {
+            console.error('Ошибка при отображении результатов:', e);
+            if (typeof window.showPage === 'function') window.showPage('results');
+        }
+    } catch (e) {
+        console.error('endGameNow failed', e);
+    }
+}
+
+// expose for HTML onclick handlers
+globalThis.startNewGame = startNewGame;
+globalThis.endGameNow = endGameNow;

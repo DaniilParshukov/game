@@ -811,7 +811,7 @@
     }
 
     /* кнопка "Завершить месяц" */
-    .btn-finish-month {
+    .btn-finish {
       background: #C7F26B;
       border-radius: 19px;
       border: none;
@@ -825,7 +825,7 @@
       flex-shrink: 0;
       width: 100%;
     }
-    .btn-finish-month:hover {
+    .btn-finish:hover {
       background: #b8e35f;
     }
 
@@ -2200,16 +2200,6 @@
 </head>
 <body>
   <div class="page">
-    <!-- Боковая панель с навигацией -->
-    <nav class="sidebar">
-      <button class="tab active-tab" id="btn-entrance" onclick="showPage('entrance')">Вход</button>
-      <button class="tab" id="btn-registration" onclick="showPage('registration')">Регистрация</button>
-      <button class="tab" id="btn-portfolio" onclick="showPage('portfolio')">Портфолио</button>
-      <button class="tab" id="btn-trade" onclick="showPage('trade')">Торговля</button>
-      <button class="tab" id="btn-teaching" onclick="showPage('teaching')">Обучение</button>
-      <button class="tab" id="btn-results" onclick="showPage('results')">Результаты</button>
-    </nav>
-
     <!-- Контентная область -->
     <div class="content">
       <!-- Страницы-секции -->
@@ -2308,8 +2298,7 @@
             <img src="icon.svg" alt=""/>
           </div>
           <div class="header-right">
-            <button class="back-btn" onclick="showPage('portfolio')">← Вернуться в портфель</button>
-            <button class="nav-profile" onclick="showPage('portfolio')"></button>
+            <button class="nav-profile"></button>
           </div>
         </header>
 
@@ -2411,8 +2400,8 @@
               </div>
             </div>
 
-            <!-- Кнопка "Завершить месяц" -->
-            <button class="btn-finish-month">Завершить месяц →</button>
+            <!-- Кнопка "Завершить" -->
+            <button class="btn-finish" onclick="(function(){ if(window.endGameNow) { window.endGameNow(); } else { showPage('results'); } })()">Завершить →</button>
 
           </div>
         </div>
@@ -2929,8 +2918,7 @@
             <img src="icon.svg" alt=""/>
           </div>
           <div class="header-right">
-            <button class="back-btn" onclick="showPage('portfolio')">← Вернуться в портфель</button>
-            <button class="nav-profile" onclick="showPage('portfolio')"></button>
+            <button class="nav-profile"></button>
           </div>
         </header>
 
@@ -3087,7 +3075,7 @@
               </div>
 
               <!-- КНОПКИ ДЕЙСТВИЙ -->
-              <button class="btn-primary" onclick="showPage('registration')">Играть ещё</button>
+              <button class="btn-primary" onclick="(function(){ if(window.startNewGame) { window.startNewGame(); } else { showPage('registration'); } })()">Играть ещё</button>
             </div>
           </div>
         </div>
@@ -3109,8 +3097,8 @@
       }
 
       // 3. Обновляем активный таб
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active-tab'));
-      document.getElementById("btn-" + pageId).classList.add('active-tab');
+      //document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active-tab'));
+      //document.getElementById("btn-" + pageId).classList.add('active-tab');
     }
   </script>
   <script type="module" src="./script.js"></script>
