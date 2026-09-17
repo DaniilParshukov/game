@@ -221,7 +221,7 @@ export class GameEngine {
 
         const bankRate = currentBalance < 0 ? rawRate * 2 : rawRate;
         const dailyRate = bankRate / 365;
-        portfolio.bankBalance = currentBalance + (currentBalance * dailyRate);
+        portfolio.bankBalance = currentBalance + (currentBalance * dailyRate / 100);
     }
 
     applyAssetDatePayments(gameData) {
