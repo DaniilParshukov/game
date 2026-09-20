@@ -5,22 +5,22 @@ import { LocalPrices } from './prices/LocalPrices.js';
 const storage = new LocalStorageAdapter();
 globalThis.CopilkaStorage = LocalStorageAdapter;
 
-let gameEngine = null;
+let gameEngine = new GameEngine(storage, null);
 let prices = null;
 let gameInitializationPromise = null;
 
 let gameData = {
-        portfolio: {
-            cash: 10000,
-            assets: {},
-            assetValues: {},
-            bankBalance: 0
-        },
-        date: getGameStartDate(2007),
-        history: [],
-        monthlyEvents: {},
-        pendingEvent: null
-    };
+    portfolio: {
+        cash: 10000,
+        assets: {},
+        assetValues: {},
+        bankBalance: 0
+    },
+    date: getGameStartDate(2007),
+    history: [],
+    monthlyEvents: {},
+    pendingEvent: null
+};
 
 const gameClock = {
     intervalMs: 3000,
@@ -28,35 +28,94 @@ const gameClock = {
     isPaused: true
 };
 
+const INTRODUCTION_SLIDES = [
+    {
+        title: '1',
+        text: 'Привет!\nЧтобы накопить небольшой капитал, у тебя есть один игровой год, который начинается с 1 сентября. Следить за временем игры ты можешь на таймере слева ВВЕРХУ.'
+    },
+    {
+        title: '2',
+        text: 'В игре:\n1) У тебя есть первоначальный капитал 10 000 рублей,\n2) Ты устроился на работу и можешь откладывать на накопление и инвестиции каждый месяц 10-го и 25-го числа.\n3) Ты можешь видеть общий капитал и свободные деньги на кнопках слева ВВЕРХУ.\n4) Свободные деньги можно вкладывать в банк на накопительный счет или инвестировать в финансовые инструменты, которые появляются в доступе постепенно. Для операций с финансовыми активами пройди по кнопке «ИНВЕСТИРОВАТЬ». Можно инвестировать в: облигации (ОФЗ, корпоративные, высокодоходные), ПИФы, акции, валюту и золото.\n5) Перед тем, как в доступе появится новый финансовый инструмент, нужно пройти обучение! Если захочешь вернуться и почитать про актив еще раз, нажми на кнопку «ОБУЧЕНИЕ» и найди нужную страницу.\n6) Если нужно почитать внимательно или немного подумать над ситуацией, жми на «Пауза»!\n7) Следи за новостями экономики и финансов!\n8) В игре тебя ждут неожиданные события!\n9) В конце игры ты узнаешь, в какие реальные активы ты инвестировал и сколько заработал или потерял денег на каждом из них и сколько удалось накопить за год!\nУспешных инвестиций!!'
+    }
+];
 
+let introductionIndex = 0;
+
+function renderIntroductionSlide() {
+    const root = document.getElementById('introduction');
+    if (!root) return;
+
+    const slide = INTRODUCTION_SLIDES[introductionIndex] || INTRODUCTION_SLIDES[0];
+    const titleNode = root.querySelector('.event-title');
+    const textNode = root.querySelector('#introText');
+    const nextButton = document.getElementById('introNext');
+    const dots = Array.from(root.querySelectorAll('.dot'));
+
+    if (titleNode) titleNode.textContent = slide.title;
+    if (textNode) textNode.textContent = slide.text;
+
+    dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === introductionIndex);
+    });
+
+    if (nextButton) {
+        nextButton.textContent = introductionIndex === INTRODUCTION_SLIDES.length - 1 ? 'В портфель' : 'Дальше';
+    }
+}
+
+function setupIntroductionFlow() {
+    const root = document.getElementById('introduction');
+    if (!root) return;
+
+    const nextButton = document.getElementById('introNext');
+    const skipButton = document.getElementById('introSkip');
+
+    if (nextButton && !nextButton.dataset.bound) {
+        nextButton.dataset.bound = 'true';
+        nextButton.addEventListener('click', () => {
+            if (introductionIndex < INTRODUCTION_SLIDES.length - 1) {
+                introductionIndex += 1;
+                renderIntroductionSlide();
+                return;
+            }
+
+            introductionIndex = 0;
+            if (typeof window.showPage === 'function') {
+                window.showPage('portfolio');
+            }
+        });
+    }
+
+    if (skipButton && !skipButton.dataset.bound) {
+        skipButton.dataset.bound = 'true';
+        skipButton.addEventListener('click', () => {
+            introductionIndex = 0;
+            if (typeof window.showPage === 'function') {
+                window.showPage('portfolio');
+            }
+        });
+    }
+
+    renderIntroductionSlide();
+}
 
 function getGameStartDate(year) {
     const safeYear = Number(year) || 2007;
     return new Date(safeYear, 8, 1);
 }
 
-async function ensureGameReady() {
-    if (!gameInitializationPromise) {
-        gameInitializationPromise = initializeGame();
+async function resumeGameAfterContinue() {
+    try {
+        await initializeGame();
+    } catch (error) {
+        console.error('Не удалось инициализировать игру:', error);
+    } finally {
+        setPauseState(true);
+        setupIntroductionFlow();
+        if (typeof window.showPage === 'function') {
+            window.showPage('introduction');
+        }
     }
-    return gameInitializationPromise;
-}
-
-function resumeGameAfterContinue() {
-    return ensureGameReady()
-        .then(() => {
-            setPauseState(true);
-            if (typeof window.showPage === 'function') {
-                window.showPage('portfolio');
-            }
-        })
-        .catch((error) => {
-            console.error('Не удалось инициализировать игру после продолжения:', error);
-            setPauseState(true);
-            if (typeof window.showPage === 'function') {
-                window.showPage('portfolio');
-            }
-        });
 }
 
 function updateDayBadge() {
@@ -545,8 +604,6 @@ function computeCategoryValue(snapshot, key, selected) {
     return sum;
 }
 
-gameEngine = new GameEngine(storage, prices);
-
 function shuffleArray(items) {
     const copy = [...items];
     for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -660,7 +717,18 @@ async function loadGame() {
 }
 
 async function initializeGame() {
-    // Пытаемся загрузить сохранённую игру
+    gameData = {
+        portfolio: {
+            cash: 10000,
+            assets: {},
+            assetValues: {},
+            bankBalance: 0
+        },
+        date: getGameStartDate(2007),
+        history: [],
+        monthlyEvents: {},
+        pendingEvent: null
+    };
     await loadGame();
 
     if (!gameData.selectedTickers || !gameData.year) {
@@ -684,7 +752,7 @@ async function initializeGame() {
     }
 
     startGameClock();
-}
+    
     // Ensure we have a snapshot of the starting portfolio to calculate yearly profit
     try {
         const safeYear = Number(gameData.year) || 2007;
@@ -695,23 +763,6 @@ async function initializeGame() {
     } catch (e) {
         console.warn('Не удалось создать начальный снимок портфеля:', e);
     }
-
-async function resetGame() {
-    const playerName = getCurrentGameId();
-    gameData = {
-        portfolio: {
-            cash: 10000,
-            assets: {},
-            assetValues: {},
-            bankBalance: 0
-        },
-        date: getGameStartDate(2007),
-        history: [],
-        monthlyEvents: {},
-        pendingEvent: null
-    };
-    await storage.saveGame(playerName, gameData);
-    return gameData;
 }
 
 // Start a fresh game flow triggered by "Играть ещё" button.
@@ -721,8 +772,7 @@ async function startNewGame() {
         stopGameClock();
         const playerName = getCurrentGameId();
 
-        // Reset in-memory state and persist without explicitly deleting previous storage key.
-        await resetGame();
+        await storage.deleteGame(playerName);
 
         // Clear any computed snapshots
         delete gameData._initialSnapshot;
@@ -735,15 +785,6 @@ async function startNewGame() {
         console.error('Не удалось корректно начать новую игру:', e);
     }
 }
-
-globalThis.game = {
-    data: () => gameData,
-    engine: gameEngine,
-    getPrices: () => prices,
-    getStorage: () => storage,
-    initialize: initializeGame,
-    reset: resetGame
-};
 
 async function bootstrapAppShell() {
     try {
@@ -782,7 +823,7 @@ async function bootstrapAppShell() {
         function bindRegistration() {
             const input = document.querySelector('.input-field');
             const button = document.querySelector('.btn-continue');
-            if (!input || !button) return;
+            if (!input || !button) throw new Error('Не удалось найти элементы ввода имени игрока или кнопку продолжения');
 
             input.value = getPlayerName();
 
@@ -790,7 +831,7 @@ async function bootstrapAppShell() {
                 const value = input.value.trim() || 'Игрок';
                 setPlayerName(value);
                 syncProfileNames();
-                void resumeGameAfterContinue();
+                resumeGameAfterContinue();
             };
 
             button.addEventListener('click', () => {
@@ -805,6 +846,8 @@ async function bootstrapAppShell() {
         }
 
 
+        setupIntroductionFlow();
+        setupIntroductionFlow();
         syncProfileNames();
         bindRegistration();
     } catch (e) {
@@ -1499,14 +1542,6 @@ const bootstrapPageModules = () => {
     }
 };
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        bootstrapPageModules();
-    }, { once: true });
-} else {
-    bootstrapPageModules();
-}
-
 // End game immediately and show results (even if year not finished)
 async function endGameNow() {
     try {
@@ -1542,14 +1577,6 @@ async function endGameNow() {
         console.error('endGameNow failed', e);
     }
 }
-
-// expose for HTML onclick handlers
-globalThis.startNewGame = startNewGame;
-globalThis.endGameNow = endGameNow;
-
-// --- Event UI integration ---
-let _eventPrevPage = null;
-let _eventPrevPaused = null;
 
 function bootstrapEventUI() {
     try {
@@ -1615,8 +1642,6 @@ function triggerTestEvent() {
     }
 }
 
-globalThis.triggerTestEvent = triggerTestEvent;
-
 function showPendingEvent() {
     try {
         const ev = gameData && gameData.pendingEvent;
@@ -1676,3 +1701,29 @@ function closeEventScreen() {
         console.error('closeEventScreen error', e);
     }
 }
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        bootstrapPageModules();
+    }, { once: true });
+} else {
+    bootstrapPageModules();
+}
+
+globalThis.game = {
+    data: () => gameData,
+    engine: gameEngine,
+    getPrices: () => prices,
+    getStorage: () => storage,
+    initialize: initializeGame,
+};
+
+// expose for HTML onclick handlers
+globalThis.startNewGame = startNewGame;
+globalThis.endGameNow = endGameNow;
+
+// --- Event UI integration ---
+let _eventPrevPage = null;
+let _eventPrevPaused = null;
+
+globalThis.triggerTestEvent = triggerTestEvent;

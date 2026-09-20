@@ -42,11 +42,11 @@ export class LocalPrices {
     }
 
     getDay(date) {
-        const safeDate = date instanceof Date ? new Date(date) : (date ? new Date(String(date)) : new Date(this.year, 8, 1));
+        const safeDate = date instanceof Date ? new Date(date) : (date ? new Date(String(date)) : new Date(this.year, 7, 1));
         if (Number.isNaN(safeDate.getTime())) {
             throw new Error(`Некорректная дата для тикера: ${date}`);
         }
-        return Math.round((safeDate - new Date(this.year, 8, 1)) / 86400000);
+        return Math.round((safeDate - new Date(this.year, 7, 1)) / 86400000);
     }
 
     // Статический фабричный метод
@@ -94,7 +94,7 @@ export class LocalPrices {
             throw new Error(`Неизвестный тикер: ${ticker}, доступные тикеры: ${Object.keys(this.prices).join(', ')}`);
         }
         
-        const dayIndex = Math.min(day - 1, this.prices[ticker].length - 1);
+        const dayIndex = Math.min(day, this.prices[ticker].length - 1);
         return this.prices[ticker][dayIndex];
     }
 
