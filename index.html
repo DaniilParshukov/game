@@ -43,6 +43,7 @@
       overflow-y: auto;
     }
 
+    .content:has(#introduction.active),
     .content:has(#event.active) {
       overflow-y: hidden;
     }
@@ -57,9 +58,12 @@
 
     /* Делаем видимой ту, у которой есть класс .active */
     .page-section.active {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%
     }
-
+    
+    #introduction.page-section.active,
     #event.page-section.active {
       display: flex;
       flex-direction: column;
@@ -187,7 +191,7 @@
 
     .kopilka-btn {
       background: #144733;
-      border-radius: 22.6px;
+      border-radius: 14px;
       padding: clamp(12px, 1.5vh, 20px) clamp(28px, 3vw, 44px);
       border: none;
       font-weight: 600;
@@ -300,7 +304,7 @@
       flex: 1;
     }
 
-    .bar {
+    .entrance-bar {
       flex: 1;
       background: #C7F26B;
       border-radius: 8.99px;
@@ -308,14 +312,14 @@
       transition: height 0.3s;
     }
 
-    .bar--1 { height: 15%; }
-    .bar--2 { height: 28%; }
-    .bar--3 { height: 22%; }
-    .bar--4 { height: 36%; }
-    .bar--5 { height: 32%; }
-    .bar--6 { height: 42%; }
-    .bar--7 { height: 50%; }
-    .bar--8 { height: 64%; }
+    .entrance-bar--1 { height: 15%; }
+    .entrance-bar--2 { height: 28%; }
+    .entrance-bar--3 { height: 22%; }
+    .entrance-bar--4 { height: 36%; }
+    .entrance-bar--5 { height: 32%; }
+    .entrance-bar--6 { height: 42%; }
+    .entrance-bar--7 { height: 50%; }
+    .entrance-bar--8 { height: 64%; }
 
     /* registration */
 
@@ -948,6 +952,7 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      background: rgba(240, 250, 237);
     }
     .asset-card.active {
       background: #D1EDD6;
@@ -1777,6 +1782,9 @@
     .pagination .dot.active {
       background: #144733;
     }
+    .pagination .dot.unavailable {
+      cursor: auto;
+    }
     .pagination .counter {
       font-weight: 600;
       font-size: 62.5%;
@@ -2191,6 +2199,7 @@
       position: relative;
       width: 100%;
       max-width: 1025px;
+      min-height: 50vh;
       margin: 0 auto;
       background: #FFFFFF;
       border-radius: clamp(20px, 2.8vh, 38px);
@@ -2251,6 +2260,15 @@
       flex-shrink: 0;
     }
 
+    #introText {
+      white-space: pre-line;
+      text-align: left;
+      max-width: 1000px;
+      font-size: clamp(15px, 1.7vw, 24px);
+      line-height: 1.5;
+      color: #18351D;
+    }
+
     /* кнопка «ОТЛИЧНО!» */
     .event-accept {
       background: #2BAE59;
@@ -2295,29 +2313,29 @@
           <div>
             <div class="hero-row">
               <div class="hero-left">
-              <div class="main-headline">Построй своё финансовое будущее</div>
-              <div class="subhead">Принимай решения, переживай неожиданные события, инвестируй и смотри, к чему приведут твои решения.</div>
-              <div class="hero-actions">
-                  <button class="kopilka-btn" onclick="showPage('registration')">Начать игру →</button>
-                  <span class="info-badge">20-30 минут</span>
-                  <span class="info-badge">12 игровых месяцев</span>
+                <div class="main-headline">Построй своё финансовое будущее</div>
+                <div class="subhead">Принимай решения, переживай неожиданные события, инвестируй и смотри, к чему приведут твои решения.</div>
+                <div class="hero-actions">
+                    <button class="kopilka-btn" onclick="showPage('registration')">Начать игру →</button>
+                    <span class="info-badge">20-30 минут</span>
+                    <span class="info-badge">12 игровых месяцев</span>
+                </div>
               </div>
             </div>
             <div class="how-it-works">
               <div class="title">Как это работает</div>
-                <div class="steps">
-                  <div class="step">
-                      <div class="step-title">01 Живи</div>
-                      <div class="step-desc">Получай зарплату, доходы и неожиданные расходы</div>
-                  </div>
-                  <div class="step">
-                      <div class="step-title">02 Решай</div>
-                      <div class="step-desc">Покупай активы и меняй состав портфеля</div>
-                  </div>
-                  <div class="step">
-                      <div class="step-title">03 Смотри результат</div>
-                      <div class="step-desc">Проверь, как решения повлияли на капитал</div>
-                  </div>
+              <div class="steps">
+                <div class="step">
+                    <div class="step-title">01 Живи</div>
+                    <div class="step-desc">Получай зарплату, доходы и неожиданные расходы</div>
+                </div>
+                <div class="step">
+                    <div class="step-title">02 Решай</div>
+                    <div class="step-desc">Покупай активы и меняй состав портфеля</div>
+                </div>
+                <div class="step">
+                    <div class="step-title">03 Смотри результат</div>
+                    <div class="step-desc">Проверь, как решения повлияли на капитал</div>
                 </div>
               </div>
             </div>
@@ -2329,14 +2347,14 @@
             <div class="amount">1 248 600 ₽</div>
             <div class="growth">+18,4% за 12 месяцев</div>
             <div class="histogram">
-                <div class="bar bar--1"></div>
-                <div class="bar bar--2"></div>
-                <div class="bar bar--3"></div>
-                <div class="bar bar--4"></div>
-                <div class="bar bar--5"></div>
-                <div class="bar bar--6"></div>
-                <div class="bar bar--7"></div>
-                <div class="bar bar--8"></div>
+                <div class="entrance-bar entrance-bar--1"></div>
+                <div class="entrance-bar entrance-bar--2"></div>
+                <div class="entrance-bar entrance-bar--3"></div>
+                <div class="entrance-bar entrance-bar--4"></div>
+                <div class="entrance-bar entrance-bar--5"></div>
+                <div class="entrance-bar entrance-bar--6"></div>
+                <div class="entrance-bar entrance-bar--7"></div>
+                <div class="entrance-bar entrance-bar--8"></div>
             </div>
           </div>
         </div>
@@ -2463,13 +2481,8 @@
               <div class="actions-title">Что сделать?</div>
               <div class="actions-list">
                 <div class="action-item" onclick="showPage('trade')">
-                  <div class="title">Купить актив</div>
+                  <div class="title">Инвестировать</div>
                   <div class="desc">Выбери инструмент и сумму</div>
-                </div>
-                <div class="action-item" onclick="showPage('trade')"
-                >
-                  <div class="title">Продать актив</div>
-                  <div class="desc">Зафиксируй прибыль или убыток</div>
                 </div>
                 <div class="action-item" onclick="showPage('teaching')">
                   <div class="title">Обучение</div>
@@ -2825,7 +2838,40 @@
               </div>
             </div>
 
-            <!-- актив 5: Акции -->
+            <!-- актив 5: ПИФ -->
+            <div class="asset-content" data-asset="pif">
+              <div class="asset-grid">
+                <div class="left-column">
+                  <div class="risk-badge risk-badge--medium">УРОВЕНЬ РИСКА — СРЕДНИЙ</div>
+                  <div class="what-section">
+                    <div class="title">Что это?</div>
+                    <div class="sub">Много инвесторов — один фонд</div>
+                    <div class="desc">Фонд собирает деньги инвесторов и вкладывает их в разные финансовые инструменты. Фонд может специализироваться на акциях, облигациях, отрасли, гособлигациях, металлах или смешанных инвестициях.</div>
+                  </div>
+                  <div class="risk-note">
+                    <div class="title">Риск / важный нюанс</div>
+                    <div class="desc">Комиссии особенно важны при коротком сроке инвестиций. На пай влияют макроэкономика, расходы УК и стоимость активов внутри фонда.</div>
+                  </div>
+                </div>
+                <div class="right-column">
+                  <div class="income-section">
+                    <div class="title">Как получить доход</div>
+                    <div class="income-item"><span class="label">01 Пай</span><div class="desc">Доход — разница между ценой продажи и покупки пая.</div></div>
+                    <div class="income-item"><span class="label">02 Комиссии</span><div class="desc">Важно учитывать управление, ввод и вывод средств.</div></div>
+                    <div class="income-item"><span class="label">03 Форматы</span><div class="desc">ОПИФ, ИПИФ, ЗПИФ и БПИФ отличаются доступностью покупки/продажи.</div></div>
+                  </div>
+                  <div class="investor-tips">
+                    <div class="title">Как выбрать</div>
+                    <div class="item"><span class="label">Цель и срок</span><div class="desc">До года; 1–3 года; более 3 лет.</div></div>
+                    <div class="item"><span class="label">Состав</span><div class="desc">Какие активы и стратегия внутри фонда.</div></div>
+                    <div class="item"><span class="label">Комиссии</span><div class="desc">Сколько стоит управление и операции.</div></div>
+                    <div class="item"><span class="label">Уставной капитал</span><div class="desc">Надёжность и репутация управляющей компании.</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- актив 6: Акции -->
             <div class="asset-content" data-asset="stocks">
               <div class="asset-grid">
                 <div class="left-column">
@@ -2858,7 +2904,7 @@
               </div>
             </div>
 
-            <!-- актив 6: Иностранная валюта -->
+            <!-- актив 7: Иностранная валюта -->
             <div class="asset-content" data-asset="currency">
               <div class="asset-grid">
                 <div class="left-column">
@@ -2885,39 +2931,6 @@
                     <div class="item"><span class="label">Инфляция</span><div class="desc">Уровень инфляции в странах.</div></div>
                     <div class="item"><span class="label">Ставки</span><div class="desc">Процентные ставки и политика центральных банков.</div></div>
                     <div class="item"><span class="label">Дополнительно</span><div class="desc">Геополитика, внутренние трудности и спрос на валюту.</div></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- актив 7: ПИФ -->
-            <div class="asset-content" data-asset="pif">
-              <div class="asset-grid">
-                <div class="left-column">
-                  <div class="risk-badge risk-badge--medium">УРОВЕНЬ РИСКА — СРЕДНИЙ</div>
-                  <div class="what-section">
-                    <div class="title">Что это?</div>
-                    <div class="sub">Много инвесторов — один фонд</div>
-                    <div class="desc">Фонд собирает деньги инвесторов и вкладывает их в разные финансовые инструменты. Фонд может специализироваться на акциях, облигациях, отрасли, гособлигациях, металлах или смешанных инвестициях.</div>
-                  </div>
-                  <div class="risk-note">
-                    <div class="title">Риск / важный нюанс</div>
-                    <div class="desc">Комиссии особенно важны при коротком сроке инвестиций. На пай влияют макроэкономика, расходы УК и стоимость активов внутри фонда.</div>
-                  </div>
-                </div>
-                <div class="right-column">
-                  <div class="income-section">
-                    <div class="title">Как получить доход</div>
-                    <div class="income-item"><span class="label">01 Пай</span><div class="desc">Доход — разница между ценой продажи и покупки пая.</div></div>
-                    <div class="income-item"><span class="label">02 Комиссии</span><div class="desc">Важно учитывать управление, ввод и вывод средств.</div></div>
-                    <div class="income-item"><span class="label">03 Форматы</span><div class="desc">ОПИФ, ИПИФ, ЗПИФ и БПИФ отличаются доступностью покупки/продажи.</div></div>
-                  </div>
-                  <div class="investor-tips">
-                    <div class="title">Как выбрать</div>
-                    <div class="item"><span class="label">Цель и срок</span><div class="desc">До года; 1–3 года; более 3 лет.</div></div>
-                    <div class="item"><span class="label">Состав</span><div class="desc">Какие активы и стратегия внутри фонда.</div></div>
-                    <div class="item"><span class="label">Комиссии</span><div class="desc">Сколько стоит управление и операции.</div></div>
-                    <div class="item"><span class="label">Уставной капитал</span><div class="desc">Надёжность и репутация управляющей компании.</div></div>
                   </div>
                 </div>
               </div>
@@ -3186,12 +3199,19 @@
             <div class="event-desc" id="introText">Привет!</div>
 
             <div class="pagination" id="pagination">
-              <span class="dot active" data-index="0"></span>
-              <span class="dot" data-index="1"></span>
+              <span class="dot unavailable active" data-index="0"></span>
+              <span class="dot unavailable" data-index="1"></span>
+              <span class="dot unavailable" data-index="2"></span>
+              <span class="dot unavailable" data-index="3"></span>
+              <span class="dot unavailable" data-index="4"></span>
+              <span class="dot unavailable" data-index="5"></span>
+              <span class="dot unavailable" data-index="6"></span>
+              <span class="dot unavailable" data-index="7"></span>
+              <span class="dot unavailable" data-index="8"></span>
+
             </div>
 
             <button class="event-accept" id="introNext">Дальше</button>
-            <button class="event-accept" id="introSkip">Пропустить</button>
           </div>
         </div>
       </div>
@@ -3199,7 +3219,7 @@
   </div>
 
   <script>
-    function showPage(pageId) {
+    function showPage(pageId, args = {}) {
       // 1. Скрываем все секции
       document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
       // 2. Показываем нужную
@@ -3208,6 +3228,12 @@
       if (pageId === 'portfolio' && globalThis.refreshPortfolio) {
         Promise.resolve(globalThis.refreshPortfolio()).catch((error) => {
           console.error('Ошибка обновления портфеля при открытии страницы:', error);
+        });
+      }
+
+      if (pageId === 'teaching' && globalThis.refreshTeachingView) {
+        Promise.resolve(globalThis.refreshTeachingView(args.index)).catch((error) => {
+          console.error('Ошибка обновления обучения при открытии страницы:', error);
         });
       }
     }

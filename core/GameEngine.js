@@ -314,7 +314,6 @@ export class GameEngine {
 
         this.checkSalary(gameData);
         gameData.pendingEvent = this.checkLifeEvents(gameData);
-        return gameData;
     }
 
     openBank(gameData, amount) {
