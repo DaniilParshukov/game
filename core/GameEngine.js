@@ -194,13 +194,6 @@ export class GameEngine {
     }
 
     /**
-     * Начислить проценты на остаток
-     */
-    applyInterest(portfolio) {
-        return portfolio;
-    }
-
-    /**
      * Начислить проценты по депозитам
      */
     applyBankInterest(portfolio, date) {
@@ -234,9 +227,14 @@ export class GameEngine {
 
         for (const [ticker, quantity] of Object.entries(portfolio.assets)) {
             let payoutValue = 0;
-
-            payoutValue = Number(this.prices.getValueByDate(ticker, date));
-
+            val = this.prices.getValueByDate(ticker, date)
+            payoutValue = Number(val[0]);
+            if (val[1] === -1) {
+                alert('Технический дефолт ВДО');
+            } else if (val[1] === -2) {
+                alert("Дефолт ВДО");
+                portfolio.assetValues[ticker].quantity = 0;
+            }
             if (payoutValue == 0) continue;
 
             if (!Number.isFinite(payoutValue) || payoutValue < 0) {

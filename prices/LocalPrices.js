@@ -2,7 +2,7 @@ export class LocalPrices {
     constructor(year, dataUrl = './prices/data.json') {
         this.year = year;
         this.prices = {};
-        this.dateValuePairs = {};
+        this.dateValue = {};
         this.dataUrl = dataUrl;
         this.isLoaded = false;
         this.allData = null;
@@ -58,23 +58,23 @@ export class LocalPrices {
 
     processYearRange(yearData) {
         this.prices = {};
-        this.dateValuePairs = {};
+        this.dateValue = {};
         
         for (const [ticker, tickerData] of Object.entries(yearData)) {
             if (tickerData.price && Array.isArray(tickerData.price)) {
                 this.prices[ticker] = tickerData.price;
             }
             
-            if (tickerData.date_value_pairs && Array.isArray(tickerData.date_value_pairs)) {
+            if (tickerData.date_value && Array.isArray(tickerData.date_value)) {
                 const map = new Map();
-                for (const pair of tickerData.date_value_pairs) {
-                    if (pair && pair.date) {
-                        map.set(pair.date, pair.value);
+                for (const trio of tickerData.date_value) {
+                    if (trio && trio.date) {
+                        map.set(trio.date, [trio.value, trio.status]);
                     }
                 }
-                this.dateValuePairs[ticker] = map;
+                this.dateValue[ticker] = map;
             } else {
-                this.dateValuePairs[ticker] = new Map();
+                this.dateValue[ticker] = new Map();
             }
         }
     }
@@ -110,8 +110,8 @@ export class LocalPrices {
             throw new Error('Данные еще не загружены. Дождитесь загрузки.');
         }
 
-        const map = this.dateValuePairs[ticker];
-        if (!map) throw new Error(`Неизвестный тикер: ${ticker}, доступные тикеры: ${Object.keys(this.dateValuePairs).join(', ')}`);
+        const map = this.dateValue[ticker];
+        if (!map) throw new Error(`Неизвестный тикер: ${ticker}, доступные тикеры: ${Object.keys(this.dateValue).join(', ')}`);
 
         const safeDate = date instanceof Date ? new Date(date) : new Date(String(date));
         if (Number.isNaN(safeDate.getTime())) {
