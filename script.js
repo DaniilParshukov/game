@@ -1248,7 +1248,7 @@ function bootstrapTrade() {
                         }
                     } else {
                         if (action === 'buy') {
-                            const price = Number(prices.getPrice(ticker, date));
+                            const price = Number(prices.getPrice(ticker, gameData.date));
                             const cost = price * quantity;
                             if ((Number(gameData.portfolio.cash) || 0) < cost) {
                                 showToast(`Недостаточно средств. Нужно: ${cost}, есть: ${Number(gameData.portfolio.cash) || 0}`, 'error');
@@ -1278,6 +1278,7 @@ function bootstrapTrade() {
                     updateUI();
                 } catch (error) {
                     alert(error.message || 'Не удалось выполнить сделку');
+                    throw error;
                 }
             }
 
@@ -1808,7 +1809,7 @@ function bootstrapEventUI() {
                     } catch (e) {
                         console.error('Ошибка при применении решения события:', e);
                         alert(e.message || 'Ошибка при обработке события');
-                        return;
+                        throw error;
                     }
 
                     // persist and refresh

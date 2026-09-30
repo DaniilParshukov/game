@@ -362,7 +362,7 @@ export class GameEngine {
             throw new Error('Количество должно быть положительным');
         }
 
-        const date = gameData.date instanceof Date ? new Date(gameData.date) : new Date(String(gameData.date));
+        const date = new Date(gameData.date);
         if (Number.isNaN(date.getTime())) {
             throw new Error('Некорректная дата игры');
         }
