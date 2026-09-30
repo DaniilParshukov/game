@@ -1204,41 +1204,73 @@ function bootstrapTrade() {
                 if (totalAmount) totalAmount.textContent = `${(amount * price).toLocaleString('ru-RU')} ₽`;
             }
 
-            async function tryTrade(action) {
+            async function tryTrade(el, action) {
                 console.log('Попытка сделки:', action, 'для актива', currentAsset);
-                const quantity = Number(String(quantityInput.value).replace(/\s/g, '')) || 0;
+                const quantity = Number(String(quantityInput.value).replace(/\s/g, '')) || -1;
                 if (!quantity || quantity <= 0) {
-                    alert('Введите корректное количество');
+                    playAnimation(el, 'shake', 500);
+                    showToast('Введите корректное количество', 'error');
+                    return;
+                }
+
+                if (!Number.isInteger(quantity)) {
+                    playAnimation(el, 'shake', 500);
+                    showToast('Введите целое число', 'error');
                     return;
                 }
 
                 const engine = globalThis.game && globalThis.game.engine ? globalThis.game.engine : null;
 
                 if (!engine) {
-                    alert('Игра ещё не инициализирована');
-                    return;
+                    throw new Error('Игра ещё не инициализирована');
                 }
 
                 try {
-                    const nextState = cloneGameData(gameData);
-
-                    let result;
+                    const ticker = resolveTickerByAsset();
+                    if (!ticker) {
+                        throw new Error('Тикер не выбран для текущего актива');
+                    }
                     if (currentAsset === 'account') {
-                        result = action === 'buy'
-                            ? engine.openBank(nextState, quantity)
-                            : engine.withdrawBank(nextState, quantity);
-                    } else {
-                        const ticker = resolveTickerByAsset();
-                        if (!ticker) {
-                            alert('Тикер не выбран для текущего актива');
-                            return;
+                        if (action === 'buy') {
+                            if ((Number(gameData.portfolio.cash) || 0) < quantity) {
+                                playAnimation(el, 'shake', 500);
+                                showToast(`Недостаточно средств. Нужно: ${quantity}, есть: ${Number(gameData.portfolio.cash) || 0}`, 'error');
+                                return;
+                            }
+                            engine.openBank(gameData, quantity)
+                        } else {
+                            if ((Number(gameData.portfolio.bankBalance) || 0) < quantity) {
+                                playAnimation(el, 'shake', 500);
+                                showToast(`Недостаточно средств на счёте. Есть: ${Number(gameData.portfolio.bankBalance) || 0}`, 'error');
+                                return
+                            }
+                            engine.withdrawBank(gameData, quantity);
                         }
-                        console.log('Выполняем сделку для тикера:', ticker, 'количество:', quantity, 'действие:', action);
-                        result = action === 'buy' ? engine.buyAsset(nextState, ticker, quantity) : engine.sellAsset(nextState, ticker, quantity);
+                    } else {
+                        if (action === 'buy') {
+                            const price = Number(prices.getPrice(ticker, date));
+                            const cost = price * quantity;
+                            if ((Number(gameData.portfolio.cash) || 0) < cost) {
+                                showToast(`Недостаточно средств. Нужно: ${cost}, есть: ${Number(gameData.portfolio.cash) || 0}`, 'error');
+                                return;
+                            }
+                            engine.buyAsset(gameData, ticker, quantity);
+                        } else {
+                            if (!gameData.portfolio.assets[ticker]) {
+                                showToast(`У вас нет актива ${ticker}`, 'error');
+                                return;
+                            }
+                            
+                            if ((Number(gameData.portfolio.assets[ticker]) || 0) < quantity) {
+                                showToast(`У вас только ${Number(gameData.portfolio.assets[ticker]) || 0} акций ${ticker}`, 'error');
+                                return;
+                            }
+                            engine.sellAsset(gameData, ticker, quantity);
+                        }
                     }
 
-                    gameData = result;
-                    globalThis.game.data = () => gameData;
+                    showToast(`${action === 'buy' ? 'Покупка' : 'Продажа'} ${ticker} (${quantity} шт.) выполнена`, 'success');
+                    console.log('Выполняем сделку для тикера:', ticker, 'количество:', quantity, 'действие:', action);
 
                     const playerName = getCurrentGameId();
                     await storage.saveGame(playerName, gameData);
@@ -1324,13 +1356,13 @@ function bootstrapTrade() {
 
             if (buyBtn) {
                 buyBtn.addEventListener('click', () => {
-                    void tryTrade(currentAction === 'buy' ? 'buy' : 'sell');
+                    void tryTrade(buyBtn, currentAction === 'buy' ? 'buy' : 'sell');
                 });
             }
 
             if (sellBtn) {
                 sellBtn.addEventListener('click', () => {
-                    void tryTrade(currentAction === 'buy' ? 'sell' : 'buy');
+                    void tryTrade(sellBtn, currentAction === 'buy' ? 'sell' : 'buy');
                 });
             }
 
@@ -1489,16 +1521,13 @@ function bootstrapTeaching() {
                 ofz: 'bonds',
                 corp: 'bonds',
                 vdo: 'bonds',
+                pif: 'pif',
                 stocks: 'stocks',
                 currency: 'currency',
-                pif: 'pif',
                 gold: 'gold'
             };
 
-            const assets = [
-                'account', 'ofz', 'corp', 'vdo',
-                'stocks', 'currency', 'pif', 'gold'
-            ];
+            const assets = ['account', 'ofz', 'corp', 'vdo', 'pif', 'stocks', 'currency', 'gold'];
             let currentIndex = 0;
 
             const titles = [
@@ -1506,9 +1535,9 @@ function bootstrapTeaching() {
                 'ОФЗ — облигации федерального займа',
                 'Корпоративные облигации',
                 'ВДО — высокодоходные облигации',
+                'ПИФ — паевые инвестиционные фонды',
                 'Акции',
                 'Иностранная валюта',
-                'ПИФ — паевые инвестиционные фонды',
                 'Золото'
             ];
 
@@ -1517,9 +1546,9 @@ function bootstrapTeaching() {
                 'Ты даёшь государству деньги в долг',
                 'Компания занимает деньги у инвесторов',
                 'Высокий купон не бывает бесплатным',
+                'Много инвесторов — один фонд',
                 'Часть компании в твоем портфеле',
                 'Иностранные деньги и инструменты',
-                'Много инвесторов — один фонд',
                 'Золото — инвестиционный товар'
             ];
 
@@ -1528,9 +1557,9 @@ function bootstrapTeaching() {
                 'Доход по ОФЗ за полгода + влияние ставки ЦБ',
                 'Доход по облигации Компании А',
                 'Доход по облигации Компании В',
+                'Пример для ПИФ (скоро)',
                 'Финансовый результат по акции Компании С',
                 'Результат по дирхаму и евро',
-                'Пример для ПИФ (скоро)',
                 'Пример для Золота (скоро)'
             ];
 
@@ -1539,9 +1568,9 @@ function bootstrapTeaching() {
                 'Время владения ОФЗ номиналом 1000 рублей — полгода (182 дня). Был выплачен купон 7% годовых, бумага выросла с 830 до 850 рублей. Общий доход: <code>(850–830)+(1000×182×7)/(365×100) = 20 + 34,90 = 54,90 ₽</code>.<br><br><strong>Как зависит цена от ставки ЦБ?</strong> После покупки ОФЗ по 900 ₽ рост ключевой ставки может снизить цену до 850 ₽ — потеря 50 ₽ с каждой бумаги. В реальных расчётах учтите налоги и комиссии.',
                 'Облигация Компании А номиналом 1000 ₽, купон 12% годовых выплачивается ежемесячно. Владение 8 месяцев (≈9 выплат), цена упала с 930 до 920 ₽. Доход: <code>(920–930)+[(1000×31×12)/(365×100)]×9 = –10 + 91,73 = 81,73 ₽</code>. Налоги и комиссии не учтены.',
                 'Облигация Компании В номинал 1000 ₽, купон 25% годовых выплачивается раз в квартал. Владение 3 месяца (91 день), цена выросла с 960 до 975 ₽. Доход: <code>(975–960)+(1000×91×25)/(365×100) = 15 + 62,33 = 77,33 ₽</code>. Налоги и комиссии не учтены.',
+                'Пример для ПИФ пока в разработке.',
                 'Акция Компании С номиналом 5000 ₽ куплена за 8200 ₽ 1 декабря. В январе выплачены дивиденды 20% от номинала = 1000 ₽. 1 мая из-за санкций цена упала на 50% от цены покупки: 8200 × 0,5 = 4100 ₽. Продажа: <code>1000 (дивиденды) – 4100 (убыток) = –3100 ₽</code>. Налог на дивиденды и комиссии не учтены (убыток налогом не облагается).',
                 '31 января куплено 1000 дирхам по курсу 20,7921 ₽ и 1000 евро по курсу 89,5400 ₽. Продажа: дирхам 30 июня по 21,4225 ₽, евро 31 мая по 82,9705 ₽.<br><br>Дирхам: <code>(21,4225–20,7921)×1000 = +630,40 ₽</code><br>Евро: <code>(82,9705–89,5400)×1000 = –6569,50 ₽</code><br><strong>Итого: –5939,10 ₽</strong>',
-                'Пример для ПИФ пока в разработке.',
                 'Пример для Золота пока в разработке.'
             ];
 

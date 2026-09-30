@@ -119,7 +119,7 @@ export class LocalPrices {
         }
 
         const key = this.formatDate(safeDate);
-        return map.has(key) ? map.get(key) : 0;
+        return map.has(key) ? map.get(key) : [0, 0];
     }
 
     formatDate(date) {

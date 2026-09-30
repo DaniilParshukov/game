@@ -1222,22 +1222,86 @@
       flex-wrap: wrap;
       margin-top: clamp(4px, 0.5vh, 8px);
     }
+
     .btn-buy {
-      flex: 1;
-      min-width: 100px;
-      height: clamp(44px, 5vh, 55px);
-      background: #0D4F35;
-      border-radius: 17px;
-      border: none;
-      font-weight: 700;
-      font-size: 100%;
-      color: #FFFFFF;
-      cursor: pointer;
-      transition: background 0.2s;
+        flex: 1;
+        min-width: 100px;
+        height: clamp(44px, 5vh, 55px);
+        background: #0D4F35;
+        border-radius: 17px;
+        border: none;
+        font-weight: 700;
+        font-size: 100%;
+        color: #FFFFFF;
+        cursor: pointer;
+        /* Плавный возврат в исходное состояние */
+        transition: background 0.2s, transform 0.15s ease-out; 
+        will-change: transform;
     }
     .btn-buy:hover {
-      background: #1a6a4a;
+        background: #1a6a4a;
     }
+    .btn-buy:active {
+        background: #0a3d29;
+        /* Кнопка сжимается при клике благодаря transition */
+        transform: scale(0.94); 
+    }
+    .btn-buy:disabled {
+        background: #9aa8a2;
+        cursor: not-allowed;
+        transform: none; /* Отменяем эффект для заблокированной кнопки */
+    }
+    /* ====== Анимация «отказа» ====== */
+    .btn-buy.shake {
+        animation: shake 0.5s ease-in-out;
+    }
+    @keyframes shake {
+        0%   { transform: translateX(0)    rotate(0); }
+        15%  { transform: translateX(-8px) rotate(-2deg); }
+        30%  { transform: translateX(8px)  rotate(2deg); }
+        45%  { transform: translateX(-8px) rotate(-2deg); }
+        60%  { transform: translateX(8px)  rotate(2deg); }
+        80%  { transform: translateX(-4px) rotate(-1deg); }
+        100% { transform: translateX(0)    rotate(0); }
+    }
+    /* ====== Уведомление ====== */
+    .toast {
+        position: fixed;
+        left: 50%;
+        /* 1. Переносим наверх (с отступом 30px от верхнего края экрана) */
+        top: 30px; 
+        
+        /* 2. Изменяем начальное смещение: теперь при появлении тост будет плавно опускаться сверху вниз (из -20px в 0) */
+        transform: translateX(-50%) translateY(-20px);
+        
+        background: #222;
+        color: #fff;
+        padding: 0.85em 1.4em; /* Использование em здесь позволит внутренним отступам пропорционально масштабироваться вместе со шрифтом */
+        border-radius: 12px;
+        
+        /* 3. Размер шрифта теперь на 100% зависит от размера шрифта родителя */
+        font-size: 1em; 
+        
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s, transform 0.3s;
+        z-index: 1000;
+    }
+
+    .toast.show {
+        opacity: 1;
+        /* Возвращаем в исходную точку */
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.error {
+        background: #c0392b;
+    }
+
+    .toast.success {
+        background: #0D4F35;
+    }
+
     .btn-sell {
       flex: 1;
       min-width: 100px;
@@ -3218,7 +3282,12 @@
     </div>
   </div>
 
+  <div class="toast" id="toast"></div>
+  
   <script>
+    const toastEl    = document.getElementById('toast');
+
+
     function showPage(pageId, args = {}) {
       // 1. Скрываем все секции
       document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
@@ -3236,6 +3305,23 @@
           console.error('Ошибка обновления обучения при открытии страницы:', error);
         });
       }
+    }
+    let toastTimer = null;
+    function showToast(message, type = '') {
+        toastEl.textContent = message;
+        toastEl.className = 'toast show ' + type;
+
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            toastEl.className = 'toast ' + type;
+        }, 2000);
+    }
+    function playAnimation(el, className, duration) {
+        el.classList.remove(className);
+        void el.offsetWidth; // форсируем reflow — иначе анимация не перезапустится
+        el.classList.add(className);
+
+        setTimeout(() => el.classList.remove(className), duration);
     }
   </script>
   <script type="module" src="./script.js"></script>

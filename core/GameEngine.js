@@ -226,28 +226,35 @@ export class GameEngine {
         }
 
         for (const [ticker, quantity] of Object.entries(portfolio.assets)) {
-            let payoutValue = 0;
-            val = this.prices.getValueByDate(ticker, date)
-            payoutValue = Number(val[0]);
+            let val = this.prices.getValueByDate(ticker, date);
+            let payoutValue = Number(val[0]) || 0;
+            const amount = payoutValue * Number(quantity);
             if (val[1] === -1) {
-                alert('Технический дефолт ВДО');
+                if (payoutValue === 0) {
+                    showToast(`Технический дефолт ${ticker}, выплата не состоялась`, 'error');
+                    continue;
+                } else {
+                    showToast(`Технический дефолт ${ticker}, ${amount} выплачено с задержкой`, 'error');
+                }
             } else if (val[1] === -2) {
-                alert("Дефолт ВДО");
+                showToast(`Дефолт ${ticker}, вложения обнулены`, 'error');
                 portfolio.assetValues[ticker].quantity = 0;
-            }
-            if (payoutValue == 0) continue;
-
-            if (!Number.isFinite(payoutValue) || payoutValue < 0) {
-                console.warn(`Неверное значение выплаты для тикера ${ticker} на дату ${date.toISOString()}: ${payoutValue}`);
                 continue;
             }
 
-            const amount = payoutValue * Number(quantity);
+            if (!Number.isFinite(payoutValue) || payoutValue < 0) {
+                console.error(`Неверное значение выплаты для тикера ${ticker} на дату ${date.toISOString()}: ${payoutValue}`);
+                continue;
+            }
+
             if (amount <= 0) {
                 continue;
             }
 
             portfolio.cash += amount;
+            if (val[1] === 0) {
+                showToast(`${ticker} выплачивает ${amount}`, 'success');
+            }
             gameData.history.push({
                 type: 'ASSET_PAYOUT',
                 ticker,
@@ -330,7 +337,6 @@ export class GameEngine {
             amount: numericAmount,
             date: new Date(gameData.date)
         });
-        return gameData;
     }
 
     withdrawBank(gameData, amount) {
@@ -348,7 +354,6 @@ export class GameEngine {
             amount: numericAmount,
             date: new Date(gameData.date)
         });
-        return gameData;
     }
 
     buyAsset(gameData, ticker, amount) {
@@ -438,7 +443,9 @@ export class GameEngine {
         const day = gameData.date.getDate();
         if (day === 10 || day === 25) {
             gameData.portfolio.cash += 10000;
+            showToast(`Начислена зарплата 10000₽`, 'success');
         }
+        
     }
 
     getRandomEventDay() {
