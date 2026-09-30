@@ -3300,6 +3300,12 @@
         });
       }
 
+      if (pageId === 'trade' && globalThis.refreshTradeView) {
+        Promise.resolve(globalThis.refreshTradeView()).catch((error) => {
+          console.error('Ошибка обновления торговли при открытии страницы:', error);
+        });
+      }
+
       if (pageId === 'teaching' && globalThis.refreshTeachingView) {
         Promise.resolve(globalThis.refreshTeachingView(args.index)).catch((error) => {
           console.error('Ошибка обновления обучения при открытии страницы:', error);

@@ -445,7 +445,24 @@ export class GameEngine {
             gameData.portfolio.cash += 10000;
             showToast(`Начислена зарплата 10000₽`, 'success');
         }
-        
+    }
+
+    checkSpeshialEvents(gameData) {
+        const day = date.getDate();
+        const month = date.getMonth();
+        const year = date.getFullYear();
+
+        if (day === 0 && month === 0 && year === 0) {
+            showToast(`Обратный сплит VTBR (5000 к 1)`, 'error');
+        } else if (day === 0 && month === 0 && year === 0) {
+            showToast(`Сплит GMKN: 1 к 100`, 'error');
+        } else if (day === 0 && month === 0 && year === 0) {
+            showToast(`Сплит TRNFP: 1 к 100`, 'error');
+        } else if (day === 0 && month === 0 && year === 0) {
+            showToast(`Сплит PLZL: 1 к 10`, 'error');
+        } else if (day === 0 && month === 0 && year === 0) {
+            showToast(`Обязательный выкуп с 5 октября по 14 декабря`, 'error');
+        }
     }
 
     getRandomEventDay() {
